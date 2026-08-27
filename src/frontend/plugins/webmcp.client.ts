@@ -1,5 +1,5 @@
 /**
- * WebMCP plugin — exposes Certo's key actions to AI agents via the browser's
+ * WebMCP plugin — exposes WPBrigade's key actions to AI agents via the browser's
  * navigator.modelContext API (Chrome origin trial / WebMCP spec).
  *
  * https://webmachinelearning.github.io/webmcp/
@@ -44,7 +44,7 @@ export default defineNuxtPlugin(() => {
       },
       {
         name: 'list_achievements',
-        description: 'List all available achievement / badge definitions in this Certo instance.',
+        description: 'List all available achievement / badge definitions in this WPBrigade instance.',
         inputSchema: { type: 'object', properties: {}, required: [] },
         async execute() {
           const res = await fetch(`${apiUrl}/api/achievements?status=published`)

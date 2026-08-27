@@ -9,41 +9,12 @@
         <!-- Logo Column -->
         <div class="md:col-span-2">
           <div class="flex items-center gap-3">
-            <img src="/certo-logo-text.png" alt="Certo logo" class="h-14 w-auto">
+            <img src="/wpbrigade-logo.png" alt="WPBrigade logo" class="h-14 w-auto">
           </div>
-          <span class="text-sm ml-2 text-text-secondary">Open Source Certifier</span>
+          <span class="text-sm ml-2 text-text-secondary">Digital Credentials Platform</span>
           <p class="mt-4 text-text-secondary max-w-sm">
-            Create, manage and issue digital certificates with ease. Open source and built for everyone.
+            Create, manage and issue digital certificates with ease.
           </p>
-          <div class="flex space-x-4 mt-6">
-            <a
-              href="https://github.com/schroedinger-hat/certo"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="w-8 h-8 flex items-center justify-center rounded-full bg-[#FFD700]  text-white hover:opacity-80 transition-opacity"
-              title="GitHub"
-            >
-              <div class="i-lucide-github w-4 h-4 color-[#000]" />
-            </a>
-            <a
-              href="https://discord.gg/schroedinger-hat"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="w-8 h-8 flex items-center justify-center rounded-full bg-[#FFD700] text-white hover:opacity-80 transition-opacity"
-              title="Discord"
-            >
-              <div class="i-lucide-message-circle w-4 h-4 color-[#000]" />
-            </a>
-            <a
-              href="https://twitter.com/schroedinger_hat"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="w-8 h-8 flex items-center justify-center rounded-full bg-[#FFD700] text-white hover:opacity-80 transition-opacity"
-              title="Twitter"
-            >
-              <div class="i-lucide-twitter w-4 h-4 color-[#000]" />
-            </a>
-          </div>
         </div>
 
         <!-- Quick Links -->
@@ -102,36 +73,6 @@
           </h3>
           <ul class="space-y-2">
             <li>
-              <a
-                href="https://github.com/schroedinger-hat/certo"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-text-secondary hover:text-text-primary transition-colors"
-              >
-                Documentation
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://github.com/schroedinger-hat/certo/blob/main/CONTRIBUTING.md"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-text-secondary hover:text-text-primary transition-colors"
-              >
-                Contributing
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://github.com/schroedinger-hat/certo/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-text-secondary hover:text-text-primary transition-colors"
-              >
-                Report an Issue
-              </a>
-            </li>
-            <li>
               <NuxtLink
                 to="/about"
                 class="text-text-secondary hover:text-text-primary transition-colors"
@@ -150,20 +91,20 @@
           <ul class="space-y-2">
             <li>
               <a
-                href="mailto:info@schroedinger-hat.org"
+                href="mailto:info@autops.online"
                 class="text-text-secondary hover:text-text-primary transition-colors"
               >
-                info@schroedinger-hat.org
+                info@autops.online
               </a>
             </li>
             <li>
               <a
-                href="https://www.schroedinger-hat.org"
+                href="https://wpbrigade.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="text-text-secondary hover:text-text-primary transition-colors"
               >
-                www.schroedinger-hat.org
+                wpbrigade.com
               </a>
             </li>
           </ul>
@@ -173,7 +114,7 @@
       <!-- Copyright -->
       <div class="text-center text-text-secondary pt-8 border-t border-gray-200">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>Certo © {{ new Date().getFullYear() }}. Made with ❤️ by Schrödinger Hat. All rights reserved.</p>
+          <p>WPBrigade © {{ new Date().getFullYear() }}. All rights reserved.</p>
           <div class="flex space-x-6">
             <a
               href="/privacy-policy"

@@ -1,7 +1,7 @@
 /**
  * GET /.well-known/api-catalog
  *
- * RFC 9727 API Catalog — machine-readable discovery of Certo's REST API.
+ * RFC 9727 API Catalog — machine-readable discovery of WPBrigade's REST API.
  * Content-Type: application/linkset+json
  * https://www.rfc-editor.org/rfc/rfc9727
  */
@@ -10,24 +10,24 @@ export default defineEventHandler((event) => {
   return {
     linkset: [
       {
-        anchor: 'https://certo.schroedinger-hat.org/api',
+        anchor: 'https://wpbrigade.com/api',
         'service-desc': [
           {
-            href: 'https://certo.schroedinger-hat.org/api/documentation/v1.0.0/full_documentation.json',
+            href: 'https://wpbrigade.com/api/documentation/v1.0.0/full_documentation.json',
             type: 'application/vnd.oai.openapi+json',
-            title: 'Certo OpenAPI 3.0 specification',
+            title: 'WPBrigade OpenAPI 3.0 specification',
           },
         ],
         'service-doc': [
           {
-            href: 'https://certo.schroedinger-hat.org/api/documentation',
+            href: 'https://wpbrigade.com/api/documentation',
             type: 'text/html',
-            title: 'Certo API documentation (Swagger UI)',
+            title: 'WPBrigade API documentation (Swagger UI)',
           },
         ],
         status: [
           {
-            href: 'https://certo.schroedinger-hat.org/api/health',
+            href: 'https://wpbrigade.com/api/health',
             type: 'application/json',
             title: 'Health check endpoint',
           },
@@ -35,7 +35,7 @@ export default defineEventHandler((event) => {
         // Prometheus metrics
         'https://www.iana.org/assignments/link-relations/monitoring': [
           {
-            href: 'https://certo.schroedinger-hat.org/api/metrics',
+            href: 'https://wpbrigade.com/api/metrics',
             type: 'text/plain',
             title: 'Prometheus metrics endpoint',
           },

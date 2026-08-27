@@ -28,14 +28,14 @@ function handleError() {
       <!-- Actions -->
       <div class="space-y-4">
         <button
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#00E5C5] hover:bg-[#00E5C5]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00E5C5]"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#3458eb] hover:bg-[#3458eb]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3458eb]"
           @click="handleError"
         >
           Try Again
         </button>
         <NuxtLink
           to="/"
-          class="w-full inline-flex justify-center py-2 px-4 border-2 border-[#00E5C5] rounded-full shadow-sm text-[#00E5C5] bg-transparent hover:bg-[#00E5C5]/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00E5C5]"
+          class="w-full inline-flex justify-center py-2 px-4 border-2 border-[#3458eb] rounded-full shadow-sm text-[#3458eb] bg-transparent hover:bg-[#3458eb]/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3458eb]"
         >
           Return Home
         </NuxtLink>

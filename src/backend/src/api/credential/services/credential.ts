@@ -2,11 +2,12 @@
  * Credential service
  */
 
+import { factories } from '@strapi/strapi'
 import { getNotificationProvider } from './notification-providers'
 import { channelAlerts } from './channel-alerts/index'
 import { credentialsIssuedTotal } from '../../../monitoring/metrics'
 
-export default ({ strapi }) => ({
+export default factories.createCoreService('api::credential.credential', ({ strapi }) => ({
   /**
    * Issue a new credential
    * @param {Object} achievement - The achievement to issue
@@ -22,6 +23,22 @@ export default ({ strapi }) => ({
       // Find or create user associated with the profile
       await this.findOrCreateUser(recipientEntity)
 
+      // Make sure the issuer has a signing key *before* reading their profile
+      // id below. Creating a key mirrors the public key onto the issuer's own
+      // profile, and in Strapi 5 that update replaces the profile's published
+      // row with a new numeric id - leaving any id read earlier dangling. That
+      // is why the first-ever issuance for a given issuer used to fail with
+      // "Issuer not found" from getOrCreateActiveListForIssuer below: the key
+      // was created mid-issuance, renumbering the very profile we had just
+      // read off `achievement.creator`. Doing it up front, then re-resolving
+      // the id by documentId (stable across republishes), means the signed
+      // payload, the proof's verificationMethod, the status list and the
+      // credential row all reference a row that still exists.
+      if (achievement.creator?.id) {
+        await strapi.service('api::profile.issuer-keys').getOrCreateKeyPair(achievement.creator.id)
+      }
+      const issuerId = await this.resolveCurrentIssuerId(achievement.creator)
+
       // Generate a unique credential ID
       const credentialId = `urn:uuid:${this.generateUUID()}`
 
@@ -32,7 +49,7 @@ export default ({ strapi }) => ({
         description: achievement.description,
         type: ['VerifiableCredential', 'OpenBadgeCredential'],
         achievement: achievement.id,
-        issuer: achievement.creator?.id,
+        issuer: issuerId,
         recipient: recipientEntity.id,
         issuanceDate: new Date(),
         revoked: false,
@@ -56,7 +73,7 @@ export default ({ strapi }) => ({
           description: achievement.description,
           type: ['VerifiableCredential', 'OpenBadgeCredential'],
           achievement: achievement.id,
-          issuer: achievement.creator?.id,
+          issuer: issuerId,
           recipient: recipientEntity.id,
           issuanceDate: new Date(),
           revoked: false,
@@ -137,6 +154,7 @@ export default ({ strapi }) => ({
             credential,
             frontendUrl,
             user,
+            recipientName: recipientEntity.name,
           })
 
           emailSent = true
@@ -217,7 +235,7 @@ export default ({ strapi }) => ({
       )
 
       if (existingRecipients && existingRecipients.length > 0) {
-        recipientEntity = existingRecipients[0]
+        recipientEntity = await this.syncRecipientName(existingRecipients[0], recipient.name)
       } else {
         recipientEntity = await strapi.entityService.create('api::profile.profile', {
           data: {
@@ -235,6 +253,50 @@ export default ({ strapi }) => ({
     }
 
     return recipientEntity
+  },
+
+  /**
+   * Bring an existing recipient profile's name up to date with the one the
+   * issuer supplied for this issuance.
+   *
+   * Recipient profiles are matched by email, so the second certificate sent
+   * to an address reuses the first one's profile - and used to keep the name
+   * captured back then, silently ignoring whatever the issuer typed this
+   * time. The issuer is the authority on the recipient's name here, so a new
+   * non-empty value wins.
+   *
+   * Note this is the recipient's name platform-wide, not a per-certificate
+   * label: their certificates all render from this profile, so correcting a
+   * name corrects it on the ones already issued too. That is the intended
+   * behaviour for what is one person under one email address.
+   *
+   * @param {Object} profile - The existing recipient profile
+   * @param {string} suppliedName - The name given for this issuance
+   */
+  async syncRecipientName(profile, suppliedName) {
+    const name = typeof suppliedName === 'string' ? suppliedName.trim() : ''
+
+    if (!name || name === profile.name) {
+      return profile
+    }
+
+    await strapi.entityService.update('api::profile.profile', profile.id, {
+      data: { name, publishedAt: new Date() },
+    })
+
+    // That update replaces the profile's published row with a new numeric id
+    // (see resolveCurrentIssuerId for the same hazard on the issuer side), so
+    // re-read it by documentId - the caller is about to link a credential to
+    // whatever this returns.
+    const current = profile.documentId
+      ? await strapi.db.query('api::profile.profile').findOne({
+          where: { documentId: profile.documentId, publishedAt: { $notNull: true } },
+        })
+      : null
+
+    strapi.log.info(`[credential.issue] Recipient ${profile.email} renamed from "${profile.name ?? ''}" to "${name}"`)
+
+    return current ?? { ...profile, name }
   },
 
   /**
@@ -380,6 +442,31 @@ export default ({ strapi }) => ({
   },
 
   /**
+   * Resolve an issuer profile's *current* published row id.
+   *
+   * Strapi 5 gives every document a stable `documentId` but a numeric row
+   * id that is replaced each time the document is republished - so a
+   * numeric id read from a populated relation can already refer to a
+   * deleted row. Looks the profile up by documentId and falls back to the
+   * id we were given when there is nothing better to go on (an unpopulated
+   * relation, or a caller that passed a bare id).
+   *
+   * @param {Object} creator - The populated issuer profile relation
+   * @returns {Promise<number|string|undefined>} The current row id
+   */
+  async resolveCurrentIssuerId(creator) {
+    if (!creator) return undefined
+    if (!creator.documentId) return creator.id
+
+    const current = await strapi.db.query('api::profile.profile').findOne({
+      where: { documentId: creator.documentId, publishedAt: { $notNull: true } },
+      select: ['id'],
+    })
+
+    return current?.id ?? creator.id
+  },
+
+  /**
    * Generate a UUID v4
    * @returns {string} A UUID v4 string
    */
@@ -389,4 +476,4 @@ export default ({ strapi }) => ({
       return v.toString(16)
     })
   },
-}) 
+}))

@@ -9,21 +9,6 @@ export interface Section {
   }
 }
 
-export interface Trustee {
-  url: string
-  img: {
-    src: string
-    alt: string
-  }
-}
-
-export interface HeaderLogo {
-  img: {
-    src: string
-    alt: string
-  }
-}
-
 export interface CardFeature {
   description: string
   icon: string
@@ -99,41 +84,8 @@ export default () => {
     },
   ]
 
-  const trustees: Trustee[] = [
-    {
-      url: 'https://strapi.io',
-      img: {
-        src: '/strapi.png',
-        alt: 'Strapi Logo'
-      }
-    },
-    {
-      url: 'https://schroedinger-hat.org',
-      img: {
-        src: '/schroedinger-hat.png',
-        alt: 'Schrödinger Hat Logo'
-      }
-    },
-    {
-      url: 'https://osday.dev',
-      img: {
-        src: '/osday.png',
-        alt: 'OSDay Logo'
-      }
-    }
-  ]
-
-  const headerLogo: HeaderLogo = {
-    img: {
-      src: '/certo-logo-text.png',
-      alt: 'Certo Logo'
-    }
-  }
-
   return {
     features,
     sections,
-    trustees,
-    headerLogo
   }
 }

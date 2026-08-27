@@ -22,7 +22,7 @@ export default defineNuxtConfig({
       debug: false
     }],
     ['@nuxtjs/sitemap', {
-      hostname: 'https://certo.schroedinger-hat.org',
+      hostname: 'https://wpbrigade.com',
       gzip: true,
       trailingSlash: false,
       // Only include public routes. Authenticated dashboards and admin flows
@@ -96,7 +96,7 @@ export default defineNuxtConfig({
         { rel: 'sitemap', type: 'application/xml', href: '/sitemap.xml' },
         { rel: 'describedby', type: 'text/plain', href: '/llms.txt' },
 
-        { rel: 'canonical', href: 'https://certo.schroedinger-hat.org' },
+        { rel: 'canonical', href: 'https://wpbrigade.com' },
         {
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap'
@@ -108,18 +108,15 @@ export default defineNuxtConfig({
           children: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'SoftwareApplication',
-            'name': 'Certo',
-            'description': 'Open-source platform for issuing, managing, and verifying digital credentials based on Open Badges 3.0 and W3C Verifiable Credentials.',
-            'url': 'https://certo.schroedinger-hat.org',
+            'name': 'WPBrigade',
+            'description': 'WPBrigade platform for issuing, managing, and verifying digital credentials based on Open Badges 3.0 and W3C Verifiable Credentials.',
+            'url': 'https://wpbrigade.com',
             'applicationCategory': 'BusinessApplication',
             'operatingSystem': 'Linux, macOS, Windows',
-            'isAccessibleForFree': true,
-            'license': 'https://www.gnu.org/licenses/agpl-3.0.html',
-            'codeRepository': 'https://github.com/Schroedinger-Hat/certo',
             'author': {
               '@type': 'Organization',
-              'name': 'Schroedinger Hat',
-              'url': 'https://github.com/Schroedinger-Hat',
+              'name': 'WPBrigade',
+              'url': 'https://wpbrigade.com',
             },
             'featureList': [
               'Digital credential issuance',
@@ -140,9 +137,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL,
-      brandName: process.env.NUXT_PUBLIC_BRAND_NAME || 'Certo',
-      brandLogoUrl: process.env.NUXT_PUBLIC_BRAND_LOGO_URL || '/certo-logo-text.png',
-      brandPrimaryColor: process.env.NUXT_PUBLIC_BRAND_PRIMARY_COLOR || '#5AB69F',
+      brandName: process.env.NUXT_PUBLIC_BRAND_NAME || 'WPBrigade',
+      brandLogoUrl: process.env.NUXT_PUBLIC_BRAND_LOGO_URL || '/wpbrigade-logo.png',
+      brandPrimaryColor: process.env.NUXT_PUBLIC_BRAND_PRIMARY_COLOR || '#3458eb',
     }
   },
   imports: {

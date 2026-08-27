@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const { sections, features, trustees } = useHomeContent()
+const { sections, features } = useHomeContent()
 </script>
 
 <template>
@@ -19,15 +19,6 @@ const { sections, features, trustees } = useHomeContent()
         {{ t('home.heroButton') }}
         <span class="i-heroicons-arrow-right ml-2 w-5 h-5" />
       </NuxtLink>
-    </div>
-
-    <div class="text-center mb-8 md:mb-16">
-      <h2 class="text-text-secondary text-xl mb-12">
-        {{ t('home.trustedBy') }}
-      </h2>
-      <div class="flex justify-center gap-8 items-center opacity-70 md:gap-16 h-auto">
-        <HomeTrustees v-for="trustee in trustees" :key="trustee.url" :trustee="trustee" />
-      </div>
     </div>
 
     <div class="relative mb-16">

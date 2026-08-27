@@ -18,7 +18,7 @@ export function useTermsContent() {
       {
         title: '1. Acceptance of Terms',
         type: 'paragraph',
-        content: 'By accessing or using Certo, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.'
+        content: 'By accessing or using WPBrigade, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.'
       },
       {
         title: '2. Changes to Terms',
@@ -42,7 +42,7 @@ export function useTermsContent() {
       {
         title: '5. Intellectual Property',
         type: 'paragraph',
-        content: 'All content and materials provided by Certo are protected by intellectual property laws. You may not reproduce, distribute, or create derivative works without permission.'
+        content: 'All content and materials provided by WPBrigade are protected by intellectual property laws. You may not reproduce, distribute, or create derivative works without permission.'
       },
       {
         title: '6. Third-Party Links',
@@ -57,12 +57,12 @@ export function useTermsContent() {
       {
         title: '8. Limitation of Liability',
         type: 'paragraph',
-        content: 'To the fullest extent permitted by law, Certo and its affiliates are not liable for any indirect, incidental, or consequential damages arising from your use of our services.'
+        content: 'To the fullest extent permitted by law, WPBrigade and its affiliates are not liable for any indirect, incidental, or consequential damages arising from your use of our services.'
       },
       {
         title: '9. Indemnification',
         type: 'paragraph',
-        content: 'You agree to indemnify and hold harmless Certo and its affiliates from any claims or damages arising from your violation of these Terms.'
+        content: 'You agree to indemnify and hold harmless WPBrigade and its affiliates from any claims or damages arising from your violation of these Terms.'
       },
       {
         title: '10. Governing Law',
@@ -72,7 +72,7 @@ export function useTermsContent() {
       {
         title: '11. Contact',
         type: 'paragraph',
-        content: 'For questions about these Terms, contact us at <a style="color: blue;" href="mailto:dpo@schroedinger-hat.org">dpo@schroedinger-hat.org</a> or Via Pino Arpioni 1, Pelago (FI).'
+        content: 'For questions about these Terms, contact us at <a style="color: blue;" href="mailto:info@autops.online">info@autops.online</a>.'
       }
     ]
   }

@@ -2,7 +2,7 @@
 import { apiClient } from '~/api/api-client'
 
 definePageMeta({ middleware: 'auth' })
-useSeoMeta({ title: 'Scheduled Issuances | Certo' })
+useSeoMeta({ title: 'Scheduled Issuances | WPBrigade' })
 
 interface ScheduledIssuance {
   id: number

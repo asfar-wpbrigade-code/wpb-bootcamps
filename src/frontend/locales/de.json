@@ -52,9 +52,9 @@
     "forgotPassword": "Passwort vergessen?",
     "resetPassword": "Passwort zurücksetzen",
     "signInTitle": "Anmelden",
-    "signInSubtitle": "Melden Sie sich bei Ihrem Certo-Konto an",
+    "signInSubtitle": "Melden Sie sich bei Ihrem WPBrigade-Konto an",
     "signUpTitle": "Konto erstellen",
-    "signUpSubtitle": "Treten Sie heute Certo bei",
+    "signUpSubtitle": "Treten Sie heute WPBrigade bei",
     "noAccount": "Kein Konto?",
     "haveAccount": "Bereits ein Konto?",
     "invalidCredentials": "Ungültige E-Mail oder Passwort",
@@ -166,7 +166,7 @@
     "networkErrorMessage": "Verbindung zum Server nicht möglich. Überprüfen Sie Ihre Internetverbindung."
   },
   "footer": {
-    "tagline": "Open-Source-Plattform für prüfbare Nachweise",
+    "tagline": "Die Plattform für prüfbare Nachweise",
     "links": {
       "about": "Über uns",
       "privacy": "Datenschutzrichtlinie",
@@ -213,7 +213,7 @@
     "error": "Fehler beim Ausstellen von Zertifikaten"
   },
   "about": {
-    "title": "Über Certo",
+    "title": "Über WPBrigade",
     "subtitle": "Erfahren Sie mehr über unsere Mission, digitale Anmeldeinformationen zu demokratisieren",
     "mission": "Unsere Mission",
     "team": "Unser Team"

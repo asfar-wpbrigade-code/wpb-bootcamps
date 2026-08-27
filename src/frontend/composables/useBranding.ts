@@ -5,9 +5,9 @@ export interface BrandingConfig {
 }
 
 const DEFAULT_BRANDING: BrandingConfig = {
-  name: 'Certo',
-  logoUrl: '/certo-logo-text.png',
-  primaryColor: '#5AB69F',
+  name: 'WPBrigade',
+  logoUrl: '/wpbrigade-logo.png',
+  primaryColor: '#3458eb',
 }
 
 function validColor(value: string | undefined): string {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const pageDescription = ref('Read everything regarding the Certo privacy and policy')
+const pageDescription = ref('Read everything regarding the WPBrigade privacy and policy')
 
 useSeoMeta({
   description: pageDescription.value,
@@ -26,7 +26,7 @@ useHead({
       </p>
       <div class="prose prose-lg max-w-none">
         <p>
-          This Privacy Policy describes how we collect, use, and disclose your personal information when you use Certo. By accessing or using our services, you agree to the collection, use, and disclosure of your information as described in this Privacy Policy. If you do not agree, please do not use our services.
+          This Privacy Policy describes how we collect, use, and disclose your personal information when you use WPBrigade. By accessing or using our services, you agree to the collection, use, and disclosure of your information as described in this Privacy Policy. If you do not agree, please do not use our services.
         </p>
         <h2>1. Changes to This Privacy Policy</h2>
         <p>
@@ -92,7 +92,7 @@ useHead({
         </p>
         <h2>13. Contact</h2>
         <p>
-          If you have questions or requests regarding this Privacy Policy, contact us at <a href="mailto:dpo@schroedinger-hat.org">dpo@schroedinger-hat.org</a> or Via Pino Arpioni 1, Pelago (FI).
+          If you have questions or requests regarding this Privacy Policy, contact us at <a :href="CONTACT_MAIL">info@autops.online</a>.
         </p>
       </div>
     </div>

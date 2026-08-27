@@ -10,8 +10,8 @@ import type { ExpirationWarningPayload, NotificationPayload, NotificationProvide
  */
 export function createStrapiEmailProvider(strapi: any): NotificationProvider {
   return {
-    async sendCredentialIssued({ to, achievement, credential, frontendUrl, user }: NotificationPayload) {
-      const emailTemplate = generateCredentialIssuanceEmail({ achievement, credential, frontendUrl, user })
+    async sendCredentialIssued({ to, achievement, credential, frontendUrl, user, recipientName }: NotificationPayload) {
+      const emailTemplate = generateCredentialIssuanceEmail({ achievement, credential, frontendUrl, user, recipientName })
 
       await strapi.plugins['email'].services.email.send({
         to,
@@ -21,8 +21,8 @@ export function createStrapiEmailProvider(strapi: any): NotificationProvider {
       })
     },
 
-    async sendExpirationWarning({ to, achievement, credential, frontendUrl, user, daysLeft, expirationDate }: ExpirationWarningPayload) {
-      const emailTemplate = generateCredentialExpirationEmail({ achievement, credential, frontendUrl, user, daysLeft, expirationDate })
+    async sendExpirationWarning({ to, achievement, credential, frontendUrl, user, recipientName, daysLeft, expirationDate }: ExpirationWarningPayload) {
+      const emailTemplate = generateCredentialExpirationEmail({ achievement, credential, frontendUrl, user, recipientName, daysLeft, expirationDate })
 
       await strapi.plugins['email'].services.email.send({
         to,

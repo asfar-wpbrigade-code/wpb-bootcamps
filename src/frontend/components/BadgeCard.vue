@@ -33,8 +33,8 @@ function formatDate(date: string) {
     <div class="flex items-start justify-between">
       <div class="flex-1">
         <!-- Badge Icon -->
-        <div class="w-12 h-12 bg-[#00E5C5]/10 rounded-lg flex items-center justify-center mb-4">
-          <div class="w-6 h-6 i-heroicons-academic-cap text-[#00E5C5]" />
+        <div class="w-12 h-12 bg-[#3458eb]/10 rounded-lg flex items-center justify-center mb-4">
+          <div class="w-6 h-6 i-heroicons-academic-cap text-[#3458eb]" />
         </div>
 
         <!-- Badge Info -->
@@ -78,13 +78,13 @@ function formatDate(date: string) {
     <!-- Actions -->
     <div class="mt-6 flex items-center justify-end space-x-4">
       <button
-        class="text-[#00E5C5] hover:text-[#00E5C5]/80 text-sm font-medium"
+        class="text-[#3458eb] hover:text-[#3458eb]/80 text-sm font-medium"
         @click="$emit('view', badge)"
       >
         View Details
       </button>
       <button
-        class="text-[#00E5C5] hover:text-[#00E5C5]/80 text-sm font-medium"
+        class="text-[#3458eb] hover:text-[#3458eb]/80 text-sm font-medium"
         @click="$emit('download', badge)"
       >
         Download

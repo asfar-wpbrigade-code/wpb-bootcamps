@@ -52,9 +52,9 @@
     "forgotPassword": "Mot de passe oublié?",
     "resetPassword": "Réinitialiser le mot de passe",
     "signInTitle": "Se connecter",
-    "signInSubtitle": "Connectez-vous à votre compte Certo",
+    "signInSubtitle": "Connectez-vous à votre compte WPBrigade",
     "signUpTitle": "Créer un compte",
-    "signUpSubtitle": "Rejoignez Certo aujourd'hui",
+    "signUpSubtitle": "Rejoignez WPBrigade aujourd'hui",
     "noAccount": "Vous n'avez pas de compte ?",
     "haveAccount": "Vous avez déjà un compte ?",
     "invalidCredentials": "E-mail ou mot de passe invalide",
@@ -166,7 +166,7 @@
     "networkErrorMessage": "Impossible de se connecter au serveur. Vérifiez votre connexion Internet."
   },
   "footer": {
-    "tagline": "Plateforme open-source pour les justificatifs vérifiables",
+    "tagline": "La plateforme pour les justificatifs vérifiables",
     "links": {
       "about": "À propos",
       "privacy": "Politique de confidentialité",
@@ -213,7 +213,7 @@
     "error": "Échec de l'émission des certificats"
   },
   "about": {
-    "title": "À propos de Certo",
+    "title": "À propos de WPBrigade",
     "subtitle": "En savoir plus sur notre mission de démocratiser les justificatifs numériques",
     "mission": "Notre mission",
     "team": "Notre équipe"

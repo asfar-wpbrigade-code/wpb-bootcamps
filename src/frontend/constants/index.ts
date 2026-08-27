@@ -1,5 +1,5 @@
 /**
- * URL of the Certo website.
+ * URL of the WPBrigade website.
  *
  * Defaults to the production URL for convenience but can be overridden
  * via the NUXT_PUBLIC_WEBSITE_URL env var for self-hosted deployments.
@@ -10,7 +10,7 @@
  */
 export const WEBSITE_URL = import.meta.env?.NUXT_PUBLIC_WEBSITE_URL
   ?? process.env.NUXT_PUBLIC_WEBSITE_URL
-  ?? 'https://certo.schroedinger-hat.org'
+  ?? 'https://wpbrigade.com'
 
 export const HEADER_NAV_LINKS = [
   { name: 'Home',         href: '/',          i18nKey: 'home' },
@@ -19,4 +19,4 @@ export const HEADER_NAV_LINKS = [
   { name: 'Issue Badges', href: '/issue',      i18nKey: 'issue' },
   { name: 'Verify',       href: '/verify',     i18nKey: 'verify' },
 ]
-export const HELLO_SH_MAIL = 'mailto:hello@schroedinger-hat.org'
+export const CONTACT_MAIL = 'mailto:info@autops.online'

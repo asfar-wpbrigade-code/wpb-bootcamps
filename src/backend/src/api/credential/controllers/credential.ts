@@ -561,6 +561,45 @@ export default factories.createCoreController('api::credential.credential', ({ s
   },
 
   /**
+   * Public single-credential lookup for `GET /api/credentials/:id`
+   * (registered with `auth: false` - see credential-public.ts). Tries
+   * Certo's own `credentialId` (the `urn:uuid:...` used throughout the
+   * SDK/API/MCP, e.g. `client.credentials.get('urn:uuid:...')`) first,
+   * falling back to Strapi's own id/documentId - the same dual-lookup
+   * pattern already used by getDirectCertificate/getCertificate/verify
+   * elsewhere in this controller. Without this override, the request would
+   * fall through to the core-generated default findOne, which has no idea
+   * what a `credentialId` is and only understands id/documentId.
+   */
+  async findOne(ctx) {
+    const { id } = ctx.params
+
+    if (!id) {
+      return ctx.badRequest('Credential ID is required')
+    }
+
+    const byCredentialId = await strapi.db.query('api::credential.credential').findOne({
+      where: { credentialId: id, publishedAt: { $notNull: true } },
+      populate: ['achievement', 'issuer', 'recipient', 'evidence', 'proof'],
+    })
+
+    if (byCredentialId) {
+      return { data: byCredentialId }
+    }
+
+    const credential = await strapi.entityService.findOne('api::credential.credential', id, {
+      status: 'published',
+      populate: ['achievement', 'issuer', 'recipient', 'evidence', 'proof'],
+    })
+
+    if (!credential) {
+      return ctx.notFound('Credential not found')
+    }
+
+    return { data: credential }
+  },
+
+  /**
    * Override the default find method to filter results based on user ownership
    * Multi-tenancy: only return credentials the user can access (owns issuer or recipient profile)
    */

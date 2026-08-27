@@ -52,7 +52,7 @@
     "forgotPassword": "Forgot password?",
     "resetPassword": "Reset password",
     "signInTitle": "Welcome back",
-    "signInSubtitle": "Sign in to your Certo account",
+    "signInSubtitle": "Sign in to your WPBrigade account",
     "signUpTitle": "Create your account",
     "signUpSubtitle": "Join thousands issuing verified credentials",
     "noAccount": "Don't have an account?",
@@ -166,7 +166,7 @@
     "networkErrorMessage": "Could not connect to the server. Please check your internet connection."
   },
   "footer": {
-    "tagline": "Open-source platform for verifiable credentials",
+    "tagline": "The platform for verifiable credentials",
     "links": {
       "about": "About",
       "privacy": "Privacy policy",
@@ -188,7 +188,7 @@
   "verify": {
     "title": "Verify Certificate",
     "subtitle": "Verify the authenticity of any certificate or badge",
-    "whyVerify": "Why Verify with Certo?",
+    "whyVerify": "Why Verify with WPBrigade?",
     "verified": "Certificate verified",
     "failed": "Verification failed",
     "share": "Share Badge",
@@ -213,7 +213,7 @@
     "error": "Failed to issue certificates"
   },
   "about": {
-    "title": "About Certo",
+    "title": "About WPBrigade",
     "subtitle": "Learn more about our mission to democratize digital credentials",
     "mission": "Our Mission",
     "team": "Our Team"

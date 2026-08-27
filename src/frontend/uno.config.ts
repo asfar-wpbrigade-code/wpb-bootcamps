@@ -27,7 +27,7 @@ export default defineConfig({
   ],
   theme: {
     colors: {
-      primary: '#5AB69F',
+      primary: '#3458eb',
       secondary: '#FFE5AE',
       background: {
         light: '#FFFFFF',

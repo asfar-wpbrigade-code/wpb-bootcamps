@@ -17,20 +17,16 @@ export default () => {
 
   const list: ListContent = {
     1: [
-      { text: 'Clone the Certo repository:', component: 'span' },
-      { text: 'git clone https://github.com/schroedinger-hat/certo.git', component: 'code' }
+      { text: 'Create your WPBrigade account:', component: 'span' },
+      { text: 'Sign up and set up your organization in minutes — no installation required.', component: 'span' }
     ],
     2: [
-      { text: 'Bootstrap the frontend and backend:', component: 'span' },
-      { text: 'Navigate to the project directory and install dependencies for both apps:', component: 'span' },
-      { text: 'cd certo/src/frontend && npm install', component: 'code' },
-      { text: 'cd ../backend && npm install', component: 'code' },
-      { text: 'Start both servers:', component: 'span' },
-      { text: 'npm run dev', component: 'code' }
+      { text: 'Set up your workspace:', component: 'span' },
+      { text: 'Invite your team, configure your achievements, and customize your certificate templates.', component: 'span' }
     ],
     3: [
-      { text: 'Set up Strapi achievements and roles:', component: 'span' },
-      { text: 'In the Strapi admin panel, create an admin account then create a new Achievement and assign roles for issuers. Create an Issuer account, then sign in on the frontend and start sending certificates.', component: 'span' }
+      { text: 'Set up achievements and roles:', component: 'span' },
+      { text: 'In the admin panel, create a new Achievement and assign roles for issuers. Create an Issuer account, then sign in on the frontend and start sending certificates.', component: 'span' }
     ]
   }
 

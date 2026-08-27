@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const pageDescription = ref('Get started with Certo, learn how it works')
+const pageDescription = ref('Get started with WPBrigade, learn how it works')
 
 const { list, title, subtitle, steps, listTitle } = useGetStartedContent()
 
@@ -36,7 +36,7 @@ useHead({
       <GetStartedList :list />
     </div>
     <div class="flex justify-center mb-8">
-      <NuxtLink :href="HELLO_SH_MAIL" class="inline-flex items-center px-6 py-3 rounded-xl bg-[#FFE5AE] text-gray-900 font-semibold text-lg shadow hover:bg-[#FFD580] transition-colors">
+      <NuxtLink :href="CONTACT_MAIL" class="inline-flex items-center px-6 py-3 rounded-xl bg-[#FFE5AE] text-gray-900 font-semibold text-lg shadow hover:bg-[#FFD580] transition-colors">
         Contact Us
         <span class="i-heroicons-arrow-right ml-2 w-5 h-5" />
       </NuxtLink>

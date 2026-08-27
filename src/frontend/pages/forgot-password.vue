@@ -6,7 +6,7 @@ const success = ref(false)
 const error = ref('')
 const config = useRuntimeConfig()
 const apiUrl = config.public.apiUrl
-const pageDescription = ref('Reset your Certo account password')
+const pageDescription = ref('Reset your WPBrigade account password')
 
 async function handleSubmit() {
   error.value = ''
@@ -72,7 +72,7 @@ useSeoMeta({
                 v-model="email"
                 type="email"
                 required
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                 placeholder="Enter your email"
                 :disabled="isLoading"
                 autocomplete="email"
@@ -112,7 +112,7 @@ useSeoMeta({
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-black bg-[#5AB69F] hover:bg-[#5AB69F]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00E5C5] disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#3458eb] hover:bg-[#3458eb]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3458eb] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="!isLoading">Send reset link</span>
             <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -123,7 +123,7 @@ useSeoMeta({
         <div class="mt-6 text-center">
           <p class="text-sm text-text-secondary">
             Remember your password?
-            <NuxtLink to="/login" class="font-medium text-[#5AB69F] hover:text-[#5AB69F]/80">
+            <NuxtLink to="/login" class="font-medium text-[#3458eb] hover:text-[#3458eb]/80">
               Sign in
             </NuxtLink>
           </p>

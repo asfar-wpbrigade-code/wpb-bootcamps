@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const pageDescription = ref('Verify your badges with Certo')
+const pageDescription = ref('Verify your badges with WPBrigade')
 const faqs = ref([
   {
     question: 'How does certificate verification work?',
@@ -9,7 +9,7 @@ const faqs = ref([
   },
   {
     question: 'What types of certificates can I verify?',
-    answer: 'You can verify any digital certificate issued through Certo, including Open Badges 3.0 and other compatible verifiable credentials. We support various formats to ensure compatibility with different certification standards.',
+    answer: 'You can verify any digital certificate issued through WPBrigade, including Open Badges 3.0 and other compatible verifiable credentials. We support various formats to ensure compatibility with different certification standards.',
     isOpen: false
   },
   {
@@ -69,8 +69,8 @@ useHead({
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div class="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg">
-            <div class="w-12 h-12 bg-[#00E5C5]/10 rounded-full flex items-center justify-center mb-4">
-              <div class="w-6 h-6 i-heroicons-cube-transparent text-[#5AB69F]" />
+            <div class="w-12 h-12 bg-[#3458eb]/10 rounded-full flex items-center justify-center mb-4">
+              <div class="w-6 h-6 i-heroicons-cube-transparent text-[#3458eb]" />
             </div>
             <h3 class="text-lg font-medium text-text-primary mb-2">
               Open Badges 3.0
@@ -82,8 +82,8 @@ useHead({
 
           <!-- Instant Results -->
           <div class="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg">
-            <div class="w-12 h-12 bg-[#00E5C5]/10 rounded-full flex items-center justify-center mb-4">
-              <div class="w-6 h-6 i-heroicons-bolt text-[#5AB69F]" />
+            <div class="w-12 h-12 bg-[#3458eb]/10 rounded-full flex items-center justify-center mb-4">
+              <div class="w-6 h-6 i-heroicons-bolt text-[#3458eb]" />
             </div>
             <h3 class="text-lg font-medium text-text-primary mb-2">
               Instant Results
@@ -95,8 +95,8 @@ useHead({
 
           <!-- Multiple Formats -->
           <div class="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg">
-            <div class="w-12 h-12 bg-[#00E5C5]/10 rounded-full flex items-center justify-center mb-4">
-              <div class="w-6 h-6 i-heroicons-document-duplicate text-[#5AB69F]" />
+            <div class="w-12 h-12 bg-[#3458eb]/10 rounded-full flex items-center justify-center mb-4">
+              <div class="w-6 h-6 i-heroicons-document-duplicate text-[#3458eb]" />
             </div>
             <h3 class="text-lg font-medium text-text-primary mb-2">
               Multiple Formats
@@ -129,7 +129,7 @@ useHead({
                 class="w-5 h-5 transform transition-transform"
                 :class="[faq.isOpen ? 'rotate-180' : '']"
               >
-                <div class="w-5 h-5 i-heroicons-chevron-down text-[#00E5C5]" />
+                <div class="w-5 h-5 i-heroicons-chevron-down text-[#3458eb]" />
               </div>
             </button>
             <div

@@ -15,7 +15,7 @@ const validationError = ref('')
 const authStore = ref(null)
 const isStoreReady = ref(false)
 const isLoading = ref(false)
-const pageDescription = ref('Create a Certo account to issue, manage, and verify digital credentials.')
+const pageDescription = ref('Create a WPBrigade account to issue, manage, and verify digital credentials.')
 
 onMounted(() => {
   // Safely initialize auth store with a delay
@@ -124,7 +124,7 @@ useHead({
                 name="username"
                 type="text"
                 required
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                 placeholder="Choose a username"
               >
             </div>
@@ -142,7 +142,7 @@ useHead({
                 name="email"
                 type="email"
                 required
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                 placeholder="Enter your email"
               >
             </div>
@@ -160,7 +160,7 @@ useHead({
                 name="password"
                 type="password"
                 required
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                 placeholder="Create a strong password"
               >
             </div>
@@ -178,7 +178,7 @@ useHead({
                 name="confirmPassword"
                 type="password"
                 required
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                 placeholder="Confirm your password"
               >
             </div>
@@ -192,13 +192,13 @@ useHead({
               name="terms"
               type="checkbox"
               required
-              class="h-4 w-4 text-[#00E5C5] focus:ring-[#00E5C5] border-gray-300 rounded"
+              class="h-4 w-4 text-[#3458eb] focus:ring-[#3458eb] border-gray-300 rounded"
             >
             <label for="terms" class="ml-2 block text-sm text-text-secondary">
               <span>{{ t('auth.termsAgree') }}</span>
-              <NuxtLink to="/terms-and-conditions" class="font-medium text-[#00E5C5] hover:text-[#00E5C5]/80">Terms and Conditions</NuxtLink>
+              <NuxtLink to="/terms-and-conditions" class="font-medium text-[#3458eb] hover:text-[#3458eb]/80">Terms and Conditions</NuxtLink>
               and
-              <NuxtLink to="/privacy-policy" class="font-medium text-[#00E5C5] hover:text-[#00E5C5]/80">Privacy Policy</NuxtLink>
+              <NuxtLink to="/privacy-policy" class="font-medium text-[#3458eb] hover:text-[#3458eb]/80">Privacy Policy</NuxtLink>
             </label>
           </div>
 
@@ -207,7 +207,7 @@ useHead({
             <button
               type="submit"
               :disabled="isLoading"
-              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#00E5C5] hover:bg-[#00E5C5]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00E5C5] disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#3458eb] hover:bg-[#3458eb]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3458eb] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span v-if="!isLoading">{{ t('auth.signUp') }}</span>
               <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -219,7 +219,7 @@ useHead({
         <div class="mt-6 text-center">
           <p class="text-sm text-text-secondary">
             {{ t('auth.alreadyHaveAccount') }}
-            <NuxtLink to="/login" class="font-medium text-[#00E5C5] hover:text-[#00E5C5]/80">
+            <NuxtLink to="/login" class="font-medium text-[#3458eb] hover:text-[#3458eb]/80">
               {{ t('nav.login') }}
             </NuxtLink>
           </p>

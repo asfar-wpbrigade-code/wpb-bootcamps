@@ -3,19 +3,19 @@
  *
  * Machine-readable MCP server discovery file.
  * AI tools and agent frameworks can GET this URL to discover the
- * @certo/mcp server and how to configure it.
+ * WPBrigade MCP server (@certo/mcp package) and how to configure it.
  *
  * Similar pattern to /.well-known/openid-configuration for OIDC.
  */
 export default defineEventHandler(() => ({
   // serverInfo required by MCP Server Card spec (SEP-1649)
   serverInfo: {
-    name: 'certo',
+    name: 'wpbrigade',
     version: '0.1.0',
-    description: 'Open-source platform for issuing and verifying Open Badges 3.0 / Verifiable Credentials',
+    description: 'Platform for issuing and verifying Open Badges 3.0 / Verifiable Credentials',
   },
   // Legacy top-level name field (backward compat)
-  name: 'Certo',
+  name: 'WPBrigade',
   mcp_server: {
     package: '@certo/mcp',
     install: 'npx -y @certo/mcp',
@@ -26,7 +26,7 @@ export default defineEventHandler(() => ({
       optional: [
         {
           env: 'CERTO_API_URL',
-          description: 'Base URL of your Certo backend',
+          description: 'Base URL of your WPBrigade backend',
           default: 'http://localhost:1337',
         },
         {
@@ -48,10 +48,8 @@ export default defineEventHandler(() => ({
     ],
   },
   api: {
-    base_url: 'https://certo.schroedinger-hat.org/api',
-    openapi: 'https://certo.schroedinger-hat.org/api/documentation',
-    health: 'https://certo.schroedinger-hat.org/api/health',
+    base_url: 'https://wpbrigade.com/api',
+    openapi: 'https://wpbrigade.com/api/documentation',
+    health: 'https://wpbrigade.com/api/health',
   },
-  source: 'https://github.com/Schroedinger-Hat/certo',
-  license: 'MIT',
 }))

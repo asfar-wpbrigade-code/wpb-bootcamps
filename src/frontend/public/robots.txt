@@ -27,4 +27,4 @@ Allow: /llms.txt
 User-Agent: Googlebot
 Allow: /
 
-Sitemap: https://certo.schroedinger-hat.org/sitemap.xml
+Sitemap: https://wpbrigade.com/sitemap.xml

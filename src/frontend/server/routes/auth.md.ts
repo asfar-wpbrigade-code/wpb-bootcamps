@@ -9,19 +9,19 @@
  */
 export default defineEventHandler((event) => {
   setResponseHeader(event, 'Content-Type', 'text/markdown; charset=utf-8')
-  return `# Auth Instructions for Certo
+  return `# Auth Instructions for WPBrigade
 
 ## Overview
 
-Certo is an open-source platform for issuing and verifying Open Badges 3.0 and W3C Verifiable Credentials.
+WPBrigade is a platform for issuing and verifying Open Badges 3.0 and W3C Verifiable Credentials.
 
-The API lives at \`https://certo.schroedinger-hat.org/api\`.
+The API lives at \`https://wpbrigade.com/api\`.
 Public endpoints (e.g. \`GET /api/credentials/:id/verify\`) require no authentication.
 Write endpoints require a Bearer token.
 
 ## Getting an API Token
 
-1. Log in to the Certo admin panel at \`https://certo.schroedinger-hat.org/admin\`
+1. Log in to the WPBrigade admin panel at \`https://wpbrigade.com/admin\`
 2. Go to **Settings → API Tokens**
 3. Click **Create new API Token**
 4. Choose a name, expiry, and permission level (\`Full access\` or \`Custom\`)
@@ -50,7 +50,7 @@ Response includes \`jwt\` (use as Bearer token) and \`user\` details.
 
 ## Scopes
 
-Certo uses Strapi role-based permissions. Common roles:
+WPBrigade uses Strapi role-based permissions. Common roles:
 
 | Role | Can do |
 |---|---|
@@ -66,11 +66,11 @@ See: \`/.well-known/mcp/server-card.json\`
 \`\`\`json
 {
   "mcpServers": {
-    "certo": {
+    "wpbrigade": {
       "command": "npx",
       "args": ["-y", "@certo/mcp"],
       "env": {
-        "CERTO_API_URL": "https://certo.schroedinger-hat.org",
+        "CERTO_API_URL": "https://wpbrigade.com",
         "CERTO_API_TOKEN": "YOUR_API_TOKEN"
       }
     }

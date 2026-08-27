@@ -2,6 +2,17 @@
 
 module.exports = {
   async up(knex) {
+    // On a fresh database this migration runs before Strapi's own schema
+    // sync has created content-type tables, so `profiles` may not exist
+    // yet - in that case the `owner` relation in the profile content-type
+    // schema will create the column itself. This migration only matters
+    // for pre-existing databases upgrading from before that relation existed.
+    const hasTable = await knex.schema.hasTable('profiles');
+    if (!hasTable) {
+      console.log('profiles table does not exist yet, skipping (will be created by schema sync)');
+      return;
+    }
+
     // Check if column already exists to support idempotent runs
     const hasColumn = await knex.schema.hasColumn('profiles', 'owner_id');
     if (hasColumn) {

@@ -52,9 +52,9 @@
     "forgotPassword": "Esqueceu sua senha?",
     "resetPassword": "Redefinir senha",
     "signInTitle": "Entrar",
-    "signInSubtitle": "Faça login em sua conta Certo",
+    "signInSubtitle": "Faça login em sua conta WPBrigade",
     "signUpTitle": "Criar uma conta",
-    "signUpSubtitle": "Junte-se ao Certo hoje",
+    "signUpSubtitle": "Junte-se ao WPBrigade hoje",
     "noAccount": "Não tem uma conta?",
     "haveAccount": "Já tem uma conta?",
     "invalidCredentials": "E-mail ou senha inválidos",
@@ -166,7 +166,7 @@
     "networkErrorMessage": "Não foi possível conectar ao servidor. Verifique sua conexão com a Internet."
   },
   "footer": {
-    "tagline": "Plataforma open-source para credenciais verificáveis",
+    "tagline": "A plataforma para credenciais verificáveis",
     "links": {
       "about": "Sobre",
       "privacy": "Política de privacidade",
@@ -213,7 +213,7 @@
     "error": "Erro ao emitir certificados"
   },
   "about": {
-    "title": "Sobre Certo",
+    "title": "Sobre a WPBrigade",
     "subtitle": "Saiba mais sobre nossa missão de democratizar credenciais digitais",
     "mission": "Nossa missão",
     "team": "Nosso time"

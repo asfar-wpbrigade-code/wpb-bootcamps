@@ -52,9 +52,9 @@
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "resetPassword": "Restablecer contraseña",
     "signInTitle": "Iniciar sesión",
-    "signInSubtitle": "Inicia sesión en tu cuenta de Certo",
+    "signInSubtitle": "Inicia sesión en tu cuenta de WPBrigade",
     "signUpTitle": "Crear una cuenta",
-    "signUpSubtitle": "Únete a Certo hoy",
+    "signUpSubtitle": "Únete a WPBrigade hoy",
     "noAccount": "¿No tienes una cuenta?",
     "haveAccount": "¿Ya tienes una cuenta?",
     "invalidCredentials": "Correo o contraseña no válidos",
@@ -166,7 +166,7 @@
     "networkErrorMessage": "No se pudo conectar al servidor. Verifica tu conexión a Internet."
   },
   "footer": {
-    "tagline": "Plataforma open-source para credenciales verificables",
+    "tagline": "La plataforma para credenciales verificables",
     "links": {
       "about": "Acerca de",
       "privacy": "Política de privacidad",
@@ -213,7 +213,7 @@
     "error": "Error al emitir certificados"
   },
   "about": {
-    "title": "Acerca de Certo",
+    "title": "Acerca de WPBrigade",
     "subtitle": "Aprende más sobre nuestra misión de democratizar las credenciales digitales",
     "mission": "Nuestra misión",
     "team": "Nuestro equipo"

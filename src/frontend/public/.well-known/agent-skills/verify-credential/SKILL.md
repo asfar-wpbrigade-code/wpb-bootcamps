@@ -1,6 +1,6 @@
 # Verify Credential
 
-Verify an Open Badges 3.0 or W3C Verifiable Credential issued by Certo.
+Verify an Open Badges 3.0 or W3C Verifiable Credential issued by WPBrigade.
 
 ## API
 

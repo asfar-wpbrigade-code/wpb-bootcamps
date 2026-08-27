@@ -26,7 +26,7 @@ interface Certificate {
 const authStore = useAuthStore()
 const loading = ref(false)
 const error = ref<string | null>(null)
-const pageDescription = ref('Your Certo dashboard: manage your issued and received digital credentials')
+const pageDescription = ref('Your WPBrigade dashboard: manage your issued and received digital credentials')
 
 const receivedCertificates = ref<Certificate[]>([])
 const issuedCertificates = ref<Certificate[]>([])
@@ -88,7 +88,7 @@ onMounted(async () => {
   <div class="container mx-auto px-4 py-8">
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center items-center py-12">
-      <div class="w-8 h-8 border-4 border-[#00E5C5] border-t-transparent rounded-full animate-spin" />
+      <div class="w-8 h-8 border-4 border-[#3458eb] border-t-transparent rounded-full animate-spin" />
     </div>
 
     <!-- Error State -->
@@ -153,7 +153,7 @@ onMounted(async () => {
           <div class="flex items-center gap-4">
             <NuxtLink
               to="/issue"
-              class="px-4 py-2 bg-[#5AB69F] text-black rounded-full hover:bg-[#5AB69F]/90 transition-colors"
+              class="px-4 py-2 bg-[#3458eb] text-white rounded-full hover:bg-[#3458eb]/90 transition-colors"
             >
               Issue New
             </NuxtLink>
@@ -169,7 +169,7 @@ onMounted(async () => {
           </p>
           <NuxtLink
             to="/issue"
-            class="inline-flex items-center px-4 py-2 bg-[#5AB69F] text-black rounded-full hover:bg-[#5AB69F]/90 transition-colors"
+            class="inline-flex items-center px-4 py-2 bg-[#3458eb] text-white rounded-full hover:bg-[#3458eb]/90 transition-colors"
           >
             <div class="i-heroicons-plus w-5 h-5 mr-2" />
             Issue Your First Certificate

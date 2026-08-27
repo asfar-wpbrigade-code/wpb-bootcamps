@@ -33,7 +33,7 @@ interface Stats {
 }
 
 const loading = ref(false)
-const pageDescription = ref('Everything regarding your profile from your Certo account')
+const pageDescription = ref('Everything regarding your profile from your WPBrigade account')
 
 const form = ref({
   name: '',
@@ -186,7 +186,7 @@ async function handleExportData() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `certo-export-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `wpbrigade-export-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -253,7 +253,7 @@ useHead({
                     id="name"
                     v-model="form.name"
                     type="text"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                     placeholder="Enter your full name"
                   >
                 </div>
@@ -266,7 +266,7 @@ useHead({
                     id="email"
                     v-model="form.email"
                     type="email"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                     placeholder="Enter your email"
                   >
                 </div>
@@ -279,7 +279,7 @@ useHead({
                     id="organization"
                     v-model="form.organization"
                     type="text"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                     placeholder="Enter your organization"
                   >
                 </div>
@@ -292,7 +292,7 @@ useHead({
                     id="bio"
                     v-model="form.bio"
                     rows="4"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                     placeholder="Tell us about yourself"
                   />
                 </div>
@@ -303,7 +303,7 @@ useHead({
                 <button
                   type="submit"
                   :disabled="loading"
-                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#00E5C5] hover:bg-[#00E5C5]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00E5C5] disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#3458eb] hover:bg-[#3458eb]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3458eb] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span v-if="!loading">Save Changes</span>
                   <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -407,25 +407,25 @@ useHead({
                   v-model="passwordForm.currentPassword"
                   type="password"
                   placeholder="Current password"
-                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#5AB69F]"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#3458eb]"
                   autocomplete="current-password"
                 />
                 <input
                   v-model="passwordForm.newPassword"
                   type="password"
                   placeholder="New password"
-                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#5AB69F]"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#3458eb]"
                   autocomplete="new-password"
                 />
                 <input
                   v-model="passwordForm.confirmPassword"
                   type="password"
                   placeholder="Confirm new password"
-                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#5AB69F]"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#3458eb]"
                   autocomplete="new-password"
                 />
                 <button
-                  class="w-full py-2 bg-[#5AB69F] text-white rounded-lg text-sm font-medium hover:bg-[#5AB69F]/90 transition-colors disabled:opacity-50"
+                  class="w-full py-2 bg-[#3458eb] text-white rounded-lg text-sm font-medium hover:bg-[#3458eb]/90 transition-colors disabled:opacity-50"
                   :disabled="passwordLoading"
                   @click="submitPasswordChange"
                 >

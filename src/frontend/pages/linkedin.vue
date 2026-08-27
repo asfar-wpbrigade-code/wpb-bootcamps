@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const pageDescription = ref('Step-by-step guide to adding your Certo certificate to your LinkedIn profile')
+const pageDescription = ref('Step-by-step guide to adding your WPBrigade certificate to your LinkedIn profile')
 
 useSeoMeta({
   description: pageDescription.value,
@@ -21,10 +21,10 @@ useHead({
     <section class="py-20">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 class="text-4xl font-bold text-gray-900 mb-6">
-          How to Add Your Certo Certificate to LinkedIn
+          How to Add Your WPBrigade Certificate to LinkedIn
         </h1>
         <p class="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
-          Showcase your achievement on LinkedIn by adding your Certo certificate to your profile. Follow these simple steps to make your credential visible to your network and potential employers.
+          Showcase your achievement on LinkedIn by adding your WPBrigade certificate to your profile. Follow these simple steps to make your credential visible to your network and potential employers.
         </p>
       </div>
     </section>
@@ -68,10 +68,10 @@ useHead({
             </h2>
             <ul class="list-disc pl-6 text-lg text-gray-600 leading-relaxed space-y-2">
               <li><span class="font-semibold">Name:</span> Enter the name of your certificate</li>
-              <li><span class="font-semibold">Issuing Organization:</span> Enter "Certo"</li>
+              <li><span class="font-semibold">Issuing Organization:</span> Enter "WPBrigade"</li>
               <li><span class="font-semibold">Issue Date:</span> Enter the date on your certificate</li>
-              <li><span class="font-semibold">Credential ID:</span> (Optional) Enter the unique ID from your Certo certificate</li>
-              <li><span class="font-semibold">Credential URL:</span> Paste the verification link from Certo</li>
+              <li><span class="font-semibold">Credential ID:</span> (Optional) Enter the unique ID from your WPBrigade certificate</li>
+              <li><span class="font-semibold">Credential URL:</span> Paste the verification link from WPBrigade</li>
             </ul>
           </div>
           <div class="flex justify-center">
@@ -88,7 +88,7 @@ useHead({
               Step 4: Save and Showcase
             </h2>
             <p class="text-lg text-gray-600 leading-relaxed">
-              Click <span class="font-semibold">"Save"</span>. Your Certo certificate will now appear in the "Licenses & Certifications" section of your LinkedIn profile. Visitors can click the credential to verify it on Certo.
+              Click <span class="font-semibold">"Save"</span>. Your WPBrigade certificate will now appear in the "Licenses & Certifications" section of your LinkedIn profile. Visitors can click the credential to verify it on WPBrigade.
             </p>
           </div>
         </div>
@@ -102,7 +102,7 @@ useHead({
           Need Help?
         </h2>
         <p class="text-xl text-text-secondary max-w-2xl mx-auto mb-8">
-          If you have any questions or need assistance, feel free to <a href="mailto:hello@schroedinger-hat.org" class="text-[#00E5C5] underline">contact us</a>.
+          If you have any questions or need assistance, feel free to <a :href="CONTACT_MAIL" class="text-[#3458eb] underline">contact us</a>.
         </p>
       </div>
     </section>

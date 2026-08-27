@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Recipient } from '~/composables/useApiClient'
 const { t } = useI18n()
-const pageDescription = ref('Issue badges utilizing Certo software')
+const pageDescription = ref('Issue badges utilizing WPBrigade software')
 
 useSeoMeta({
   description: pageDescription.value,
@@ -347,7 +347,7 @@ function formatDate(date: string) {
           <div class="bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-lg">
             <!-- Loading State -->
             <div v-if="isLoadingTemplates" class="text-center py-8">
-              <div class="w-12 h-12 border-4 border-[#00E5C5] border-t-transparent rounded-full animate-spin mx-auto" />
+              <div class="w-12 h-12 border-4 border-[#3458eb] border-t-transparent rounded-full animate-spin mx-auto" />
               <p class="mt-4 text-text-secondary">
                 Loading available templates...
               </p>
@@ -362,7 +362,7 @@ function formatDate(date: string) {
                 {{ error }}
               </p>
               <button
-                class="mt-4 text-[#00E5C5] hover:text-[#00E5C5]/80"
+                class="mt-4 text-[#3458eb] hover:text-[#3458eb]/80"
                 @click="loadTemplates"
               >
                 Try Again
@@ -383,8 +383,8 @@ function formatDate(date: string) {
                     class="relative border rounded-lg p-4 cursor-pointer transition-all"
                     :class="[
                       selectedTemplate?.id === template.id
-                        ? 'border-[#00E5C5] bg-[#00E5C5]/5'
-                        : 'border-gray-200 hover:border-[#00E5C5]/50',
+                        ? 'border-[#3458eb] bg-[#3458eb]/5'
+                        : 'border-gray-200 hover:border-[#3458eb]/50',
                     ]"
                     @click="selectTemplate(template)"
                   >
@@ -396,7 +396,7 @@ function formatDate(date: string) {
                           :alt="template.title"
                           class="max-w-full max-h-full object-contain"
                         >
-                        <div v-else class="w-8 h-8 i-heroicons-document-text text-[#00E5C5]" />
+                        <div v-else class="w-8 h-8 i-heroicons-document-text text-[#3458eb]" />
                       </div>
                       <div class="ml-4">
                         <h3 class="text-sm font-medium text-text-primary">
@@ -405,14 +405,14 @@ function formatDate(date: string) {
                         <p class="text-xs text-text-secondary mt-1">
                           {{ template.description }}
                         </p>
-                        <p v-if="template.attributes?.creator?.data?.attributes?.name" class="text-xs text-[#00E5C5] mt-1">
+                        <p v-if="template.attributes?.creator?.data?.attributes?.name" class="text-xs text-[#3458eb] mt-1">
                           By {{ template.attributes.creator.data.attributes.name }}
                         </p>
                       </div>
                     </div>
                     <div
                       v-if="selectedTemplate?.id === template.id"
-                      class="absolute top-2 right-2 w-5 h-5 bg-[#00E5C5] rounded-full flex items-center justify-center"
+                      class="absolute top-2 right-2 w-5 h-5 bg-[#3458eb] rounded-full flex items-center justify-center"
                     >
                       <div class="w-3 h-3 i-heroicons-check text-white" />
                     </div>
@@ -421,14 +421,14 @@ function formatDate(date: string) {
 
                 <!-- Empty State -->
                 <div v-if="templates.length === 0" class="text-center py-8">
-                  <div class="w-16 h-16 bg-[#00E5C5]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <div class="w-8 h-8 i-heroicons-document-text text-[#00E5C5]" />
+                  <div class="w-16 h-16 bg-[#3458eb]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div class="w-8 h-8 i-heroicons-document-text text-[#3458eb]" />
                   </div>
                   <p class="text-text-secondary">
                     No templates available
                   </p>
                   <button
-                    class="mt-4 text-[#00E5C5] hover:text-[#00E5C5]/80"
+                    class="mt-4 text-[#3458eb] hover:text-[#3458eb]/80"
                     @click="loadTemplates"
                   >
                     Refresh
@@ -443,15 +443,15 @@ function formatDate(date: string) {
                 </label>
                 <div class="space-y-4">
                   <!-- CSV Upload -->
-                  <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-[#00E5C5] transition-colors">
+                  <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-[#3458eb] transition-colors">
                     <div class="flex flex-col items-center">
-                      <div class="w-12 h-12 bg-[#00E5C5]/10 rounded-full flex items-center justify-center mb-4">
-                        <div class="w-6 h-6 i-heroicons-cloud-arrow-up text-[#00E5C5]" />
+                      <div class="w-12 h-12 bg-[#3458eb]/10 rounded-full flex items-center justify-center mb-4">
+                        <div class="w-6 h-6 i-heroicons-cloud-arrow-up text-[#3458eb]" />
                       </div>
                       <div class="text-sm text-text-secondary">
                         <label
                           for="csv-upload"
-                          class="relative cursor-pointer rounded-md font-medium text-[#00E5C5] hover:text-[#00E5C5]/80 focus-within:outline-none"
+                          class="relative cursor-pointer rounded-md font-medium text-[#3458eb] hover:text-[#3458eb]/80 focus-within:outline-none"
                         >
                           <span>Upload CSV</span>
                           <input
@@ -469,7 +469,7 @@ function formatDate(date: string) {
                         </p>
                       </div>
                       <p class="text-xs text-text-secondary mt-2">
-                        Download our <a href="/recipients-template.csv" download class="text-[#00E5C5] hover:text-[#00E5C5]/80">CSV template</a>
+                        Download our <a href="/recipients-template.csv" download class="text-[#3458eb] hover:text-[#3458eb]/80">CSV template</a>
                       </p>
                     </div>
                   </div>
@@ -498,7 +498,7 @@ function formatDate(date: string) {
                       <input
                         v-model="recipients[0].name"
                         type="text"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                         placeholder="Recipient name"
                       >
                     </div>
@@ -506,7 +506,7 @@ function formatDate(date: string) {
                       <input
                         v-model="recipients[0].email"
                         type="email"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                         placeholder="Email address"
                       >
                     </div>
@@ -514,7 +514,7 @@ function formatDate(date: string) {
                       <input
                         v-model="recipients[0].expirationDate"
                         type="date"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                         placeholder="Expiration date (optional)"
                       >
                     </div>
@@ -531,7 +531,7 @@ function formatDate(date: string) {
                   id="issueDate"
                   v-model="issueDate"
                   type="date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                 >
               </div>
 
@@ -625,7 +625,7 @@ function formatDate(date: string) {
                 <button
                   type="submit"
                   :disabled="isLoading || !selectedTemplate || recipients.length === 0"
-                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#00E5C5] hover:bg-[#00E5C5]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00E5C5] disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#3458eb] hover:bg-[#3458eb]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3458eb] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span v-if="!isLoading">Issue Certificates</span>
                   <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -678,8 +678,8 @@ function formatDate(date: string) {
             </div>
 
             <div v-else class="text-center py-8">
-              <div class="w-16 h-16 bg-[#00E5C5]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div class="w-8 h-8 i-heroicons-document-text text-[#00E5C5]" />
+              <div class="w-16 h-16 bg-[#3458eb]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div class="w-8 h-8 i-heroicons-document-text text-[#3458eb]" />
               </div>
               <p class="text-text-secondary">
                 Select a template to preview

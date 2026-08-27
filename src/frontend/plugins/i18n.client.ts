@@ -1,6 +1,6 @@
 /**
  * i18n client plugin — runs on first page load in the browser.
- * Reads the certo_locale cookie; if not set, detects the browser language
+ * Reads the wpbrigade_locale cookie; if not set, detects the browser language
  * and sets the closest supported locale.
  */
 import { LOCALES } from '~/composables/useI18n'
@@ -9,7 +9,7 @@ export default defineNuxtPlugin(() => {
   const { locale, setLocale } = useI18n()
 
   // Already have a saved preference
-  const cookie = useCookie('certo_locale')
+  const cookie = useCookie('wpbrigade_locale')
   if (cookie.value) return
 
   // Detect from navigator.languages

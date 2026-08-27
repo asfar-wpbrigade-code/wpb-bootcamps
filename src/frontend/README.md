@@ -1,6 +1,6 @@
-# Certo Frontend (Nuxt 3 + Una UI)
+# WPBrigade Frontend (Nuxt 3 + Una UI)
 
-This is the Nuxt 3 (Vue 3 + Una UI) implementation of the Certo frontend for managing digital credentials and badges using the Open Badges standard.
+This is the Nuxt 3 (Vue 3 + Una UI) implementation of the WPBrigade frontend for managing digital credentials and badges using the Open Badges standard.
 
 ## Features
 
@@ -17,7 +17,7 @@ This is the Nuxt 3 (Vue 3 + Una UI) implementation of the Certo frontend for man
 
 - Node.js 20.x or later
 - NPM or Yarn
-- A running Certo backend (Strapi) instance
+- A running WPBrigade backend (Strapi) instance
 
 ### Environment Variables
 
@@ -154,7 +154,3 @@ See [Nuxt Testing Docs](https://nuxt.com/docs/getting-started/testing) for more 
 - **Pinia**: State management
 - **TypeScript**: Type-safe JavaScript
 - **Tailwind CSS**: Utility-first CSS framework
-
-## License
-
-This project is licensed under the GNU Affero General Public License v3.0. See the LICENSE file for details.

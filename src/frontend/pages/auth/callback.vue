@@ -61,7 +61,7 @@ onMounted(() => {
             {{ errorMessage }}
           </p>
         </div>
-        <NuxtLink to="/login" class="text-[#5AB69F] underline">
+        <NuxtLink to="/login" class="text-[#3458eb] underline">
           Back to login
         </NuxtLink>
       </div>

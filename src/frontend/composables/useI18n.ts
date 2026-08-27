@@ -1,7 +1,7 @@
 /**
  * Lightweight i18n composable — no @nuxtjs/i18n dependency needed.
  * Reads locale JSON files directly; locale is stored in a Nuxt state ref
- * (SSR-compatible) and persisted in the certo_locale cookie.
+ * (SSR-compatible) and persisted in the wpbrigade_locale cookie.
  */
 
 // Statically import all locale files so they are bundled with no async load
@@ -38,7 +38,7 @@ function resolve(obj: Record<string, any>, key: string): string | undefined {
 
 export function useI18n() {
   const locale = useState<LocaleCode>('locale', () => 'en')
-  const localeCookie = useCookie<LocaleCode>('certo_locale', { maxAge: 60 * 60 * 24 * 365 })
+  const localeCookie = useCookie<LocaleCode>('wpbrigade_locale', { maxAge: 60 * 60 * 24 * 365 })
 
   /** Translate a dot-notation key, with optional `{param}` interpolation */
   function t(key: string, params?: Record<string, string>): string {

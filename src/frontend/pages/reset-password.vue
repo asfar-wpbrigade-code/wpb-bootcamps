@@ -10,7 +10,7 @@ const router = useRouter()
 const route = useRoute()
 const config = useRuntimeConfig()
 const apiUrl = config.public.apiUrl
-const pageDescription = ref('Set a new password for your Certo account.')
+const pageDescription = ref('Set a new password for your WPBrigade account.')
 
 useSeoMeta({
   description: pageDescription.value,
@@ -138,7 +138,7 @@ onMounted(() => {
                 type="password"
                 required
                 minlength="6"
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                 placeholder="Enter new password"
                 :disabled="isLoading"
                 autocomplete="new-password"
@@ -158,7 +158,7 @@ onMounted(() => {
                 type="password"
                 required
                 minlength="6"
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
                 placeholder="Confirm new password"
                 :disabled="isLoading"
                 autocomplete="new-password"
@@ -170,7 +170,7 @@ onMounted(() => {
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#00E5C5] hover:bg-[#00E5C5]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00E5C5] disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#3458eb] hover:bg-[#3458eb]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3458eb] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="!isLoading">Reset password</span>
             <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -181,7 +181,7 @@ onMounted(() => {
         <div class="mt-6 text-center">
           <p class="text-sm text-text-secondary">
             Remember your password?
-            <NuxtLink to="/login" class="font-medium text-[#00E5C5] hover:text-[#00E5C5]/80">
+            <NuxtLink to="/login" class="font-medium text-[#3458eb] hover:text-[#3458eb]/80">
               Sign in
             </NuxtLink>
           </p>

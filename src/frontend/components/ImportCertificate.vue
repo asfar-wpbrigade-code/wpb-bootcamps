@@ -67,14 +67,14 @@ function formatDate(date: string) {
 
       <!-- File Upload -->
       <div v-if="importedCertificate" class="text-center">
-        <div class="flex flex-col items-center justify-center px-6 py-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#00E5C5] transition-colors">
-          <div class="w-12 h-12 bg-[#00E5C5]/10 rounded-full flex items-center justify-center mb-4">
-            <div class="w-6 h-6 i-heroicons-cloud-arrow-up text-[#00E5C5]" />
+        <div class="flex flex-col items-center justify-center px-6 py-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#3458eb] transition-colors">
+          <div class="w-12 h-12 bg-[#3458eb]/10 rounded-full flex items-center justify-center mb-4">
+            <div class="w-6 h-6 i-heroicons-cloud-arrow-up text-[#3458eb]" />
           </div>
           <div class="text-sm text-text-secondary">
             <label
               for="file-upload"
-              class="relative cursor-pointer rounded-md font-medium text-[#00E5C5] hover:text-[#00E5C5]/80 focus-within:outline-none"
+              class="relative cursor-pointer rounded-md font-medium text-[#3458eb] hover:text-[#3458eb]/80 focus-within:outline-none"
             >
               <span>Upload a file</span>
               <input
@@ -104,7 +104,7 @@ function formatDate(date: string) {
           id="json"
           v-model="jsonInput"
           rows="8"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00E5C5] focus:border-transparent font-mono text-sm"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent font-mono text-sm"
           placeholder="Paste your certificate JSON here..."
         />
       </div>
@@ -114,7 +114,7 @@ function formatDate(date: string) {
         <button
           type="submit"
           :disabled="isLoading"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#00E5C5] hover:bg-[#00E5C5]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00E5C5] disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#3458eb] hover:bg-[#3458eb]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3458eb] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span v-if="!isLoading">Import Certificate</span>
           <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />

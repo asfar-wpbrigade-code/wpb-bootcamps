@@ -1,6 +1,6 @@
 # List Achievements
 
-List all available achievement / badge definitions in a Certo instance.
+List all available achievement / badge definitions in a WPBrigade instance.
 
 ## API
 

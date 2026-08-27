@@ -1,6 +1,6 @@
 # Issue Credential
 
-Issue an Open Badges 3.0 credential to a recipient via Certo.
+Issue an Open Badges 3.0 credential to a recipient via WPBrigade.
 
 ## API
 
@@ -42,7 +42,7 @@ Content-Type: application/json
 
 ## Prerequisites
 
-1. An API token with write permissions (Certo admin → Settings → API Tokens)
+1. An API token with write permissions (WPBrigade admin → Settings → API Tokens)
 2. An existing achievement/badge definition (`achievementId`)
 
 ## Notes

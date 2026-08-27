@@ -2,6 +2,7 @@ import type { Core } from '@strapi/strapi';
 import { seedDevelopmentData } from './bootstrap/seed-data';
 import { setupPermissions } from './bootstrap/permissions-setup';
 import { warnIfDefaultAdminCredentials } from './bootstrap/default-credentials-warning';
+import { setupEmailTemplates } from './bootstrap/email-templates-setup';
 import { registerMonitoringRoutes } from './monitoring/routes';
 import { createEventBus } from './utils/event-bus';
 
@@ -85,6 +86,11 @@ export default {
 
     // Setup all permissions (public, authenticated roles)
     await setupPermissions(strapi);
+
+    // Repair the users-permissions email templates if they still carry
+    // Strapi's factory defaults, which break password resets outright
+    // (see bootstrap/email-templates-setup.ts)
+    await setupEmailTemplates(strapi);
 
     // Warn on every boot if the default admin credentials are still active,
     // regardless of environment (see bootstrap/default-credentials-warning.ts)

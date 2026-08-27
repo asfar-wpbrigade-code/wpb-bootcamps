@@ -4,14 +4,15 @@
  * MCP Server Card per SEP-1649.
  * https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2127
  *
- * Advertises the @certo/mcp server, its transport, and its capabilities
- * so agent frameworks can auto-configure without reading a README.
+ * Advertises the WPBrigade MCP server (@certo/mcp package), its transport,
+ * and its capabilities so agent frameworks can auto-configure without
+ * reading a README.
  */
 export default defineEventHandler(() => ({
   serverInfo: {
-    name: 'certo',
+    name: 'wpbrigade',
     version: '0.1.0',
-    description: 'Open-source platform for issuing and verifying Open Badges 3.0 / Verifiable Credentials',
+    description: 'Platform for issuing and verifying Open Badges 3.0 / Verifiable Credentials',
   },
   transport: {
     // npx-invocable stdio server — the primary transport for local AI assistants
@@ -20,7 +21,7 @@ export default defineEventHandler(() => ({
     args: ['-y', '@certo/mcp'],
     // configuration via env vars
     env: {
-      CERTO_API_URL: 'https://certo.schroedinger-hat.org',
+      CERTO_API_URL: 'https://wpbrigade.com',
       CERTO_API_TOKEN: '(required for write operations)',
     },
   },
@@ -40,9 +41,7 @@ export default defineEventHandler(() => ({
     },
   },
   links: {
-    source: 'https://github.com/Schroedinger-Hat/certo',
-    docs: 'https://github.com/Schroedinger-Hat/certo/tree/main/mcp',
     package: 'https://www.npmjs.com/package/@certo/mcp',
-    agentSkills: 'https://certo.schroedinger-hat.org/.well-known/agent-skills/index.json',
+    agentSkills: 'https://wpbrigade.com/.well-known/agent-skills/index.json',
   },
 }))

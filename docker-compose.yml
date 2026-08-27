@@ -41,6 +41,8 @@ services:
         condition: service_healthy
       mailhog:
         condition: service_started
+    env_file:
+      - ./src/backend/.env
     environment:
       HOST: 0.0.0.0
       PORT: 1337
@@ -63,8 +65,9 @@ services:
       # signing/verification code paths; kept only so old container envs
       # referencing it don't error.
       ED25519_PRIVATE_KEY_PKCS8: ${ED25519_PRIVATE_KEY_PKCS8:-LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUFISG5RZ0tlSitZMFFMMlhTbTRQZUxZdUxPWVRaY3NXSDVlR3hLQ3JoUi8KLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=}
-      SMTP_HOST: mailhog
-      SMTP_PORT: 1025
+      # SMTP_HOST/PORT/USERNAME/PASSWORD/FROM/REPLY_TO now come from
+      # src/backend/.env via env_file above (real Hostinger SMTP, not
+      # Mailhog) - removed the mailhog hardcode that used to live here.
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:1337}
     ports:

@@ -88,8 +88,20 @@ export const revocationListExtension = ({ strapi }: { strapi: any }) => ({
       // Create a unique ID for the status list credential
       const statusListId = `urn:uuid:${crypto.randomUUID()}`
 
-      // Create an empty status list
-      const statusList = await strapi.entityService.create('api::revocation-list.revocation-list', {
+      // Create an empty status list.
+      //
+      // Uses the low-level strapi.db.query() API rather than
+      // strapi.entityService.create(): `revocation-list` has
+      // draftAndPublish enabled, and entityService.create() with
+      // `publishedAt` set creates a draft row plus a separate published
+      // counterpart whose id can still briefly fail Strapi 5's
+      // relation-existence check if referenced immediately afterward - as
+      // this list's id is, moments later, by the credential this method
+      // was called to support issuing. db.query().create() inserts a
+      // single, immediately-stable row instead - safe here since
+      // revocation-list has no component fields (unlike credential, where
+      // the `proof` component needs entityService's handling).
+      const statusList = await strapi.db.query('api::revocation-list.revocation-list').create({
         data: {
           issuer: issuerId,
           statusListCredential: statusListId,
@@ -113,8 +125,13 @@ export const revocationListExtension = ({ strapi }: { strapi: any }) => ({
    * their first credential.
    */
   async getOrCreateActiveListForIssuer(issuerId: number | string) {
-    const existing = await strapi.entityService.findMany('api::revocation-list.revocation-list', {
-      filters: { issuer: { id: issuerId }, statusPurpose: 'revocation' },
+    // db.query, not entityService.findMany - see the note above
+    // createStatusListCredential on why this content type is managed
+    // through the low-level API throughout, avoiding any
+    // draft/publish-status ambiguity in whether a freshly-created row (with
+    // no draft counterpart at all) matches a default-status lookup.
+    const existing = await strapi.db.query('api::revocation-list.revocation-list').findMany({
+      where: { issuer: issuerId, statusPurpose: 'revocation' },
     })
     if (existing && existing.length > 0) return existing[0]
     return this.createStatusListCredential(issuerId)
@@ -124,47 +141,53 @@ export const revocationListExtension = ({ strapi }: { strapi: any }) => ({
    * Reserve the next available index in a status list for a new credential.
    */
   async assignNextIndex(statusListId: number | string) {
-    const statusList = await strapi.entityService.findOne('api::revocation-list.revocation-list', statusListId)
+    const statusList = await strapi.db.query('api::revocation-list.revocation-list').findOne({
+      where: { id: statusListId },
+    })
     if (!statusList) {
       throw new ApplicationError('Status list not found')
     }
 
     const index = statusList.nextIndex ?? 0
-    await strapi.entityService.update('api::revocation-list.revocation-list', statusListId, {
+    await strapi.db.query('api::revocation-list.revocation-list').update({
+      where: { id: statusListId },
       data: { nextIndex: index + 1 },
     })
 
     return index
   },
-  
+
   /**
    * Update a status list to revoke a credential
    */
   async revokeCredentialInStatusList(statusListId: number | string, statusListIndex: number) {
     try {
       // Find the status list
-      const statusList = await strapi.entityService.findOne('api::revocation-list.revocation-list', statusListId)
-      
+      const statusList = await strapi.db.query('api::revocation-list.revocation-list').findOne({
+        where: { id: statusListId },
+      })
+
       if (!statusList) {
         throw new ApplicationError('Status list not found')
       }
-      
+
       // Update the encoded list to include the new index
       const encodedList = statusList.encodedList || ''
       const indices = encodedList ? encodedList.split(',').map(i => parseInt(i.trim())) : []
-      
+
       if (!indices.includes(statusListIndex)) {
         indices.push(statusListIndex)
       }
-      
+
       // Update the status list
-      await strapi.entityService.update('api::revocation-list.revocation-list', statusListId, {
+      await strapi.db.query('api::revocation-list.revocation-list').update({
+        where: { id: statusListId },
         data: {
           encodedList: indices.join(','),
           lastUpdated: new Date()
         }
       })
-      
+
       return true
     } catch (error) {
       console.error('Error revoking credential in status list:', error)

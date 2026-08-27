@@ -124,7 +124,7 @@ function getCredentialDescription(): string {
 
 function getIssuerName(): string {
   const cred = verificationData.value?.credential || verificationData.value?.rawCredential
-  return cred?.issuer?.name || 'Certo'
+  return cred?.issuer?.name || 'WPBrigade'
 }
 
 function getRecipientName(): string {
@@ -136,7 +136,7 @@ useSeoMeta({
   // Title
   title: () => {
     const name = getCredentialName()
-    return name ? `${name} | Certo` : 'Credential Details | Certo'
+    return name ? `${name} | WPBrigade` : 'Credential Details | WPBrigade'
   },
 
   // Description
@@ -149,52 +149,52 @@ useSeoMeta({
       const issuer = getIssuerName()
       const recipient = getRecipientName()
       return recipient
-        ? `View and verify "${name}" awarded to ${recipient}, issued by ${issuer} via Certo.`
-        : `View and verify "${name}" issued by ${issuer} via Certo.`
+        ? `View and verify "${name}" awarded to ${recipient}, issued by ${issuer} via WPBrigade.`
+        : `View and verify "${name}" issued by ${issuer} via WPBrigade.`
     }
-    return 'View and verify this digital credential issued via Certo.'
+    return 'View and verify this digital credential issued via WPBrigade.'
   },
 
   // Open Graph
   ogType: 'website',
-  ogSiteName: 'Certo',
+  ogSiteName: 'WPBrigade',
   ogUrl: shareableUrl,
   ogTitle: () => {
     const name = getCredentialName()
-    return name ? `${name} | Certo` : 'Credential Details | Certo'
+    return name ? `${name} | WPBrigade` : 'Credential Details | WPBrigade'
   },
   ogDescription: () => {
     const desc = getCredentialDescription()
     if (desc) return desc
     const name = getCredentialName()
-    if (name) return `View and verify "${name}" issued by ${getIssuerName()} via Certo.`
-    return 'View and verify this digital credential issued via Certo.'
+    if (name) return `View and verify "${name}" issued by ${getIssuerName()} via WPBrigade.`
+    return 'View and verify this digital credential issued via WPBrigade.'
   },
   ogImage: ogImageUrl,
   ogImageWidth: 1200,
   ogImageHeight: 630,
   ogImageAlt: () => {
     const name = getCredentialName()
-    return name ? `${name} - verified credential` : 'Certo credential'
+    return name ? `${name} - verified credential` : 'WPBrigade credential'
   },
 
   // Twitter
   twitterCard: 'summary_large_image',
   twitterTitle: () => {
     const name = getCredentialName()
-    return name ? `${name} | Certo` : 'Credential Details | Certo'
+    return name ? `${name} | WPBrigade` : 'Credential Details | WPBrigade'
   },
   twitterDescription: () => {
     const desc = getCredentialDescription()
     if (desc) return desc
     const name = getCredentialName()
-    if (name) return `View and verify "${name}" issued by ${getIssuerName()} via Certo.`
-    return 'View and verify this digital credential issued via Certo.'
+    if (name) return `View and verify "${name}" issued by ${getIssuerName()} via WPBrigade.`
+    return 'View and verify this digital credential issued via WPBrigade.'
   },
   twitterImage: ogImageUrl,
   twitterImageAlt: () => {
     const name = getCredentialName()
-    return name ? `${name} - verified credential` : 'Certo credential'
+    return name ? `${name} - verified credential` : 'WPBrigade credential'
   },
 
   // Author
@@ -231,7 +231,7 @@ useHead({
           'identifier': credentialId,
           'publisher': {
             '@type': 'Organization',
-            'name': 'Certo',
+            'name': 'WPBrigade',
             'url': WEBSITE_URL,
           },
         })

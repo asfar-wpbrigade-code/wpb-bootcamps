@@ -226,8 +226,8 @@ function getLinkedInAddToProfileUrl() {
     <div class="flex items-start justify-between">
       <div class="flex-1">
         <!-- Certificate Icon -->
-        <div class="w-12 h-12 bg-[#00E5C5]/10 rounded-lg flex items-center justify-center mb-4">
-          <div class="w-6 h-6 i-heroicons-document-text text-[#5AB69F]" />
+        <div class="w-12 h-12 bg-[#3458eb]/10 rounded-lg flex items-center justify-center mb-4">
+          <div class="w-6 h-6 i-heroicons-document-text text-[#3458eb]" />
         </div>
 
         <!-- Certificate Info -->

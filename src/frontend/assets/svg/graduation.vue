@@ -11,7 +11,7 @@
     <circle cx="250" cy="270" r="8" fill="#2D3436" />
 
     <!-- Face and neck -->
-    <path d="M200 240C200 220 220 210 250 210C280 210 300 220 300 240V300C300 320 280 340 250 340C220 340 200 320 200 300V240Z" fill="#00E5C5" />
+    <path d="M200 240C200 220 220 210 250 210C280 210 300 220 300 240V300C300 320 280 340 250 340C220 340 200 320 200 300V240Z" fill="#3458eb" />
     <path d="M220 280C220 280 235 290 250 290C265 290 280 280 280 280" stroke="#2D3436" stroke-width="3" stroke-linecap="round" />
 
     <!-- Glasses -->
@@ -20,12 +20,12 @@
     <path d="M250 260H260" stroke="#2D3436" stroke-width="2" />
 
     <!-- Body/Shirt -->
-    <path d="M180 300C180 300 200 400 250 400C300 400 320 300 320 300" fill="#00E5C5" />
-    <path d="M180 300C180 300 200 400 250 400C300 400 320 300 320 300" stroke="#00E5C5" stroke-width="2" />
+    <path d="M180 300C180 300 200 400 250 400C300 400 320 300 320 300" fill="#3458eb" />
+    <path d="M180 300C180 300 200 400 250 400C300 400 320 300 320 300" stroke="#3458eb" stroke-width="2" />
 
     <!-- Arms -->
-    <path d="M180 320C160 330 150 350 140 380" stroke="#00E5C5" stroke-width="20" stroke-linecap="round" />
-    <path d="M320 320C340 330 350 350 360 380" stroke="#00E5C5" stroke-width="20" stroke-linecap="round" />
+    <path d="M180 320C160 330 150 350 140 380" stroke="#3458eb" stroke-width="20" stroke-linecap="round" />
+    <path d="M320 320C340 330 350 350 360 380" stroke="#3458eb" stroke-width="20" stroke-linecap="round" />
 
     <!-- Certificate/Paper -->
     <rect x="310" y="360" width="60" height="80" transform="rotate(-15 310 360)" fill="white" stroke="#2D3436" stroke-width="2" />
@@ -34,7 +34,7 @@
     <!-- Gradient definition -->
     <defs>
       <radialGradient id="grad1" cx="0.5" cy="0.5" r="0.5">
-        <stop offset="0%" stop-color="#00E5C5" stop-opacity="0.2" />
+        <stop offset="0%" stop-color="#3458eb" stop-opacity="0.2" />
         <stop offset="100%" stop-color="#FFE5EC" stop-opacity="0.1" />
       </radialGradient>
     </defs>

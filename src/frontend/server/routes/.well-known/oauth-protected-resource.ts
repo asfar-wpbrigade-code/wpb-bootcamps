@@ -2,13 +2,13 @@
  * GET /.well-known/oauth-protected-resource
  *
  * OAuth 2.0 Protected Resource Metadata per RFC 9728.
- * Tells agents which authorization server issues tokens for Certo's API.
+ * Tells agents which authorization server issues tokens for WPBrigade's API.
  * https://www.rfc-editor.org/rfc/rfc9728
  */
 export default defineEventHandler(() => ({
-  resource: 'https://certo.schroedinger-hat.org/api',
+  resource: 'https://wpbrigade.com/api',
   authorization_servers: [
-    'https://certo.schroedinger-hat.org',
+    'https://wpbrigade.com',
   ],
   // Strapi uses bearer tokens — API tokens or user JWTs
   bearer_methods_supported: ['header'],
@@ -21,6 +21,6 @@ export default defineEventHandler(() => ({
     'profile:read',
     'profile:export',
   ],
-  resource_documentation: 'https://certo.schroedinger-hat.org/api/documentation',
+  resource_documentation: 'https://wpbrigade.com/api/documentation',
   resource_signing_alg_values_supported: ['HS256', 'RS256'],
 }))

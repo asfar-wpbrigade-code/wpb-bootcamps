@@ -1,17 +1,5 @@
 <script setup lang="ts">
-const { t } = useI18n()
-const pageDescription = ref('Learn about Certo, our mission, and our open-source community.')
-
-function handleSupportClick() {
-  const subject = encodeURIComponent('Interested in Supporting Certo')
-  const body = encodeURIComponent(
-    'Hello Schrödinger Hat team,\n\n'
-    + 'I am interested in becoming a supporter of the Certo project.\n\n'
-    + 'Please let me know how I can contribute and support the project.\n\n'
-    + 'Best regards'
-  )
-  window.location.href = `mailto:hello@schroedinger-hat.org?subject=${subject}&body=${body}`
-}
+const pageDescription = ref('Learn about WPBrigade\'s digital credentials platform and our mission.')
 
 useSeoMeta({
   description: pageDescription.value,
@@ -40,7 +28,7 @@ useHead({
             </h1>
             <div class="space-y-6">
               <p class="text-lg text-gray-600 leading-relaxed">
-                Certo is an innovative open-source platform designed to democratize the issuance and verification of digital credentials. By leveraging Open Badges 3.0 standard, we ensure that every certificate issued through our platform is tamper-proof, verifiable, and accessible globally.
+                WPBrigade is a platform designed to make issuing and verifying digital credentials simple. By leveraging the Open Badges 3.0 standard, we ensure that every certificate issued through our platform is tamper-proof, verifiable, and accessible globally.
               </p>
               <p class="text-lg text-gray-600 leading-relaxed">
                 Our mission is to provide a transparent, secure, and user-friendly solution for educational institutions, professional organizations, and businesses to issue and manage digital credentials that truly represent achievement and expertise in the digital age.
@@ -49,172 +37,28 @@ useHead({
           </div>
 
           <!-- Right Column -->
-          <div class="bg-gradient-to-br from-[#FFE5AE]/20 to-[#00E5C5]/20 rounded-2xl p-8">
+          <div class="bg-gradient-to-br from-[#FFE5AE]/20 to-[#3458eb]/20 rounded-2xl p-8">
             <h2 class="text-2xl font-bold text-gray-900 mb-6">
               Key Features
             </h2>
             <ul class="space-y-4">
               <li class="flex items-center gap-4">
-                <div class="w-6 h-6 text-[#5AB69F] i-lucide-check-circle flex-shrink-0" />
+                <div class="w-6 h-6 text-[#3458eb] i-lucide-check-circle flex-shrink-0" />
                 <span class="text-lg text-gray-700">Easy-to-use interface</span>
               </li>
               <li class="flex items-center gap-4">
-                <div class="w-6 h-6 text-[#5AB69F] i-lucide-check-circle flex-shrink-0" />
+                <div class="w-6 h-6 text-[#3458eb] i-lucide-check-circle flex-shrink-0" />
                 <span class="text-lg text-gray-700">Customizable templates</span>
               </li>
               <li class="flex items-center gap-4">
-                <div class="w-6 h-6 text-[#5AB69F] i-lucide-check-circle flex-shrink-0" />
+                <div class="w-6 h-6 text-[#3458eb] i-lucide-check-circle flex-shrink-0" />
                 <span class="text-lg text-gray-700">Instant verification</span>
               </li>
               <li class="flex items-center gap-4">
-                <div class="w-6 h-6 text-[#5AB69F] i-lucide-check-circle flex-shrink-0" />
-                <span class="text-lg text-gray-700">Open-source transparency</span>
+                <div class="w-6 h-6 text-[#3458eb] i-lucide-check-circle flex-shrink-0" />
+                <span class="text-lg text-gray-700">Secure, standards-based credentials</span>
               </li>
             </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Schrödinger Hat Section -->
-    <section class="py-16 bg-gradient-to-b from-[#FFE5AE]/20 to-white">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid md:grid-cols-2 gap-16 items-start">
-          <!-- Left Column -->
-          <div class="bg-gradient-to-br from-[#FFE5AE]/20 to-[#5AB69F]/20 rounded-2xl p-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">
-              What We Do
-            </h2>
-            <ul class="space-y-4">
-              <li class="flex items-center gap-4">
-                <div class="w-6 h-6 text-[#5AB69F] i-lucide-code flex-shrink-0" />
-                <span class="text-lg text-gray-700">Open Source Development</span>
-              </li>
-              <li class="flex items-center gap-4">
-                <div class="w-6 h-6 text-[#5AB69F] i-lucide-users flex-shrink-0" />
-                <span class="text-lg text-gray-700">Community Events</span>
-              </li>
-              <li class="flex items-center gap-4">
-                <div class="w-6 h-6 text-[#5AB69F] i-lucide-graduation-cap flex-shrink-0" />
-                <span class="text-lg text-gray-700">Educational Resources</span>
-              </li>
-              <li class="flex items-center gap-4">
-                <div class="w-6 h-6 text-[#5AB69F] i-lucide-heart-handshake flex-shrink-0" />
-                <span class="text-lg text-gray-700">Non-Profit Initiatives</span>
-              </li>
-            </ul>
-          </div>
-
-          <!-- Right Column -->
-          <div>
-            <h2 class="text-4xl font-bold text-gray-900 mb-8">
-              Schrödinger Hat
-            </h2>
-            <div class="space-y-6">
-              <p class="text-lg text-gray-600 leading-relaxed">
-                Schrödinger Hat is a non-profit organization dedicated to advancing open-source technology and fostering a vibrant tech community. We believe in the power of collaboration, knowledge sharing, and accessible technology for all.
-              </p>
-              <p class="text-lg text-gray-600 leading-relaxed">
-                Through our various initiatives, including Certo, we work to create innovative solutions that make a positive impact on society while maintaining the highest standards of transparency and community involvement.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Plans Section -->
-    <section class="py-16">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold mb-4">
-            Support Open Source
-          </h2>
-          <p class="text-xl text-text-secondary max-w-2xl mx-auto">
-            Choose how you want to be part of our journey
-          </p>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          <!-- Free Plan -->
-          <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 flex flex-col justify-between">
-            <h3 class="text-2xl font-bold mb-4">
-              Community Edition
-            </h3>
-            <div class="text-3xl font-bold mb-6">
-              Free
-              <span class="text-text-secondary text-lg font-normal">forever</span>
-            </div>
-            <p class="text-text-secondary mb-8">
-              Get started with Certo and join our open-source community.
-            </p>
-            <ul class="space-y-4 mb-8">
-              <li class="flex items-center gap-3">
-                <div class="i-lucide-check w-5 h-5 text-[#5AB69F]" />
-                <span>Unlimited certificates</span>
-              </li>
-              <li class="flex items-center gap-3">
-                <div class="i-lucide-check w-5 h-5 text-[#5AB69F]" />
-                <span>Basic templates</span>
-              </li>
-              <li class="flex items-center gap-3">
-                <div class="i-lucide-check w-5 h-5 text-[#5AB69F]" />
-                <span>Community support</span>
-              </li>
-            </ul>
-            <div class="flex-grow-1 flex items-end">
-              <NuxtLink
-                to="/get-started"
-                class="block w-full py-3 px-4 text-center rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"
-              >
-                Get Started
-              </NuxtLink>
-            </div>
-          </div>
-
-          <!-- Supporter Plan -->
-          <div class="bg-gradient-to-br from-[#FFD700]/10 to-[#00E5C5]/10 rounded-2xl p-8 shadow-lg border border-[#00E5C5]/20 relative overflow-hidden flex flex-col justify-between">
-            <div class="absolute top-3 right-3 px-3 py-1 bg-[#5AB69F] text-black text-sm rounded-full">
-              Support Us ❤️
-            </div>
-            <h3 class="text-2xl font-bold mb-4">
-              Open Source Supporter
-            </h3>
-            <div class="text-3xl font-bold mb-6">
-              Custom
-              <span class="text-text-secondary text-lg font-normal">donation</span>
-            </div>
-            <p class="text-text-secondary mb-8">
-              Support our mission and help us grow the platform.
-            </p>
-            <ul class="space-y-4 mb-8">
-              <li class="flex items-center gap-3">
-                <div class="i-lucide-check w-5 h-5 text-[#5AB69F]" />
-                <span>All Community features</span>
-              </li>
-              <li class="flex items-center gap-3">
-                <div class="i-lucide-check w-5 h-5 text-[#5AB69F]" />
-                <span>Priority support</span>
-              </li>
-              <li class="flex items-center gap-3">
-                <div class="i-lucide-check w-5 h-5 text-[#5AB69F]" />
-                <span>Early access to features</span>
-              </li>
-              <li class="flex items-center gap-3">
-                <div class="i-lucide-check w-5 h-5 text-[#5AB69F]" />
-                <span>Name in supporters list</span>
-              </li>
-              <li class="flex items-center gap-3">
-                <div class="i-lucide-check w-5 h-5 text-[#5AB69F]" />
-                <span>Custom badge on profile</span>
-              </li>
-            </ul>
-            <button
-              class="w-full py-3 px-6 rounded-full bg-gradient-to-r from-[#387364] to-[#5AB69F] text-white font-semibold hover:opacity-90 transition-opacity"
-              @click="handleSupportClick"
-            >
-              Become a Supporter
-            </button>
           </div>
         </div>
       </div>
@@ -224,28 +68,18 @@ useHead({
     <section class="py-16 bg-gradient-to-b from-white to-[#FFE5AE]/20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl font-bold mb-6">
-          Join Our Community
+          Ready to get started?
         </h2>
         <p class="text-xl text-text-secondary max-w-2xl mx-auto mb-8">
-          Be part of our growing community and help shape the future of digital credentials.
+          Start issuing and verifying digital credentials with WPBrigade today.
         </p>
         <div class="flex justify-center gap-4">
-          <a
-            href="https://github.com/schroedinger-hat/certo"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="py-3 px-6 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+          <NuxtLink
+            to="/get-started"
+            class="py-3 px-6 rounded-full bg-[#3458eb] text-white hover:bg-[#3458eb]/90 transition-colors"
           >
-            Star on GitHub
-          </a>
-          <a
-            href="https://discord.gg/schroedinger-hat"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="py-3 px-6 rounded-full bg-[#5AB69F] text-black hover:bg-[#5AB69F]/90 transition-colors"
-          >
-            Join Discord
-          </a>
+            Get Started
+          </NuxtLink>
         </div>
       </div>
     </section>

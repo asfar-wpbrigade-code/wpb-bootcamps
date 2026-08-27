@@ -2,7 +2,7 @@
 const { t } = useI18n()
 import { format } from '@formkit/tempo'
 
-const pageDescription = ref('Terms and conditions that apply whenever utilizing Certo')
+const pageDescription = ref('Terms and conditions that apply whenever utilizing WPBrigade')
 const { termsContent } = useTermsContent()
 
 useSeoMeta({
