@@ -204,20 +204,17 @@ function openCertificateInNewTab() {
 }
 
 // Utility to generate LinkedIn Add to Profile URL
+const { buildAddToProfileUrl } = useLinkedInShare()
+
 function getLinkedInAddToProfileUrl() {
-  const certName = achievementName
   const certIdValue = credentialId || id
-  const issueDateValue = issuanceDate || issuedOn
-  const params = new URLSearchParams({
-    startTask: 'CERTIFICATION_NAME',
-    name: certName,
-    organizationId: '53115782',
-    issueYear: issueDateValue ? new Date(issueDateValue).getFullYear().toString() : '',
-    issueMonth: issueDateValue ? (new Date(issueDateValue).getMonth() + 1).toString() : '',
+
+  return buildAddToProfileUrl({
+    name: achievementName,
     certId: certIdValue,
-    certUrl: import.meta.client ? `${window.location.origin}/credentials/${certIdValue}` : ''
+    certUrl: import.meta.client ? `${window.location.origin}/credentials/${certIdValue}` : '',
+    issueDate: issuanceDate || issuedOn,
   })
-  return `https://www.linkedin.com/profile/add?${params.toString()}`
 }
 </script>
 

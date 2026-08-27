@@ -31,18 +31,16 @@ const pageDescription = ref('Your WPBrigade dashboard: manage your issued and re
 const receivedCertificates = ref<Certificate[]>([])
 const issuedCertificates = ref<Certificate[]>([])
 
+const { buildAddToProfileUrl } = useLinkedInShare()
+
 // Utility to generate LinkedIn Add to Profile URL
 function getLinkedInAddToProfileUrl(cert: Certificate) {
-  const params = new URLSearchParams({
-    startTask: 'CERTIFICATION_NAME',
+  return buildAddToProfileUrl({
     name: cert.title,
-    organizationId: '53115782',
-    issueYear: cert.issueDate ? new Date(cert.issueDate).getFullYear().toString() : '',
-    issueMonth: cert.issueDate ? (new Date(cert.issueDate).getMonth() + 1).toString() : '',
     certId: cert.id,
-    certUrl: `${window.location.origin}/credentials/${cert.id}`
+    certUrl: `${window.location.origin}/credentials/${cert.id}`,
+    issueDate: cert.issueDate,
   })
-  return `https://www.linkedin.com/profile/add?${params.toString()}`
 }
 
 useSeoMeta({

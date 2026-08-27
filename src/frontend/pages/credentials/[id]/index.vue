@@ -379,20 +379,18 @@ async function downloadCredential() {
   }
 }
 
+const { buildAddToProfileUrl } = useLinkedInShare()
+
 function getLinkedInAddToProfileUrl() {
   if (!credential.value) return '#'
 
   const cert = credential.value
-  const params = new URLSearchParams({
-    startTask: 'CERTIFICATION_NAME',
+  return buildAddToProfileUrl({
     name: cert.name || cert.title || '',
-    organizationId: '53115782',
-    issueYear: cert.issuanceDate ? new Date(cert.issuanceDate).getFullYear().toString() : '',
-    issueMonth: cert.issuanceDate ? (new Date(cert.issuanceDate).getMonth() + 1).toString() : '',
     certId: cert.id,
-    certUrl: shareableUrl
+    certUrl: shareableUrl,
+    issueDate: cert.issuanceDate,
   })
-  return `https://www.linkedin.com/profile/add?${params.toString()}`
 }
 
 // ============================================================================

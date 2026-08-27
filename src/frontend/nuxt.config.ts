@@ -140,6 +140,7 @@ export default defineNuxtConfig({
       brandName: process.env.NUXT_PUBLIC_BRAND_NAME || 'WPBrigade',
       brandLogoUrl: process.env.NUXT_PUBLIC_BRAND_LOGO_URL || '/wpbrigade-logo.png',
       brandPrimaryColor: process.env.NUXT_PUBLIC_BRAND_PRIMARY_COLOR || '#3458eb',
+      brandLinkedInOrganizationId: process.env.NUXT_PUBLIC_BRAND_LINKEDIN_ORGANIZATION_ID || '',
     }
   },
   imports: {

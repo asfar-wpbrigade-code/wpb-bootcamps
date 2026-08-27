@@ -80,12 +80,19 @@ Questions? Reply to this email or write to us at ${brand.contactEmail}
 
 ${brand.name}`
 
-  // Omit the organisation attribution rather than crediting the wrong
-  // company when LINKEDIN_ORGANIZATION_ID isn't configured.
+  // Identify the organisation by numeric id where configured, since that
+  // links the certification straight to the company page. Without one, fall
+  // back to `organizationName`, which LinkedIn matches against company
+  // names - less reliable than an id, but it shows the recipient the right
+  // organisation instead of the wrong one or none. Never hardcode an id:
+  // the upstream project's own was in here, crediting them for every
+  // certificate issued from this instance.
   const linkedInParams = [
     'startTask=CERTIFICATION_NAME',
     `name=${encodeURIComponent(achievement.name)}`,
-    ...(brand.linkedInOrganizationId ? [`organizationId=${brand.linkedInOrganizationId}`] : []),
+    brand.linkedInOrganizationId
+      ? `organizationId=${brand.linkedInOrganizationId}`
+      : `organizationName=${encodeURIComponent(brand.name)}`,
     `issueYear=${new Date().getFullYear()}`,
     `issueMonth=${new Date().getMonth() + 1}`,
     `certId=${encodeURIComponent(credential.credentialId)}`,
