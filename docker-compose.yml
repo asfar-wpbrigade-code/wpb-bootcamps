@@ -46,6 +46,13 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 1337
+      # Production by default. Two things follow from this: Strapi stops
+      # returning internal error detail (raw SQL, stack traces) to API
+      # clients, and bootstrap/seed-data.ts refuses to seed the
+      # admin@certo.com/certo account - whose password is published in the
+      # upstream README - into a fresh database. Override with NODE_ENV in a
+      # root .env if you want development behaviour locally.
+      NODE_ENV: ${NODE_ENV:-production}
       DATABASE_CLIENT: postgres
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432

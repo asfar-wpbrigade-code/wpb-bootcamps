@@ -68,7 +68,14 @@ export default () => ({
    * Returns true if the user owns it, or if the profile has no owner (legacy resource).
    */
   async userOwnsProfile(userId: number, profileId: number): Promise<boolean> {
-    const profile = (await strapi.entityService.findOne('api::profile.profile', profileId)) as any;
+    // `owner` must be populated explicitly: without it the relation comes
+    // back undefined, which the legacy branch below reads as "unowned" and
+    // waves through - turning every caller of this guard into a no-op.
+    // `as any` because types/generated/ predates the `owner` relation and so
+    // rejects it as a populatable attribute - same cast the sibling checks use.
+    const profile = (await strapi.entityService.findOne('api::profile.profile', profileId, {
+      populate: ['owner'] as any,
+    })) as any;
     if (!profile) return false;
     // Profiles without an owner are legacy resources — accessible to any authenticated user
     if (!profile.owner) return true;
@@ -81,7 +88,8 @@ export default () => ({
    */
   async userCanAccessCredential(userId: number, credentialId: number): Promise<boolean> {
     const credential = (await strapi.entityService.findOne('api::credential.credential', credentialId, {
-      populate: ['issuer', 'recipient'],
+      // Nested populate - see the note in userOwnsProfile.
+      populate: { issuer: { populate: ['owner'] }, recipient: { populate: ['owner'] } } as any,
     })) as any;
 
     if (!credential) return false;
@@ -99,7 +107,8 @@ export default () => ({
    */
   async userCanAccessAchievement(userId: number, achievementId: number): Promise<boolean> {
     const achievement = (await strapi.entityService.findOne('api::achievement.achievement', achievementId, {
-      populate: ['creator'],
+      // Nested populate - see the note in userOwnsProfile.
+      populate: { creator: { populate: ['owner'] } } as any,
     })) as any;
 
     if (!achievement) return false;

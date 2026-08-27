@@ -78,6 +78,23 @@ export default factories.createCoreController('api::credential.credential', ({ s
         return ctx.notFound('Achievement not found')
       }
 
+      // Issuing binds a certificate to the achievement's creator profile as
+      // its issuer, so the caller must be entitled to act for that profile.
+      // Without this, any registered user could issue certificates in
+      // another organisation's name (achievement creators with no owner stay
+      // open - see multi-tenancy.userCanAccessAchievement).
+      if (!ctx.state.user) {
+        return ctx.unauthorized('You must be logged in to issue credentials')
+      }
+
+      const multiTenancy = strapi.service('api::profile.multi-tenancy')
+      const mayIssue = await multiTenancy.userCanAccessAchievement(ctx.state.user.id, achievement.id)
+
+      if (!mayIssue) {
+        strapi.log.warn(`[credential.issue] User ${ctx.state.user.id} tried to issue achievement ${achievement.id}, which they do not own`)
+        return ctx.forbidden('You can only issue certificates for achievements you own')
+      }
+
       // Add recipient data if provided in the request
       const recipientData = data.recipient || {}
       const recipient = {
@@ -646,6 +663,23 @@ export default factories.createCoreController('api::credential.credential', ({ s
       }
       if (!achievement.creator) {
         return ctx.badRequest('Achievement creator not found')
+      }
+
+      // Issuing binds a certificate to the achievement's creator profile as
+      // its issuer, so the caller must be entitled to act for that profile.
+      // Without this, any registered user could issue certificates in
+      // another organisation's name (achievement creators with no owner stay
+      // open - see multi-tenancy.userCanAccessAchievement).
+      if (!ctx.state.user) {
+        return ctx.unauthorized('You must be logged in to issue credentials')
+      }
+
+      const multiTenancy = strapi.service('api::profile.multi-tenancy')
+      const mayIssue = await multiTenancy.userCanAccessAchievement(ctx.state.user.id, achievement.id)
+
+      if (!mayIssue) {
+        strapi.log.warn(`[credential.batchIssue] User ${ctx.state.user.id} tried to issue achievement ${achievement.id}, which they do not own`)
+        return ctx.forbidden('You can only issue certificates for achievements you own')
       }
 
       const issuePromises = recipients.map(async (recipientData) => {
