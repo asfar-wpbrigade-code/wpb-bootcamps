@@ -18,9 +18,21 @@ export default factories.createCoreService('api::credential.credential', ({ stra
    */
   async issue(achievement, recipient, evidence = [], expirationDate = undefined, actorId = undefined) {
     try {
+      // Validated before anything is written. Everything below creates rows,
+      // and a failure past that point used to leave a recipient profile and a
+      // working login account behind for someone who never received a
+      // certificate - one non-ISO date in a CSV cell was enough, because the
+      // date only failed at the credential insert, long after the account.
+      const validExpirationDate = this.normaliseExpirationDate(expirationDate)
+
+      // Whether these already existed decides what rollbackNewRecipient may
+      // remove if the issuance fails: never touch a profile or account that
+      // was already there and has its own history.
+      const profileExisted = await this.recipientProfileExists(recipient)
       const recipientEntity = await this.findOrCreateRecipientProfile(recipient)
 
       // Find or create user associated with the profile
+      const userExisted = await this.recipientUserExists(recipientEntity.email)
       await this.findOrCreateUser(recipientEntity)
 
       // Make sure the issuer has a signing key *before* reading their profile
@@ -54,7 +66,7 @@ export default factories.createCoreService('api::credential.credential', ({ stra
         issuanceDate: new Date(),
         revoked: false,
         publishedAt: new Date(),
-        ...(expirationDate ? { expirationDate: new Date(expirationDate) } : {})
+        ...(validExpirationDate ? { expirationDate: validExpirationDate } : {})
       }
       // Generate cryptographic proof (JWS)
       const proof = await this.generateProof(credentialPayload.issuer, credentialPayload)
@@ -66,7 +78,11 @@ export default factories.createCoreService('api::credential.credential', ({ stra
       const statusListIndex = await revocationListService.assignNextIndex(statusList.id)
 
       // Create the credential
-      const credential = await strapi.entityService.create('api::credential.credential', {
+      const credential = await this.createCredentialOrRollback({
+        profileExisted,
+        userExisted,
+        recipientEntity,
+      }, () => strapi.entityService.create('api::credential.credential', {
         data: {
           credentialId,
           name: achievement.name,
@@ -81,9 +97,9 @@ export default factories.createCoreService('api::credential.credential', ({ stra
           proof: [proof],
           statusList: statusList.id,
           statusListIndex,
-          ...(expirationDate ? { expirationDate: new Date(expirationDate) } : {})
+          ...(validExpirationDate ? { expirationDate: validExpirationDate } : {})
         }
-      })
+      }))
 
       // Explicitly connect the credential to the recipient's profile.
       // This ensures the bidirectional relationship is updated.
@@ -216,6 +232,121 @@ export default factories.createCoreService('api::credential.credential', ({ stra
    * the profile data-portability service's import path.
    * @param {Object} recipient - `{ id }` or `{ email, name }`
    */
+  /**
+   * Parses an expiration date, or throws with something a person can act on.
+   *
+   * Only unambiguous formats are accepted - `31/12/2027` and `12/31/2027` are
+   * the same characters meaning different days, and silently guessing sets a
+   * real certificate to expire on the wrong date. Previously an unparseable
+   * value reached the database and came back as a raw SQL insert statement.
+   *
+   * @param {string|Date} [value] - The supplied expiration date
+   * @returns {Date|undefined} A valid date, or undefined when none was given
+   */
+  normaliseExpirationDate(value) {
+    if (!value) return undefined
+
+    if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) {
+        throw new Error('Expiration date is not a valid date')
+      }
+      return value
+    }
+
+    const trimmed = String(value).trim()
+    if (!trimmed) return undefined
+
+    const match = trimmed.match(/^(\d{4})[-/](\d{2})[-/](\d{2})$/)
+    if (!match) {
+      throw new Error(`Expiration date "${trimmed}" must be in YYYY-MM-DD format`)
+    }
+
+    const [, year, month, day] = match
+    const iso = `${year}-${month}-${day}`
+    const parsed = new Date(`${iso}T00:00:00.000Z`)
+
+    // Rejects 2027-02-31, which Date rolls forward into March instead of
+    // reporting as invalid.
+    if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== iso) {
+      throw new Error(`Expiration date "${trimmed}" is not a real date`)
+    }
+
+    return parsed
+  },
+
+  /** Whether a recipient profile already exists for this recipient. */
+  async recipientProfileExists(recipient) {
+    if (recipient?.id && recipient.id !== 0) return true
+    if (!recipient?.email) return false
+
+    const existing = await strapi.db.query('api::profile.profile').findOne({
+      where: { email: recipient.email },
+      select: ['id'],
+    })
+
+    return Boolean(existing)
+  },
+
+  /** Whether a login account already exists for this email address. */
+  async recipientUserExists(email) {
+    if (!email) return false
+
+    const existing = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { email },
+      select: ['id'],
+    })
+
+    return Boolean(existing)
+  },
+
+  /**
+   * Creates the credential, undoing the recipient rows this call created if
+   * it fails.
+   *
+   * Issuance writes a profile and a login account before the credential, so
+   * a failed insert used to leave both behind - a real account, with a real
+   * password-reset path, for someone who was never issued anything. Repeated
+   * bad rows accumulated them.
+   *
+   * Compensation rather than a transaction: the profile and account are
+   * written through the document service, whose draft/publish handling spans
+   * several rows per entity, and unpicking that inside one transaction is
+   * more fragile than deleting exactly what we know we added. Cleanup
+   * failures are logged and swallowed - the original error is the one worth
+   * reporting.
+   */
+  async createCredentialOrRollback({ profileExisted, userExisted, recipientEntity }, create) {
+    try {
+      return await create()
+    } catch (error) {
+      if (!userExisted && recipientEntity?.email) {
+        try {
+          await strapi.db.query('plugin::users-permissions.user').deleteMany({
+            where: { email: recipientEntity.email },
+          })
+        } catch (cleanupError) {
+          strapi.log.error(`[credential.issue] Could not remove the account created for ${recipientEntity.email}: ${cleanupError.message}`)
+        }
+      }
+
+      if (!profileExisted && recipientEntity?.documentId) {
+        try {
+          await strapi.db.query('api::profile.profile').deleteMany({
+            where: { documentId: recipientEntity.documentId },
+          })
+        } catch (cleanupError) {
+          strapi.log.error(`[credential.issue] Could not remove the profile created for ${recipientEntity.email}: ${cleanupError.message}`)
+        }
+      }
+
+      if (!profileExisted || !userExisted) {
+        strapi.log.info(`[credential.issue] Issuance failed for ${recipientEntity?.email}; removed the profile/account this attempt created`)
+      }
+
+      throw error
+    }
+  },
+
   async findOrCreateRecipientProfile(recipient) {
     let recipientEntity = null
 

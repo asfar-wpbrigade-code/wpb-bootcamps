@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Recipient } from '~/composables/useApiClient'
+import type { CsvRowIssue } from '~/composables/useRecipientsCsv'
 const { t } = useI18n()
 const pageDescription = ref('Issue badges utilizing WPBrigade software')
 
@@ -66,6 +67,9 @@ const submissionError = ref<string | null>(null)
 const isLoadingTemplates = ref(false)
 const csvUploaded = ref(false)
 const batchResults = ref<any[]>([])
+
+/** Rows the CSV parser rejected, reported per row so they can be corrected. */
+const csvIssues = ref<CsvRowIssue[]>([])
 
 // Load available badges
 async function loadTemplates() {
@@ -201,71 +205,46 @@ function getImageUrl(template: Template): string {
   return finalUrl
 }
 
-function handleFileUpload(event: Event) {
+/**
+ * Reads an uploaded recipients CSV into the form.
+ *
+ * Parsing and validation live in composables/useRecipientsCsv.ts so they can
+ * be tested without a browser; this only wires the result into the page.
+ */
+async function handleFileUpload(event: Event) {
   const input = event.target as HTMLInputElement
-  if (!input.files?.length) {
+  const file = input.files?.[0]
+
+  if (!file) {
     return
   }
 
-  const file = input.files[0]
-  const reader = new FileReader()
-  reader.onload = () => {
-    try {
-      const content = reader.result as string
-      const lines = content.split(/\r?\n/)
-      if (lines.length < 2) {
-        throw new Error('CSV file is empty or invalid.')
-      }
-      const header = lines[0].split(',').map(h => h.trim().toLowerCase())
-      const nameIdx = header.indexOf('name')
-      const emailIdx = header.indexOf('email')
-      const orgIdx = header.indexOf('organization')
-      const expIdx = header.indexOf('expirationdate')
+  error.value = null
+  csvIssues.value = []
 
-      const parsedRecipients: Recipient[] = []
-      for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) {
-          continue
-        }
-        const row = lines[i].split(',')
-        const name = row[nameIdx]?.trim()
-        const email = row[emailIdx]?.trim()
-        const organization = orgIdx !== -1 ? row[orgIdx]?.trim() : ''
-        const expirationDate = expIdx !== -1 ? row[expIdx]?.trim() : ''
-        if (name && email) {
-          parsedRecipients.push({
-            name,
-            email,
-            organization,
-            expirationDate
-          })
-        }
-      }
-      if (parsedRecipients.length === 0) {
-        throw new Error('CSV file is empty or invalid. Please check the file and try again.')
-      }
-      recipients.value = parsedRecipients
-      csvUploaded.value = true
-      error.value = null
-    }
-    catch (err) {
-      console.error('Error parsing CSV:', err)
-      error.value = err instanceof Error ? err.message : 'Failed to parse CSV file'
-      recipients.value = [{ name: '', email: '', expirationDate: '' }]
-      csvUploaded.value = false
-    }
-  }
-  reader.onerror = () => {
-    console.error('Error reading file:', reader.error)
-    error.value = 'Failed to read CSV file'
+  const result = await parseRecipientsCsv(file)
+
+  csvIssues.value = result.issues
+
+  if (result.error) {
+    error.value = result.error
     csvUploaded.value = false
+    recipients.value = [{ name: '', email: '', expirationDate: '' }]
   }
-  reader.readAsText(file)
+  else {
+    recipients.value = result.recipients
+    csvUploaded.value = true
+  }
+
+  // Let the same file be re-selected after a Clear.
+  input.value = ''
 }
 
 function clearCsvRecipients() {
   recipients.value = [{ name: '', email: '', expirationDate: '' }]
   csvUploaded.value = false
+  csvIssues.value = []
+  error.value = null
 }
 
 async function handleIssue() {
@@ -312,6 +291,7 @@ function clearForm() {
   selectedTemplate.value = null
   recipients.value = [{ name: '', email: '', expirationDate: '' }]
   csvUploaded.value = false
+  csvIssues.value = []
   isSuccess.value = false
   error.value = null
   submissionError.value = null
@@ -492,6 +472,21 @@ function formatDate(date: string) {
                     </ul>
                   </div>
 
+                  <!-- Rows the CSV parser could not use, named by line number -->
+                  <div v-if="csvIssues.length > 0" class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2">
+                    <p class="font-medium text-amber-900 text-sm mb-2">
+                      {{ csvIssues.length }} row{{ csvIssues.length > 1 ? 's' : '' }} skipped
+                    </p>
+                    <ul class="max-h-32 overflow-y-auto text-xs text-amber-800 space-y-1">
+                      <li v-for="issue in csvIssues" :key="issue.line">
+                        <span class="font-medium">Line {{ issue.line }}:</span> {{ issue.problem }}
+                      </li>
+                    </ul>
+                    <p class="text-xs text-amber-700 mt-2">
+                      Fix these in your spreadsheet and upload again, or continue without them.
+                    </p>
+                  </div>
+
                   <!-- If no CSV, show single manual entry -->
                   <div v-else class="flex gap-4">
                     <div class="flex-1">
@@ -572,10 +567,13 @@ function formatDate(date: string) {
                             Email
                           </th>
                           <th class="px-4 py-2 text-left">
-                            Status
+                            Certificate
                           </th>
                           <th class="px-4 py-2 text-left">
-                            Error
+                            Email sent
+                          </th>
+                          <th class="px-4 py-2 text-left">
+                            Detail
                           </th>
                         </tr>
                       </thead>
@@ -585,11 +583,19 @@ function formatDate(date: string) {
                             {{ row.recipient }}
                           </td>
                           <td class="px-4 py-2">
-                            <span v-if="row.success" class="text-green-600">Success</span>
+                            <span v-if="row.success" class="text-green-600">Issued</span>
                             <span v-else class="text-red-600">Failed</span>
                           </td>
-                          <td class="px-4 py-2 text-xs text-red-500">
-                            {{ row.error || '' }}
+                          <td class="px-4 py-2">
+                            <span v-if="!row.success" class="text-gray-400">&mdash;</span>
+                            <span v-else-if="row.data?.notification?.sent" class="text-green-600">Sent</span>
+                            <span v-else class="text-amber-600">Not sent</span>
+                          </td>
+                          <td class="px-4 py-2 text-xs">
+                            <span v-if="row.error" class="text-red-500">{{ row.error }}</span>
+                            <span v-else-if="row.success && !row.data?.notification?.sent" class="text-amber-600">
+                              {{ row.data?.notification?.error || 'Certificate is valid - send the link manually' }}
+                            </span>
                           </td>
                         </tr>
                       </tbody>
