@@ -51,6 +51,16 @@ export default factories.createCoreService('api::credential.credential', ({ stra
       }
       const issuerId = await this.resolveCurrentIssuerId(achievement.creator)
 
+      // Refuse rather than continue without one. Strapi silently drops a
+      // relation pointing at a row that no longer exists, so an unresolved
+      // issuer produced a *published* credential with no issuer link at all -
+      // which then failed serialisation with "missing an associated issuer"
+      // after the row was already written, and before the recipient email.
+      // The result was unverifiable certificates and no notification.
+      if (!issuerId) {
+        throw new Error('Could not resolve the issuing profile - the achievement\'s creator no longer exists')
+      }
+
       // Generate a unique credential ID
       const credentialId = `urn:uuid:${this.generateUUID()}`
 
@@ -594,7 +604,11 @@ export default factories.createCoreService('api::credential.credential', ({ stra
       select: ['id'],
     })
 
-    return current?.id ?? creator.id
+    // No `?? creator.id` fallback: that id has just been shown not to exist
+    // (the profile was mid-republish), and passing it on produced a
+    // credential with a silently dropped issuer relation. Undefined makes
+    // the caller fail instead.
+    return current?.id
   },
 
   /**

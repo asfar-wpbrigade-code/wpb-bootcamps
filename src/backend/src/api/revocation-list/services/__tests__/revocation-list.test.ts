@@ -1,35 +1,82 @@
 import { revocationListExtension } from '../revocation-list'
 
+const LIST_UID = 'api::revocation-list.revocation-list'
+
+/**
+ * The fake here has to mirror the three data access styles the service uses,
+ * because each was adopted for a reason:
+ *
+ * - `entityService` for the issuer profile lookup;
+ * - `db.query` for the list itself, avoiding draft/publish ambiguity on a
+ *   freshly created row (see the notes in the service);
+ * - `db.connection` for reserving an index, which has to be one atomic
+ *   UPDATE ... RETURNING rather than a read followed by a write.
+ *
+ * This fake previously only implemented `entityService`, so the whole suite
+ * had been failing silently since the service moved to `db.query`.
+ */
 function createFakeStrapi() {
   const profiles = new Map<number, any>([[1, { id: 1, name: 'Test Issuer' }]])
   const lists = new Map<number, any>()
   let nextId = 1
+
+  /** Just enough knex to satisfy `.where(...).increment(...).returning(...)`. */
+  function connection(table: string) {
+    if (table !== 'revocation_lists') throw new Error(`Unexpected table: ${table}`)
+
+    let row: any = null
+    let result: any[] = []
+
+    const chain: any = {
+      where: (criteria: any) => {
+        row = lists.get(criteria.id) ?? null
+        return chain
+      },
+      increment: (column: string, by: number) => {
+        if (column !== 'next_index') throw new Error(`Unexpected column: ${column}`)
+        if (row) {
+          row.nextIndex = (row.nextIndex ?? 0) + by
+          // The real column is snake_case; the entity field is camelCase.
+          result = [{ next_index: row.nextIndex }]
+        }
+        return chain
+      },
+      returning: async () => result,
+    }
+
+    return chain
+  }
 
   return {
     strapi: {
       entityService: {
         findOne: async (contentType: string, id: number) => {
           if (contentType === 'api::profile.profile') return profiles.get(id) || null
-          if (contentType === 'api::revocation-list.revocation-list') return lists.get(id) || null
+          if (contentType === LIST_UID) return lists.get(id) || null
           throw new Error(`Unexpected content type: ${contentType}`)
         },
-        findMany: async (contentType: string, { filters }: any) => {
-          if (contentType !== 'api::revocation-list.revocation-list') throw new Error('unexpected content type')
-          return [...lists.values()].filter(
-            (list) => list.issuer === filters.issuer?.id && list.statusPurpose === filters.statusPurpose
-          )
-        },
-        create: async (contentType: string, { data }: any) => {
-          if (contentType !== 'api::revocation-list.revocation-list') throw new Error('unexpected content type')
-          const record = { id: nextId++, ...data }
-          lists.set(record.id, record)
-          return record
-        },
-        update: async (contentType: string, id: number, { data }: any) => {
-          if (contentType !== 'api::revocation-list.revocation-list') throw new Error('unexpected content type')
-          const updated = { ...lists.get(id), ...data }
-          lists.set(id, updated)
-          return updated
+      },
+      db: {
+        connection,
+        query: (uid: string) => {
+          if (uid !== LIST_UID) throw new Error(`Unexpected content type: ${uid}`)
+
+          return {
+            findOne: async ({ where }: any) => lists.get(where.id) ?? null,
+            findMany: async ({ where }: any) => [...lists.values()].filter(
+              list => list.issuer === where.issuer && list.statusPurpose === where.statusPurpose
+            ),
+            create: async ({ data }: any) => {
+              const record = { id: nextId++, ...data }
+              lists.set(record.id, record)
+              return record
+            },
+            update: async ({ where, data }: any) => {
+              const updated = { ...lists.get(where.id), ...data }
+              lists.set(where.id, updated)
+              return updated
+            },
+          }
         },
       },
     },

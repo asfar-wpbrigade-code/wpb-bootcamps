@@ -682,7 +682,27 @@ export default factories.createCoreController('api::credential.credential', ({ s
         return ctx.forbidden('You can only issue certificates for achievements you own')
       }
 
-      const issuePromises = recipients.map(async (recipientData) => {
+      // One at a time, deliberately - this was Promise.all, and issuing a
+      // batch concurrently corrupted it in two ways.
+      //
+      // Issuing to a recipient republishes their profile, and in Strapi 5 a
+      // republish deletes the published row and writes a new one with a new
+      // id. When the issuer is also a recipient in the same batch - which is
+      // ordinary, an issuer sending themselves a copy - the other recipients'
+      // parallel issuances tried to resolve that same profile as the issuer
+      // during the window where its row was gone, and produced published
+      // credentials with no issuer link, no email, and no way to verify.
+      //
+      // Concurrent runs also raced on the revocation list index: five
+      // credentials all read the same `nextIndex` and took slot 0, so
+      // revoking any one of them would revoke all five.
+      //
+      // Sequential issuance costs wall-clock time on large batches (each
+      // recipient waits on an SMTP round trip). Moving delivery off the
+      // request is the fix for that, not restoring the concurrency.
+      const results = []
+
+      for (const recipientData of recipients) {
         try {
           const recipient = { ...recipientData }
           const expirationDate = recipientData.expirationDate || undefined
@@ -693,14 +713,12 @@ export default factories.createCoreController('api::credential.credential', ({ s
             expirationDate,
             ctx.state.user?.id
           )
-          return { success: true, recipient: recipientData.email, data: credential }
+          results.push({ success: true, recipient: recipientData.email, data: credential })
         } catch (error) {
           strapi.log.error(`[credential.batchIssue] Error issuing to ${recipientData.email}: ${error.message}`)
-          return { success: false, recipient: recipientData.email, error: error.message }
+          results.push({ success: false, recipient: recipientData.email, error: error.message })
         }
-      })
-
-      const results = await Promise.all(issuePromises)
+      }
 
       const auditLog = strapi.service('api::audit-log-entry.audit-log')
       await auditLog.record({

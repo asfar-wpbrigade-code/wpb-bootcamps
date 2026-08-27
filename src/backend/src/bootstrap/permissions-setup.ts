@@ -26,7 +26,17 @@ const AUTHENTICATED_PERMISSIONS = [
   'api::achievement.achievement.create',
   'api::achievement.achievement.update',
   'api::achievement.achievement.delete',
-  'api::achievement.achievement.credentials',
+  // Custom controller actions. Permission ids are
+  // `api::<api>.<content-type>.<controller action>`, so these must match the
+  // handler names in api/achievement/routes/ exactly. They were unnecessary
+  // while those routes carried `auth: false` (which skips the permission
+  // check entirely) and became load-bearing the moment that was removed -
+  // the issue page's template picker calls findByCreator and got a 403.
+  // `...achievement.credentials` used to sit here and matches no action on
+  // the controller; it granted nothing.
+  'api::achievement.achievement.findByCreator',
+  'api::achievement.achievement.findWithCredentials',
+  'api::achievement.achievement.createAchievement',
   
   // Credential permissions
   'api::credential.credential.find',

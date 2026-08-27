@@ -141,20 +141,29 @@ export const revocationListExtension = ({ strapi }: { strapi: any }) => ({
    * Reserve the next available index in a status list for a new credential.
    */
   async assignNextIndex(statusListId: number | string) {
-    const statusList = await strapi.db.query('api::revocation-list.revocation-list').findOne({
-      where: { id: statusListId },
-    })
-    if (!statusList) {
+    // Reserved with a single atomic UPDATE ... RETURNING rather than a read
+    // followed by a write. Read-then-write let concurrent issuances all see
+    // the same `nextIndex` and claim the same slot - 11 credentials ended up
+    // sharing slot 0, so revoking any one of them would have revoked all
+    // eleven. The slot is a credential's identity in the StatusList2021
+    // bitstring, so a duplicate is a correctness bug, not a cosmetic one.
+    const connection = strapi.db.connection
+
+    const updated = await connection("revocation_lists")
+      .where({ id: statusListId })
+      .increment("next_index", 1)
+      .returning("next_index")
+
+    const row = Array.isArray(updated) ? updated[0] : updated
+    const nextIndex = typeof row === "object" && row !== null ? row.next_index : row
+
+    if (nextIndex === undefined || nextIndex === null) {
       throw new ApplicationError('Status list not found')
     }
 
-    const index = statusList.nextIndex ?? 0
-    await strapi.db.query('api::revocation-list.revocation-list').update({
-      where: { id: statusListId },
-      data: { nextIndex: index + 1 },
-    })
-
-    return index
+    // RETURNING gives the value after the increment; the slot reserved for
+    // this caller is the one before it.
+    return Number(nextIndex) - 1
   },
 
   /**
