@@ -35,20 +35,30 @@ export default factories.createCoreService('api::credential.credential', ({ stra
       const userExisted = await this.recipientUserExists(recipientEntity.email)
       await this.findOrCreateUser(recipientEntity)
 
-      // Make sure the issuer has a signing key *before* reading their profile
-      // id below. Creating a key mirrors the public key onto the issuer's own
-      // profile, and in Strapi 5 that update replaces the profile's published
-      // row with a new numeric id - leaving any id read earlier dangling. That
-      // is why the first-ever issuance for a given issuer used to fail with
-      // "Issuer not found" from getOrCreateActiveListForIssuer below: the key
-      // was created mid-issuance, renumbering the very profile we had just
-      // read off `achievement.creator`. Doing it up front, then re-resolving
-      // the id by documentId (stable across republishes), means the signed
-      // payload, the proof's verificationMethod, the status list and the
-      // credential row all reference a row that still exists.
-      if (achievement.creator?.id) {
-        await strapi.service('api::profile.issuer-keys').getOrCreateKeyPair(achievement.creator.id)
+      // The issuer's profile row id is resolved twice, deliberately, because
+      // two different things invalidate it.
+      //
+      // `achievement.creator.id` is read once when the achievement is fetched
+      // and goes stale the moment anything republishes that profile - a Strapi
+      // 5 republish deletes the published row and inserts a new one. In a
+      // batch that happens as soon as the issuer appears among the recipients,
+      // and getOrCreateKeyPair then tried to attach the key to a row that no
+      // longer existed: a foreign key violation on issuer_keys_profile_lnk
+      // that failed the issuance outright.
+      //
+      // Creating a key mirrors the public key onto the issuer's profile, which
+      // republishes it in turn - so the id has to be read again afterwards.
+      // Skipping that second read is what made the first-ever issuance for any
+      // issuer fail with "Issuer not found" from getOrCreateActiveListForIssuer.
+      //
+      // documentId is stable across republishes, which is why resolution goes
+      // through it rather than carrying a row id forward.
+      const initialIssuerId = await this.resolveCurrentIssuerId(achievement.creator)
+
+      if (initialIssuerId) {
+        await strapi.service('api::profile.issuer-keys').getOrCreateKeyPair(initialIssuerId)
       }
+
       const issuerId = await this.resolveCurrentIssuerId(achievement.creator)
 
       // Refuse rather than continue without one. Strapi silently drops a
@@ -111,18 +121,23 @@ export default factories.createCoreService('api::credential.credential', ({ stra
         }
       }))
 
-      // Explicitly connect the credential to the recipient's profile.
-      // This ensures the bidirectional relationship is updated.
-      if (recipientEntity && recipientEntity.id && credential && credential.id) {
-        await strapi.entityService.update('api::profile.profile', recipientEntity.id, {
-          data: {
-            receivedCredentials: {
-              connect: [{ id: credential.id }],
-            },
-            publishedAt: new Date(),
-          },
-        })
-      }
+      // Nothing here connects the credential to `profile.receivedCredentials`.
+      // That relation is the inverse side of `credential.recipient`
+      // (mappedBy: 'recipient'), so setting `recipient` above is what defines
+      // it - there is no second side to maintain.
+      //
+      // An explicit `entityService.update(profile, { receivedCredentials:
+      // connect, publishedAt })` used to run here, and it was actively
+      // destructive. Setting publishedAt republishes the profile, and a Strapi
+      // 5 republish deletes the published row and inserts a new one - so every
+      // link row pointing at the old row is cascade-deleted. When the profile
+      // being republished is the issuer's (an issuer issuing to themselves,
+      // which is ordinary), that wipes the issuer link off credentials issued
+      // earlier, leaving them published but unverifiable with "Credential is
+      // missing an associated issuer". 29 of 38 credentials in this database
+      // had lost their issuer that way. It also churned the issuer's row id
+      // mid-batch, so later recipients failed with a foreign key violation
+      // inserting into issuer_keys_profile_lnk.
 
       // Add evidence if provided
       if (evidence && evidence.length > 0) {
