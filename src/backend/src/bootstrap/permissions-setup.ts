@@ -176,20 +176,30 @@ const PUBLIC_PERMISSIONS = [
 ];
 
 /**
- * Setup permissions for a specific role
+ * Setup permissions for a specific role.
+ *
+ * `optional` marks a role this project ships a permission list for but does
+ * not create: `issuer`, `reviewer` and `viewer` only exist once an admin adds
+ * them in Settings > Users & Permissions > Roles. Their absence is the normal
+ * state, not a fault - logging it per-role at error level meant three false
+ * alarms on every boot, which is exactly the noise a real error then hides in.
+ *
+ * @returns 'ok' when the role was found and configured, 'missing' otherwise
  */
-async function setupRolePermissions(strapi: any, roleType: string, permissions: string[]): Promise<void> {
-  strapi.log.info(`[Permissions] Setting up ${roleType} permissions...`);
-  
-  // Get the role
+async function setupRolePermissions(strapi: any, roleType: string, permissions: string[], { optional = false } = {}): Promise<'ok' | 'missing'> {
   const role = await strapi
     .query('plugin::users-permissions.role')
     .findOne({ where: { type: roleType } });
 
   if (!role) {
-    strapi.log.error(`[Permissions] ${roleType} role not found`);
-    return;
+    // Required roles are Strapi built-ins - if one is gone, something is wrong.
+    if (!optional) {
+      strapi.log.error(`[Permissions] ${roleType} role not found`);
+    }
+    return 'missing';
   }
+
+  strapi.log.info(`[Permissions] Setting up ${roleType} permissions...`);
 
   let created = 0;
   let linked = 0;
@@ -238,6 +248,8 @@ async function setupRolePermissions(strapi: any, roleType: string, permissions: 
   }
 
   strapi.log.info(`[Permissions] ${roleType}: created ${created} permissions, linked ${linked} to role`);
+
+  return 'ok';
 }
 
 /**
@@ -247,21 +259,29 @@ export async function setupPermissions(strapi: any): Promise<void> {
   strapi.log.info('[Permissions] Starting permission setup...');
   
   try {
-    // Setup authenticated permissions
+    // Strapi's built-in roles - these must exist.
     await setupRolePermissions(strapi, 'authenticated', AUTHENTICATED_PERMISSIONS);
-
-    // Setup public permissions
     await setupRolePermissions(strapi, 'public', PUBLIC_PERMISSIONS);
 
-    // Setup issuer permissions (no-ops with a log message if no 'issuer' role exists yet)
-    await setupRolePermissions(strapi, 'issuer', ISSUER_PERMISSIONS);
+    // Optional roles. Their permission lists stay inert until an admin creates
+    // matching roles in the admin panel (Settings > Users & Permissions >
+    // Roles). See docs/known-issues-and-dev-notes.md and docs/security.md.
+    const optionalRoles: Array<[string, string[]]> = [
+      ['issuer', ISSUER_PERMISSIONS],
+      ['reviewer', REVIEWER_PERMISSIONS],
+      ['viewer', VIEWER_PERMISSIONS],
+    ];
 
-    // Reviewer/viewer: same no-op-until-the-role-exists caveat as issuer -
-    // these lists are inert until an admin creates matching roles in the
-    // admin panel (Settings > Users & Permissions > Roles). See
-    // docs/known-issues-and-dev-notes.md and docs/security.md.
-    await setupRolePermissions(strapi, 'reviewer', REVIEWER_PERMISSIONS);
-    await setupRolePermissions(strapi, 'viewer', VIEWER_PERMISSIONS);
+    const absent: string[] = [];
+
+    for (const [roleType, permissions] of optionalRoles) {
+      const result = await setupRolePermissions(strapi, roleType, permissions, { optional: true });
+      if (result === 'missing') absent.push(roleType);
+    }
+
+    if (absent.length > 0) {
+      strapi.log.info(`[Permissions] Optional roles not present, permission lists skipped: ${absent.join(', ')}. Create them under Settings > Users & Permissions > Roles to activate.`);
+    }
 
     strapi.log.info('[Permissions] Permission setup complete');
   } catch (error) {

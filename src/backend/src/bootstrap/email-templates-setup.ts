@@ -65,7 +65,9 @@ async function repairSender(
 
   if (!templates) return;
 
-  const repaired: string[] = [];
+  // Records what each sender was, so the log can state the actual reason for
+  // the change - Strapi's default on a first run, a stale name on a later one.
+  const repaired: Array<{ key: string, previous: string }> = [];
 
   for (const templateKey of Object.keys(templates)) {
     const options = templates[templateKey]?.options;
@@ -84,19 +86,25 @@ async function repairSender(
     if (!isOursToSet) continue;
     if (currentSender === fromAddress && options.from?.name === fromName) continue;
 
+    const previous = options.from?.name
+      ? `"${options.from.name}" <${currentSender ?? ''}>`
+      : `<${currentSender ?? 'unset'}>`;
+
     options.from = { name: fromName, email: fromAddress };
 
     if (!options.response_email || options.response_email === STRAPI_DEFAULT_SENDER) {
       options.response_email = replyTo;
     }
 
-    repaired.push(templateKey);
+    repaired.push({ key: templateKey, previous });
   }
 
   if (repaired.length === 0) return;
 
   await pluginStore.set({ key: 'email', value: templates });
-  strapi.log.info(`[email-templates] Sender for ${repaired.join(', ')} was still Strapi's default (${STRAPI_DEFAULT_SENDER}) - set to ${fromAddress}.`);
+
+  const changes = repaired.map(r => `${r.key} (was ${r.previous})`).join(', ');
+  strapi.log.info(`[email-templates] Sender set to "${fromName}" <${fromAddress}> for ${changes}.`);
 }
 
 /**
