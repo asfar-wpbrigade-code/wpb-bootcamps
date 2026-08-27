@@ -3,6 +3,7 @@ import { seedDevelopmentData } from './bootstrap/seed-data';
 import { setupPermissions } from './bootstrap/permissions-setup';
 import { warnIfDefaultAdminCredentials } from './bootstrap/default-credentials-warning';
 import { setupEmailTemplates } from './bootstrap/email-templates-setup';
+import { scheduleBackups } from './bootstrap/scheduled-backup';
 import { registerMonitoringRoutes } from './monitoring/routes';
 import { createEventBus } from './utils/event-bus';
 
@@ -123,5 +124,8 @@ export default {
 
     setTimeout(runScheduledIssuanceCheck, 35_000);
     setInterval(runScheduledIssuanceCheck, 24 * 60 * 60 * 1000);
+
+    // Scheduled database + uploads backups (see bootstrap/scheduled-backup.ts)
+    scheduleBackups(strapi);
   },
 };

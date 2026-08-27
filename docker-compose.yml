@@ -86,6 +86,13 @@ services:
       # scripts/backup.js and scripts/restore.js read/write - see
       # docs/self-hosting.md.
       - uploads-data:/app/public/uploads
+      # Bind mount, not a named volume: scripts/backup.js writes to
+      # /app/backups, which without this is the container's writable layer -
+      # every `docker compose up --build` would silently destroy every
+      # backup taken since the last one. A host directory also means you can
+      # copy dumps off this machine without going through Docker, which is
+      # the point of having them.
+      - ./backups:/app/backups
     networks:
       - certo-network
 

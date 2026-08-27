@@ -45,3 +45,8 @@ logs
 # local utility files
 ROADMAP.md
 VISION.md
+
+# Local database + uploads backups (docker-compose bind-mounts this to
+# the backend container). Never commit these - they contain every
+# recipient email address and the encrypted issuer signing keys.
+/backups

@@ -58,6 +58,46 @@ function timestampedDir() {
   return path.join(BACKUPS_ROOT, ts);
 }
 
+/** Matches the directory names timestampedDir() produces, and nothing else. */
+const BACKUP_DIR_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z$/;
+
+/**
+ * Deletes all but the newest `keep` backups.
+ *
+ * Without this a scheduled backup fills the disk, and a full disk takes the
+ * database down with it - a backup strategy that causes the outage it exists
+ * to protect against. Set BACKUP_RETENTION_COUNT to change how many are
+ * kept, or 0 to keep everything and manage it yourself.
+ *
+ * Only directories matching BACKUP_DIR_PATTERN are considered, so anything
+ * else you leave in backups/ (a dump copied in by hand, notes) is never
+ * touched. Names are ISO-8601, so a lexicographic sort is chronological.
+ */
+function pruneOldBackups() {
+  const keep = Number.parseInt(process.env.BACKUP_RETENTION_COUNT ?? '7', 10);
+
+  if (!Number.isFinite(keep) || keep <= 0) {
+    return;
+  }
+
+  const existing = fs
+    .readdirSync(BACKUPS_ROOT, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && BACKUP_DIR_PATTERN.test(entry.name))
+    .map((entry) => entry.name)
+    .sort();
+
+  const stale = existing.slice(0, Math.max(0, existing.length - keep));
+
+  for (const name of stale) {
+    fs.rmSync(path.join(BACKUPS_ROOT, name), { recursive: true, force: true });
+    console.log(`[Backup] Pruned old backup ${name}`);
+  }
+
+  if (stale.length > 0) {
+    console.log(`[Backup] Keeping the ${keep} most recent backups.`);
+  }
+}
+
 function backupPostgres(connection, outDir) {
   const dumpFile = path.join(outDir, 'db.dump');
   const args = ['--format=custom', '--file', dumpFile];
@@ -114,6 +154,10 @@ function runBackup() {
       : backupSqlite(connection, outDir);
 
     const uploadsPath = copyUploads(outDir);
+
+    // Prune only after this backup succeeded, so a failing run can never
+    // delete the good backups it was meant to replace.
+    pruneOldBackups();
 
     console.log('[Backup] Done.');
     console.log(`[Backup]   Database: ${dbBackupPath}`);
