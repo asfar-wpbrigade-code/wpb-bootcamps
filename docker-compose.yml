@@ -117,7 +117,7 @@ services:
     depends_on:
       - backend
     environment:
-      NUXT_PUBLIC_API_URL: http://localhost:1337
+      NUXT_PUBLIC_API_URL: https://bootcamp-api.labspk.com
     ports:
       - "3399:3000"
     networks:
