@@ -27,7 +27,9 @@
     "image": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": ["images"]
+      "allowedTypes": [
+        "images"
+      ]
     },
     "criteria": {
       "type": "component",
@@ -64,6 +66,25 @@
       "relation": "oneToMany",
       "target": "api::credential.credential",
       "mappedBy": "achievement"
+    },
+    "signatureImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "signatoryName": {
+      "type": "string"
+    },
+    "signatoryTitle": {
+      "type": "string"
+    },
+    "programmeStartDate": {
+      "type": "date"
+    },
+    "programmeEndDate": {
+      "type": "date"
     }
   }
-} 
+}

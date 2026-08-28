@@ -6,7 +6,7 @@ import { generateCertificateSvg } from '../../../utils/certificate-template'
 
 /** Relations the certificate template needs to render. */
 const CERTIFICATE_POPULATE = {
-  achievement: { populate: ['image'] },
+  achievement: { populate: ['image', 'signatureImage'] },
   issuer: { populate: ['image'] },
   recipient: true,
 } as any
@@ -94,6 +94,14 @@ export default ({ strapi }) => ({
       const frontendUrl = strapi.config.get('frontend.url', 'http://localhost:3000')
       const verifyUrl = `${frontendUrl}/credentials/${encodeURIComponent(credential.credentialId)}`
 
+      // The signature is read off disk and inlined rather than linked. An SVG
+      // shown through an <img> tag cannot fetch anything external, and a
+      // certificate someone has downloaded has no server to fetch from - a
+      // linked signature would simply be missing in both cases.
+      const signatureImageDataUri = await this.readImageAsDataUri(
+        credential.achievement?.signatureImage?.url
+      )
+
       // Generate the certificate SVG
       return await generateCertificateSvg({
         recipientName,
@@ -102,11 +110,60 @@ export default ({ strapi }) => ({
         issueDate,
         credentialId: credential.credentialId,
         badgeImageUrl,
-        verifyUrl
+        verifyUrl,
+        description: credential.achievement?.description || credential.description,
+        signatureImageDataUri,
+        signatoryName: credential.achievement?.signatoryName,
+        signatoryTitle: credential.achievement?.signatoryTitle,
+        programmeStartDate: credential.achievement?.programmeStartDate,
+        programmeEndDate: credential.achievement?.programmeEndDate,
       })
     } catch (error) {
       console.error('Error generating certificate:', error)
       throw error
+    }
+  },
+
+  /**
+   * Reads an uploaded image off disk and returns it as a data URI.
+   *
+   * Only handles local uploads: an absolute URL means the file lives with an
+   * external provider (S3 and friends), where fetching it per certificate
+   * would put a network round trip in the middle of rendering. Returns
+   * undefined on anything unreadable, so a missing signature leaves a blank
+   * line rather than failing the certificate.
+   *
+   * @param {string} [url] - The upload's URL, as Strapi stores it
+   */
+  async readImageAsDataUri(url?: string): Promise<string | undefined> {
+    if (!url || url.startsWith('http')) return undefined
+
+    try {
+      const path = require('node:path')
+      const fs = require('node:fs/promises')
+
+      // Strapi serves /uploads/... from the app's public directory.
+      const absolute = path.join(strapi.dirs.static.public, url.replace(/^\/+/, '').replace(/^public\//, ''))
+      const file = await fs.readFile(absolute)
+
+      const extension = path.extname(absolute).toLowerCase()
+      const mimeTypes: Record<string, string> = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp',
+        '.svg': 'image/svg+xml',
+      }
+      const mime = mimeTypes[extension]
+
+      if (!mime) return undefined
+
+      return `data:${mime};base64,${file.toString('base64')}`
+    }
+    catch (error) {
+      strapi.log.warn(`[certificate] Could not inline image ${url}: ${error.message}`)
+      return undefined
     }
   },
 
