@@ -4,6 +4,7 @@ import { setupPermissions } from './bootstrap/permissions-setup';
 import { warnIfDefaultAdminCredentials } from './bootstrap/default-credentials-warning';
 import { setupEmailTemplates } from './bootstrap/email-templates-setup';
 import { scheduleBackups } from './bootstrap/scheduled-backup';
+import { warnOnInsecureDefaults } from './bootstrap/insecure-defaults-warning';
 import { registerMonitoringRoutes } from './monitoring/routes';
 import { createEventBus } from './utils/event-bus';
 
@@ -96,6 +97,9 @@ export default {
     // Warn on every boot if the default admin credentials are still active,
     // regardless of environment (see bootstrap/default-credentials-warning.ts)
     await warnIfDefaultAdminCredentials(strapi);
+
+    // Same idea for the secrets shipped in docker-compose.yml
+    warnOnInsecureDefaults(strapi);
 
     // Schedule daily credential expiration scan.
     // Run once at startup (30s delay to let Strapi fully settle) and then every 24h.
