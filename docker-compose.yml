@@ -21,15 +21,15 @@ services:
       timeout: 5s
       retries: 5
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: certo_mailhog
-    restart: unless-stopped
-    ports:
-      - "1025:1025"  # SMTP server
-      - "8025:8025"  # Web UI
-    networks:
-      - certo-network
+  # mailhog:
+  #   image: mailhog/mailhog:latest
+  #   container_name: certo_mailhog
+  #   restart: unless-stopped
+  #   ports:
+  #     - "1025:1025"  # SMTP server
+  #     - "8025:8025"  # Web UI
+  #   networks:
+  #     - certo-network
 
   backend:
     build:
@@ -39,10 +39,20 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      mailhog:
-        condition: service_started
-    env_file:
-      - ./src/backend/.env
+      # mailhog:
+      #   condition: service_started
+    # env_file:
+    #   - ./src/backend/.env
+    labels:                    # ADD: whole block
+      - traefik.enable=true
+      - traefik.http.routers.bootcamp-backend-web.rule=Host(`bootcamp-api.labspk.com`)
+      - traefik.http.routers.bootcamp-backend-web.entrypoints=web
+      - traefik.http.routers.bootcamp-backend-web.service=bootcamp-backend-service
+      - traefik.http.routers.bootcamp-backend-websecure.rule=Host(`bootcamp-api.labspk.com`)
+      - traefik.http.routers.bootcamp-backend-websecure.entrypoints=websecure
+      - traefik.http.routers.bootcamp-backend-websecure.tls=true
+      - traefik.http.routers.bootcamp-backend-websecure.service=bootcamp-backend-service
+      - traefik.http.services.bootcamp-backend-service.loadbalancer.server.port=1337
     environment:
       HOST: 0.0.0.0
       PORT: 1337
@@ -53,10 +63,10 @@ services:
       # upstream README - into a fresh database. Override with NODE_ENV in a
       # root .env if you want development behaviour locally.
       NODE_ENV: ${NODE_ENV:-production}
-      DATABASE_CLIENT: postgres
-      DATABASE_HOST: postgres
+      DATABASE_CLIENT: ${DATABASE_CLIENT:-postgres}
+      DATABASE_HOST: $:{DATABASE_HOST:-postgres}
       DATABASE_PORT: 5432
-      DATABASE_NAME: certo
+      DATABASE_NAME: ${DATABASE_NAME:-certo}
       DATABASE_USERNAME: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
@@ -85,13 +95,16 @@ services:
       # `docker-compose up --build`/container recreation. Also what
       # scripts/backup.js and scripts/restore.js read/write - see
       # docs/self-hosting.md.
+      
       - uploads-data:/app/public/uploads
+      
       # Bind mount, not a named volume: scripts/backup.js writes to
       # /app/backups, which without this is the container's writable layer -
       # every `docker compose up --build` would silently destroy every
       # backup taken since the last one. A host directory also means you can
       # copy dumps off this machine without going through Docker, which is
       # the point of having them.
+      
       - ./backups:/app/backups
     networks:
       - certo-network
@@ -114,9 +127,20 @@ services:
       NUXT_PUBLIC_BRAND_PRIMARY_COLOR: ${NUXT_PUBLIC_BRAND_PRIMARY_COLOR:-#3458eb}
       NUXT_PUBLIC_BRAND_LINKEDIN_ORGANIZATION_ID: ${NUXT_PUBLIC_BRAND_LINKEDIN_ORGANIZATION_ID:-}
     ports:
-      - "3000:3000"
+      - "3399:3000"
     networks:
       - certo-network
+    labels:                    # ADD: whole block
+      - traefik.enable=true
+      - traefik.http.routers.bootcamp-frontend-web.rule=Host(`bootcamp.labspk.com`)
+      - traefik.http.routers.bootcamp-frontend-web.entrypoints=web
+      - traefik.http.routers.bootcamp-frontend-web.service=bootcamp-frontend-service
+      - traefik.http.routers.bootcamp-frontend-websecure.rule=Host(`bootcamp.labspk.com`)
+      - traefik.http.routers.bootcamp-frontend-websecure.entrypoints=websecure
+      - traefik.http.routers.bootcamp-frontend-websecure.tls=true
+      - traefik.http.routers.bootcamp-frontend-websecure.service=bootcamp-frontend-service
+      - traefik.http.services.bootcamp-frontend-service.loadbalancer.server.port=3000
+
 
 networks:
   certo-network:
