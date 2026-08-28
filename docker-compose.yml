@@ -43,6 +43,16 @@ services:
       #   condition: service_started
     # env_file:
     #   - ./src/backend/.env
+    labels:                    # ADD: whole block
+      - traefik.enable=true
+      - traefik.http.routers.bootcamp-backend-web.rule=Host(`bootcamp-api.labspk.com`)
+      - traefik.http.routers.bootcamp-backend-web.entrypoints=web
+      - traefik.http.routers.bootcamp-backend-web.service=bootcamp-backend-service
+      - traefik.http.routers.bootcamp-backend-websecure.rule=Host(`bootcamp-api.labspk.com`)
+      - traefik.http.routers.bootcamp-backend-websecure.entrypoints=websecure
+      - traefik.http.routers.bootcamp-backend-websecure.tls=true
+      - traefik.http.routers.bootcamp-backend-websecure.service=bootcamp-backend-service
+      - traefik.http.services.bootcamp-backend-service.loadbalancer.server.port=1337
     environment:
       HOST: 0.0.0.0
       PORT: 1337
@@ -112,6 +122,17 @@ services:
       - "3399:3000"
     networks:
       - certo-network
+    labels:                    # ADD: whole block
+      - traefik.enable=true
+      - traefik.http.routers.bootcamp-frontend-web.rule=Host(`bootcamp.labspk.com`)
+      - traefik.http.routers.bootcamp-frontend-web.entrypoints=web
+      - traefik.http.routers.bootcamp-frontend-web.service=bootcamp-frontend-service
+      - traefik.http.routers.bootcamp-frontend-websecure.rule=Host(`bootcamp.labspk.com`)
+      - traefik.http.routers.bootcamp-frontend-websecure.entrypoints=websecure
+      - traefik.http.routers.bootcamp-frontend-websecure.tls=true
+      - traefik.http.routers.bootcamp-frontend-websecure.service=bootcamp-frontend-service
+      - traefik.http.services.bootcamp-frontend-service.loadbalancer.server.port=3000
+
 
 networks:
   certo-network:
