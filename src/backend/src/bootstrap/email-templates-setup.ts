@@ -108,17 +108,34 @@ async function repairSender(
 }
 
 /**
- * Give `<%= URL %>` somewhere to point: the frontend's reset-password page,
- * which reads the `code` query parameter the template appends.
+ * Keeps `<%= URL %>` pointing at the frontend's reset-password page, which
+ * reads the `code` query parameter the template appends.
+ *
+ * Kept in step with FRONTEND_URL rather than only filled in when empty. This
+ * value lives in the database, so moving the app to a real domain would
+ * otherwise leave it on whatever host it was first booted with - every
+ * password reset email sent from production would link people back to
+ * localhost, and nobody would notice until a user could not get in.
+ *
+ * Only a URL ending in `/reset-password` is rewritten, so a deliberately
+ * custom page is left alone.
  */
 async function repairResetPasswordUrl(strapi: any, pluginStore: any): Promise<void> {
   const advanced = await pluginStore.get({ key: 'advanced' });
 
-  if (!advanced || advanced.email_reset_password) return;
+  if (!advanced) return;
 
   const frontendUrl = strapi.config.get('frontend.url', 'http://localhost:3000');
-  const resetUrl = `${frontendUrl.replace(/\/+$/, '')}/reset-password`;
+  const resetUrl = `${String(frontendUrl).replace(/\/+$/, '')}/reset-password`;
+  const current = advanced.email_reset_password;
+
+  if (current === resetUrl) return;
+
+  if (current && !/\/reset-password\/?$/.test(current)) {
+    strapi.log.info(`[email-templates] Reset-password page is set to a custom URL (${current}) - leaving it.`);
+    return;
+  }
 
   await pluginStore.set({ key: 'advanced', value: { ...advanced, email_reset_password: resetUrl } });
-  strapi.log.info(`[email-templates] Reset-password page URL was unset - set to ${resetUrl}.`);
+  strapi.log.info(`[email-templates] Reset-password page URL set to ${resetUrl}${current ? ` (was ${current})` : ''}.`);
 }

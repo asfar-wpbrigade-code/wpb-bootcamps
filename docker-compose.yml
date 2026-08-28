@@ -104,7 +104,15 @@ services:
     depends_on:
       - backend
     environment:
-      NUXT_PUBLIC_API_URL: http://localhost:1337
+      # Overridable so a deployment can point at a real domain without editing
+      # this file. NUXT_PUBLIC_API_URL is the address the *browser* uses to
+      # reach the API, so it has to be publicly resolvable - not the
+      # `backend` service name, which only exists inside the compose network.
+      NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL:-http://localhost:1337}
+      NUXT_PUBLIC_WEBSITE_URL: ${NUXT_PUBLIC_WEBSITE_URL:-http://localhost:3000}
+      NUXT_PUBLIC_BRAND_NAME: ${NUXT_PUBLIC_BRAND_NAME:-WPBrigade}
+      NUXT_PUBLIC_BRAND_PRIMARY_COLOR: ${NUXT_PUBLIC_BRAND_PRIMARY_COLOR:-#3458eb}
+      NUXT_PUBLIC_BRAND_LINKEDIN_ORGANIZATION_ID: ${NUXT_PUBLIC_BRAND_LINKEDIN_ORGANIZATION_ID:-}
     ports:
       - "3000:3000"
     networks:
