@@ -520,13 +520,22 @@ export default factories.createCoreController('api::credential.credential', ({ s
       
       // Generate the certificate SVG
       const svg = await certificateService.generateCertificate(id)
-      
+
       // Set the content type and return the SVG
       ctx.set('Content-Type', 'image/svg+xml')
       return svg
     } catch (error) {
-      console.error('Error generating certificate:', error)
-      return ctx.badRequest(error.message || 'Failed to generate certificate')
+      // The detail goes to the log, not to the caller. Returning
+      // `error.message` here meant a lookup failure answered the browser with
+      // the raw SQL statement and Postgres's own wording, exposing the schema
+      // and telling the person nothing they could act on.
+      strapi.log.error(`[credential.getCertificate] ${error.message}`)
+
+      if (error.message === 'Credential not found') {
+        return ctx.notFound('No certificate exists for that credential')
+      }
+
+      return ctx.badRequest('Could not generate the certificate')
     }
   },
 

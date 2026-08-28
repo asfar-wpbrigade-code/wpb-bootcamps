@@ -367,8 +367,16 @@ async function downloadCredential() {
     const blob = await response.blob()
     const downloadUrl = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
+
+    // Name the file after what was actually downloaded. This was hardcoded to
+    // .png while the certificate endpoint returns SVG, so the saved file had
+    // an extension that didn't match its contents and wouldn't open.
+    const extension = blob.type === 'image/svg+xml'
+      ? 'svg'
+      : (blob.type.split('/')[1] || 'png')
+
     a.href = downloadUrl
-    a.download = `${credential.value?.name || 'credential'}.png`
+    a.download = `${credential.value?.name || 'credential'}.${extension}`
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(downloadUrl)

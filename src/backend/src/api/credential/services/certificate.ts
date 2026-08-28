@@ -4,7 +4,61 @@
 
 import { generateCertificateSvg } from '../../../utils/certificate-template'
 
+/** Relations the certificate template needs to render. */
+const CERTIFICATE_POPULATE = {
+  achievement: { populate: ['image'] },
+  issuer: { populate: ['image'] },
+  recipient: true,
+} as any
+
 export default ({ strapi }) => ({
+  /**
+   * Find the credential a certificate is being requested for.
+   *
+   * Accepts any of the three identifiers this system hands out, because
+   * callers legitimately hold different ones:
+   *
+   * - `urn:uuid:...` - the credentialId in the Open Badges payload, in
+   *   verification links and in the SDK. This is what the frontend has, and
+   *   what it was passing: `entityService.findOne` fed it straight to a
+   *   `WHERE id = $1` and Postgres answered "invalid input syntax for type
+   *   integer", which reached the browser as a raw SQL string. The credential
+   *   page treats that as a broken image and silently falls back to the
+   *   achievement artwork - which is why the generated certificate never
+   *   appeared anywhere in the app.
+   * - `documentId` - Strapi 5's stable document identifier.
+   * - the numeric row id - what the endpoint used to accept, and only that.
+   *
+   * @param {number|string} identifier - Any of the three
+   */
+  async findCredentialForCertificate(identifier: number | string) {
+    const query = strapi.db.query('api::credential.credential')
+    const asString = String(identifier)
+
+    const byCredentialId = await query.findOne({
+      where: { credentialId: asString, publishedAt: { $notNull: true } },
+      populate: CERTIFICATE_POPULATE,
+    })
+    if (byCredentialId) return byCredentialId
+
+    const byDocumentId = await query.findOne({
+      where: { documentId: asString, publishedAt: { $notNull: true } },
+      populate: CERTIFICATE_POPULATE,
+    })
+    if (byDocumentId) return byDocumentId
+
+    // Only try the numeric column when the value is actually numeric -
+    // handing Postgres a urn is what produced the SQL error above.
+    if (/^\d+$/.test(asString)) {
+      return query.findOne({
+        where: { id: Number(asString), publishedAt: { $notNull: true } },
+        populate: CERTIFICATE_POPULATE,
+      })
+    }
+
+    return null
+  },
+
   /**
    * Generate a certificate for a credential
    * @param {number|string} credentialId - The ID of the credential
@@ -12,21 +66,7 @@ export default ({ strapi }) => ({
    */
   async generateCertificate(credentialId: number | string): Promise<string> {
     try {
-      // Get the credential with all necessary relationships
-      const credential = await strapi.entityService.findOne(
-        'api::credential.credential',
-        credentialId,
-        {
-          status: 'published',
-          populate: [
-            'achievement',
-            'achievement.image',
-            'issuer',
-            'issuer.image',
-            'recipient'
-          ]
-        }
-      )
+      const credential = await this.findCredentialForCertificate(credentialId)
 
       if (!credential) {
         throw new Error('Credential not found')
