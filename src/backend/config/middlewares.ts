@@ -1,7 +1,22 @@
-// Origins allowed in addition to the defaults below - a comma-separated list,
-// e.g. CORS_ALLOWED_ORIGINS=https://badges.example.org,https://api.badges.example.org
-// so self-hosters can deploy on their own domain without editing source.
+// Browsers are refused outright unless the page's origin appears here. The
+// production domains are listed rather than left to configuration alone: an
+// unset environment variable is a silent failure - the site loads and every
+// request from it is blocked - and this is the one setting where that costs a
+// working login.
+//
+// Additional origins can still be supplied without editing this file:
+// CORS_ALLOWED_ORIGINS=https://staging.example.org,https://other.example.org
+//
+// The upstream project's own domains (certo.netlify.app,
+// certo.schroedinger-hat.org and its Strapi Cloud host) were removed along
+// with a wildcard for that project's Netlify deploy previews - anyone opening
+// a pull request there would have received an origin this API trusted.
 const DEFAULT_ALLOWED_ORIGINS = [
+  // Production
+  'https://bootcamp.labspk.com',
+  'https://bootcamp-api.labspk.com',
+
+  // Local development
   'http://localhost:3000',
   'http://[::1]:3000',
   'http://localhost:3001',
@@ -9,13 +24,10 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:3003',
   'http://localhost:3004',
   'http://localhost:3005',
+  'http://localhost:3399',
   'http://localhost:1337',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
-  'https://bold-approval-5bde4fbd5d.strapiapp.com',
-  'https://certo.netlify.app',
-  'https://certo.schroedinger-hat.org',
-  'https://certo-strapi.schroedinger-hat.org',
 ];
 
 export default ({ env }) => {
@@ -26,8 +38,7 @@ export default ({ env }) => {
 
   const isAllowedOrigin = (origin: string) =>
     DEFAULT_ALLOWED_ORIGINS.includes(origin) ||
-    extraAllowedOrigins.includes(origin) ||
-    /^https:\/\/deploy-preview-\d+--certo\.netlify\.app$/.test(origin);
+    extraAllowedOrigins.includes(origin);
 
   return [
     // Rewrites /api/v1/* to /api/* before anything else sees the path -
