@@ -1,0 +1,184 @@
+# Production stack for Dokploy.
+#
+# Kept separate from docker-compose.yml, which stays a local development file:
+# the two want opposite things. Development wants published ports, bind mounts
+# and defaults that let a fresh clone start with no configuration. Production
+# wants none of those, and wants to fail loudly when something is missing.
+#
+# Point Dokploy's Compose Path at this file.
+#
+# Differences from the development file, and why:
+#
+#   * Volumes are `external`, created once by hand. Compose namespaces volumes
+#     by project name, so a rename, a recreated app or a different build path
+#     silently produces a *new, empty* volume - the deploy succeeds and the
+#     database is blank. External volumes have fixed names that no longer
+#     depend on the project, so data survives that.
+#
+#   * No `ports:`. Traefik reaches containers over the shared dokploy-network,
+#     so publishing ports only creates a way to bypass it - including reaching
+#     Postgres directly from the internet.
+#
+#   * No bind mounts. Dokploy builds immutable images; a host path may not
+#     exist on the deploy host and is not portable between them.
+#
+#   * No `container_name`. Fixed names collide with anything else on the host
+#     and prevent Dokploy replacing a container while the old one drains.
+#
+#   * Secrets have no defaults. `${VAR:?message}` refuses to deploy when one is
+#     missing, rather than falling back to a value published in this
+#     repository. ENCRYPTION_KEY is the reason this matters: it encrypts every
+#     issuer's private signing key, and it cannot be changed once certificates
+#     exist without making those keys undecryptable.
+#
+# One-time setup on the Docker host, before the first deploy:
+#
+#   docker volume create wpb-bootcamps-db
+#   docker volume create wpb-bootcamps-uploads
+#   docker volume create wpb-bootcamps-backups
+#
+# Set the environment in Dokploy's Environment tab. Required:
+#   POSTGRES_PASSWORD, APP_KEYS, JWT_SECRET, ADMIN_JWT_SECRET, API_TOKEN_SALT,
+#   TRANSFER_TOKEN_SALT, ENCRYPTION_KEY, SMTP_*, PUBLIC_URL, FRONTEND_URL,
+#   CORS_ALLOWED_ORIGINS, NUXT_PUBLIC_API_URL, NUXT_PUBLIC_WEBSITE_URL
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${DATABASE_NAME:-certo}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./src/backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      HOST: 0.0.0.0
+      PORT: 1337
+      NODE_ENV: production
+
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:-certo}
+      DATABASE_USERNAME: ${POSTGRES_USER:-postgres}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+
+      # No defaults on purpose - see the note at the top of this file.
+      APP_KEYS: ${APP_KEYS:?APP_KEYS must be set}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET must be set}
+      API_TOKEN_SALT: ${API_TOKEN_SALT:?API_TOKEN_SALT must be set}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT:?TRANSFER_TOKEN_SALT must be set}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set - and never changed once certificates exist}
+
+      # Public addresses. PUBLIC_URL ends up inside signed proofs, so it has to
+      # be settled before real certificates are issued.
+      PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL must be set}
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL must be set}
+      # Without this the browser is refused: the site loads and every API call
+      # from it fails CORS.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set}
+
+      # Absent SMTP config does not disable email - config/plugins.ts falls
+      # back to a hardcoded test account, mail appears to send, and nobody
+      # receives anything.
+      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST must be set}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:?SMTP_USERNAME must be set}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?SMTP_PASSWORD must be set}
+      SMTP_FROM: ${SMTP_FROM:?SMTP_FROM must be set}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-WPBrigade}
+      SMTP_REPLY_TO: ${SMTP_REPLY_TO:-}
+
+      BRAND_NAME: ${BRAND_NAME:-WPBrigade}
+      BRAND_PRIMARY_COLOR: ${BRAND_PRIMARY_COLOR:-#3458eb}
+      BRAND_CONTACT_EMAIL: ${BRAND_CONTACT_EMAIL:-}
+      LINKEDIN_ORGANIZATION_ID: ${LINKEDIN_ORGANIZATION_ID:-}
+
+      BACKUP_SCHEDULE_ENABLED: ${BACKUP_SCHEDULE_ENABLED:-true}
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      BACKUP_RETENTION_COUNT: ${BACKUP_RETENTION_COUNT:-7}
+
+      LOG_FORMAT_JSON: ${LOG_FORMAT_JSON:-true}
+    volumes:
+      - uploads-data:/app/public/uploads
+      # Backups are written inside the container; without a volume they would
+      # be discarded on the next deploy, which is when you most want them.
+      - backups-data:/app/backups
+    networks:
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.bootcamp-backend-web.rule=Host(`bootcamp-api.labspk.com`)
+      - traefik.http.routers.bootcamp-backend-web.entrypoints=web
+      - traefik.http.routers.bootcamp-backend-web.service=bootcamp-backend-service
+      - traefik.http.routers.bootcamp-backend-websecure.rule=Host(`bootcamp-api.labspk.com`)
+      - traefik.http.routers.bootcamp-backend-websecure.entrypoints=websecure
+      - traefik.http.routers.bootcamp-backend-websecure.tls=true
+      - traefik.http.routers.bootcamp-backend-websecure.tls.certresolver=letsencrypt
+      - traefik.http.routers.bootcamp-backend-websecure.service=bootcamp-backend-service
+      - traefik.http.services.bootcamp-backend-service.loadbalancer.server.port=1337
+
+  frontend:
+    build:
+      context: ./src/frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # The address the *browser* uses, so it must be publicly resolvable -
+      # not the `backend` service name, which only exists on this network.
+      NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL:?NUXT_PUBLIC_API_URL must be set}
+      NUXT_PUBLIC_WEBSITE_URL: ${NUXT_PUBLIC_WEBSITE_URL:?NUXT_PUBLIC_WEBSITE_URL must be set}
+      NUXT_PUBLIC_BRAND_NAME: ${NUXT_PUBLIC_BRAND_NAME:-WPBrigade}
+      NUXT_PUBLIC_BRAND_PRIMARY_COLOR: ${NUXT_PUBLIC_BRAND_PRIMARY_COLOR:-#3458eb}
+      NUXT_PUBLIC_BRAND_LINKEDIN_ORGANIZATION_ID: ${NUXT_PUBLIC_BRAND_LINKEDIN_ORGANIZATION_ID:-}
+    networks:
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.bootcamp-frontend-web.rule=Host(`bootcamp.labspk.com`)
+      - traefik.http.routers.bootcamp-frontend-web.entrypoints=web
+      - traefik.http.routers.bootcamp-frontend-web.service=bootcamp-frontend-service
+      - traefik.http.routers.bootcamp-frontend-websecure.rule=Host(`bootcamp.labspk.com`)
+      - traefik.http.routers.bootcamp-frontend-websecure.entrypoints=websecure
+      - traefik.http.routers.bootcamp-frontend-websecure.tls=true
+      - traefik.http.routers.bootcamp-frontend-websecure.tls.certresolver=letsencrypt
+      - traefik.http.routers.bootcamp-frontend-websecure.service=bootcamp-frontend-service
+      - traefik.http.services.bootcamp-frontend-service.loadbalancer.server.port=3000
+
+networks:
+  dokploy-network:
+    external: true
+
+# Fixed names, created once by hand, deliberately not managed by this project.
+# A project-namespaced volume is recreated empty whenever the project name
+# changes; these are not, so a rename or a rebuilt Dokploy app keeps its data.
+volumes:
+  db-data:
+    external: true
+    name: wpb-bootcamps-db
+  uploads-data:
+    external: true
+    name: wpb-bootcamps-uploads
+  backups-data:
+    external: true
+    name: wpb-bootcamps-backups
