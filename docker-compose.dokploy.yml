@@ -180,11 +180,5 @@ networks:
 # changes; these are not, so a rename or a rebuilt Dokploy app keeps its data.
 volumes:
   db-data:
-    external: true
-    name: wpb-bootcamps-db
   uploads-data:
-    external: true
-    name: wpb-bootcamps-uploads
   backups-data:
-    external: true
-    name: wpb-bootcamps-backups
