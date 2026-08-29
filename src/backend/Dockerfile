@@ -12,8 +12,12 @@ RUN npm ci
 RUN npm install pg --save
 # postgresql16-client (matching the postgres:16 image in docker-compose.yml)
 # provides pg_dump/pg_restore for scripts/backup.js and scripts/restore.js -
-# see docs/self-hosting.md
-RUN apk add --no-cache postgresql16-client
+# see docs/self-hosting.md.
+#
+# bash is here for people, not for the app: the base image ships busybox ash,
+# so `docker compose exec backend bash` fails and anyone debugging a
+# deployment has to know to type `sh` instead. Costs about a megabyte.
+RUN apk add --no-cache postgresql16-client bash
 
 # Copy application files
 COPY . .

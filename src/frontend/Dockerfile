@@ -26,6 +26,12 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# bash is for people, not the app: the base image ships busybox ash, so
+# `docker compose exec frontend bash` fails and anyone debugging a deployment
+# has to know to type `sh` instead. Installed before dropping privileges,
+# since apk needs root.
+RUN apk add --no-cache bash
+
 # Don't run as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nuxt
