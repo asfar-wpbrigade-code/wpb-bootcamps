@@ -152,7 +152,8 @@ export default defineNuxtConfig({
   plugins: [
     '~/plugins/api.ts',
     '~/plugins/auth.ts',
-    // The auth-init plugin is client-only and will be auto-imported
-    '~/plugins/i18n.client.ts',
+    // The auth-init plugin is client-only and will be auto-imported.
+    // The i18n plugin is gone: it detected a browser language and picked the
+    // closest match, and the site now ships in English only.
   ],
 })

@@ -1,28 +1,28 @@
 /**
- * Lightweight i18n composable — no @nuxtjs/i18n dependency needed.
- * Reads locale JSON files directly; locale is stored in a Nuxt state ref
- * (SSR-compatible) and persisted in the wpbrigade_locale cookie.
+ * Lightweight translation lookup — no @nuxtjs/i18n dependency needed.
+ *
+ * The site ships in English only. This stays in place rather than being
+ * stripped out because every component calls `t('some.key')`, and the keys are
+ * a useful single source for the site's wording: copy changes happen in
+ * locales/en.json instead of being scattered through templates.
+ *
+ * The upstream project carried French, Italian, Spanish, German and Portuguese
+ * translations of its own marketing copy. They were removed rather than left
+ * to rot: the copy they translated no longer exists, and a half-translated
+ * language switcher is worse than none.
+ *
+ * To add a language later: add the JSON file, add it to MESSAGES and LOCALES,
+ * and put the switcher back in the header.
  */
 
-// Statically import all locale files so they are bundled with no async load
 import en from '../locales/en.json'
-import fr from '../locales/fr.json'
-import it from '../locales/it.json'
-import es from '../locales/es.json'
-import de from '../locales/de.json'
-import pt from '../locales/pt.json'
 
-type LocaleCode = 'en' | 'fr' | 'it' | 'es' | 'de' | 'pt'
+type LocaleCode = 'en'
 
-const MESSAGES: Record<LocaleCode, Record<string, any>> = { en, fr, it, es, de, pt }
+const MESSAGES: Record<LocaleCode, Record<string, any>> = { en }
 
 export const LOCALES = [
   { code: 'en' as LocaleCode, name: 'English' },
-  { code: 'fr' as LocaleCode, name: 'Français' },
-  { code: 'it' as LocaleCode, name: 'Italiano' },
-  { code: 'es' as LocaleCode, name: 'Español' },
-  { code: 'de' as LocaleCode, name: 'Deutsch' },
-  { code: 'pt' as LocaleCode, name: 'Português' },
 ]
 
 /** Resolve a dot-separated key path in a nested object */
@@ -38,7 +38,6 @@ function resolve(obj: Record<string, any>, key: string): string | undefined {
 
 export function useI18n() {
   const locale = useState<LocaleCode>('locale', () => 'en')
-  const localeCookie = useCookie<LocaleCode>('wpbrigade_locale', { maxAge: 60 * 60 * 24 * 365 })
 
   /** Translate a dot-notation key, with optional `{param}` interpolation */
   function t(key: string, params?: Record<string, string>): string {
@@ -51,9 +50,7 @@ export function useI18n() {
   }
 
   function setLocale(code: LocaleCode | string) {
-    const safe = (code in MESSAGES ? code : 'en') as LocaleCode
-    locale.value = safe
-    localeCookie.value = safe
+    locale.value = (code in MESSAGES ? code : 'en') as LocaleCode
   }
 
   return {

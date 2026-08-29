@@ -104,7 +104,6 @@ onUnmounted(() => {
 
           <!-- Auth Buttons -->
           <div class="flex items-center gap-4 ml-6">
-            <LanguageSwitcher />
             <template v-if="isAuthenticated && userName">
               <div class="relative">
                 <button
@@ -141,17 +140,14 @@ onUnmounted(() => {
               </div>
             </template>
             <template v-else>
+              <!-- No sign-up: recipients get an account automatically when a
+                   certificate is issued to them, so a public "create account"
+                   path would only lead somewhere useless. -->
               <NuxtLink
                 to="/login"
-                class="font-medium text-text-primary hover:text-text-secondary transition-colors"
-              >
-                {{ t('nav.login') }}
-              </NuxtLink>
-              <NuxtLink
-                to="/get-started"
                 class="px-4 py-2 bg-[var(--brand-primary)] rounded-full font-medium hover:opacity-90 transition-colors text-text-primary"
               >
-                {{ t('nav.getStarted') }}
+                {{ t('nav.login') }}
               </NuxtLink>
             </template>
           </div>
@@ -200,15 +196,9 @@ onUnmounted(() => {
           <template v-else>
             <NuxtLink
               to="/login"
-              class="block w-full py-2 text-center text-text-primary hover:text-text-secondary transition-colors"
-            >
-              {{ t('nav.login') }}
-            </NuxtLink>
-            <NuxtLink
-              to="/get-started"
               class="block w-full py-2 text-center bg-[var(--brand-primary)] text-white rounded-full hover:opacity-90 transition-colors"
             >
-              {{ t('nav.getStarted') }}
+              {{ t('nav.login') }}
             </NuxtLink>
           </template>
         </div>

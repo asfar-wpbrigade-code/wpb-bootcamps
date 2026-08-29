@@ -12,13 +12,23 @@ const { sections, features } = useHomeContent()
       <p class="text-text-secondary text-xl md:text-2xl mb-12 max-w-2xl mx-auto">
         {{ t('home.heroSubtitle') }}
       </p>
-      <NuxtLink
-        to="/get-started"
-        class="inline-flex items-center px-8 py-4 rounded-full bg-secondary text-text-primary hover:bg-opacity-90 transition-all text-lg font-medium"
-      >
-        {{ t('home.heroButton') }}
-        <span class="i-heroicons-arrow-right ml-2 w-5 h-5" />
-      </NuxtLink>
+      <!-- Two audiences arrive here: people considering a bootcamp, and
+           people holding a certificate who want it checked. One route each. -->
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <NuxtLink
+          to="/get-started"
+          class="inline-flex items-center px-8 py-4 rounded-full bg-secondary text-text-primary hover:bg-opacity-90 transition-all text-lg font-medium"
+        >
+          {{ t('home.heroButton') }}
+          <span class="i-heroicons-arrow-right ml-2 w-5 h-5" />
+        </NuxtLink>
+        <NuxtLink
+          to="/verify"
+          class="inline-flex items-center px-8 py-4 rounded-full border border-text-primary/20 text-text-primary hover:bg-text-primary/5 transition-all text-lg font-medium"
+        >
+          {{ t('home.heroSecondaryButton') }}
+        </NuxtLink>
+      </div>
     </div>
 
     <div class="relative mb-16">

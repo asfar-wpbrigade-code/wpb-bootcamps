@@ -5,29 +5,37 @@ export interface ListContent {
   }[]
 }
 
+/**
+ * Copy for the "how it works" page.
+ *
+ * Written for someone thinking about joining a bootcamp, or holding a
+ * certificate and wondering what it is. It previously addressed an
+ * organisation installing the platform - create an account, invite your team,
+ * configure Strapi - which is a different site's job.
+ */
 export default () => {
-  const title = 'How does it work?'
-  const subtitle = 'Just few simple steps to start create certificates for your business'
+  const title = 'How it works'
+  const subtitle = 'From joining a programme to a certificate you can show anyone'
   const steps = [
-    'Strapi Admin User creates certificates',
-    'Company Issuer sends certificates',
-    'Recipients receive & share certificates'
+    'Join a programme',
+    'Complete the work',
+    'Earn your certificate',
   ]
-  const listTitle = 'Get Started in 3 Steps'
+  const listTitle = 'Three steps'
 
   const list: ListContent = {
     1: [
-      { text: 'Create your WPBrigade account:', component: 'span' },
-      { text: 'Sign up and set up your organization in minutes — no installation required.', component: 'span' }
+      { text: 'Join a programme:', component: 'span' },
+      { text: 'Get in touch to find out which bootcamp fits and when the next cohort starts. Programmes run in cohorts, so there is a start date rather than a sign-up button.', component: 'span' },
     ],
     2: [
-      { text: 'Set up your workspace:', component: 'span' },
-      { text: 'Invite your team, configure your achievements, and customize your certificate templates.', component: 'span' }
+      { text: 'Complete the work:', component: 'span' },
+      { text: 'Each programme sets out what you need to do to pass. Those criteria are printed on the certificate itself, so anyone reading it can see what it took to earn.', component: 'span' },
     ],
     3: [
-      { text: 'Set up achievements and roles:', component: 'span' },
-      { text: 'In the admin panel, create a new Achievement and assign roles for issuers. Create an Issuer account, then sign in on the frontend and start sending certificates.', component: 'span' }
-    ]
+      { text: 'Earn your certificate:', component: 'span' },
+      { text: 'It arrives by email when you finish, with a link to view, download and share it. An account is created at the same time using that address, so you can sign in and find every certificate you hold in one place.', component: 'span' },
+    ],
   }
 
   return {
