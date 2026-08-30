@@ -12,12 +12,16 @@ const AUTHENTICATED_PERMISSIONS = [
   'api::profile.profile.update',
   'api::profile.profile.delete',
   'api::profile.profile.me',
+  'api::profile.profile.updateMe',
   'api::profile.profile.myIssuedCredentials',
   'api::profile.profile.myReceivedCredentials',
   'api::profile.profile.findIssuedCredentials',
   'api::profile.profile.findReceivedCredentials',
   'api::profile.profile.exportMyData',
   'api::profile.profile.importMyData',
+  // GDPR right-to-erasure. Was missing while the frontend's Delete Account
+  // button was a stub, so wiring the button up would have returned 403.
+  'api::profile.profile.deleteMyData',
   'api::profile.profile.dashboardStats',
 
   // Achievement permissions
@@ -110,10 +114,12 @@ const ISSUER_PERMISSIONS = [
   'api::profile.profile.find',
   'api::profile.profile.findOne',
   'api::profile.profile.me',
+  'api::profile.profile.updateMe',
   'api::profile.profile.myIssuedCredentials',
   'api::profile.profile.myReceivedCredentials',
   'api::profile.profile.exportMyData',
   'api::profile.profile.importMyData',
+  'api::profile.profile.deleteMyData',
   'api::profile.profile.dashboardStats',
 
   // Achievement permissions

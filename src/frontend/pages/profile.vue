@@ -4,20 +4,14 @@ import { apiClient } from '~/api/api-client'
 import { useAuthStore } from '~/stores/auth'
 
 const { t } = useI18n()
+// Mirrors api::profile.profile. The page used to declare avatar/role/website/
+// social as well, none of which exist on the content type or were rendered.
 interface UserProfile {
-  id: string
+  id: number | string
   name: string
-  email: string
-  avatar?: string
-  role: string
+  email?: string
   organization?: string
-  bio?: string
-  website?: string
-  social?: {
-    twitter?: string
-    linkedin?: string
-    github?: string
-  }
+  description?: string
 }
 
 interface Stats {
@@ -42,20 +36,11 @@ const form = ref({
   bio: '',
 })
 
-const profile = ref<UserProfile>({
-  id: '1',
-  name: 'John Doe',
-  email: 'john@example.com',
-  role: 'Issuer',
-  organization: 'Tech Academy',
-  bio: 'Passionate about education and technology',
-  website: 'https://johndoe.com',
-  social: {
-    twitter: '@johndoe',
-    linkedin: 'johndoe',
-    github: 'johndoe'
-  }
-})
+const profile = ref<UserProfile | null>(null)
+const profileLoading = ref(true)
+const profileError = ref<string | null>(null)
+const saveError = ref<string | null>(null)
+const saveSuccess = ref(false)
 
 const stats = ref<Stats>({
   credentialsIssued: 0,
@@ -82,8 +67,43 @@ const passwordSuccess = ref(false)
 const exportLoading = ref(false)
 const exportError = ref<string | null>(null)
 
-// Fetch real stats from the backend
-onMounted(async () => {
+// Delete account
+const showDeleteConfirm = ref(false)
+const deleteConfirmText = ref('')
+const deleteLoading = ref(false)
+const deleteError = ref<string | null>(null)
+
+// Load the signed-in user's real profile. This page previously seeded the form
+// from a hardcoded placeholder and never fetched anything, so every visitor saw
+// the same invented person - and saving would have written that over their
+// actual record.
+async function loadProfile() {
+  profileError.value = null
+  profileLoading.value = true
+  try {
+    const response = await apiClient.getCurrentUserProfile()
+    const data = response?.data
+    if (!data) {
+      throw new Error('No profile is linked to this account yet')
+    }
+
+    profile.value = data
+    form.value = {
+      name: data.name || '',
+      email: data.email || '',
+      organization: data.organization || '',
+      bio: data.description || '',
+    }
+  }
+  catch (err: any) {
+    profileError.value = err?.message || 'Could not load your profile'
+  }
+  finally {
+    profileLoading.value = false
+  }
+}
+
+async function loadStats() {
   statsLoading.value = true
   try {
     const result = await apiClient.getDashboardStats()
@@ -97,36 +117,49 @@ onMounted(async () => {
   finally {
     statsLoading.value = false
   }
-})
-
-// Initialize form with profile data
-form.value = {
-  name: profile.value.name,
-  email: profile.value.email,
-  organization: profile.value.organization || '',
-  bio: profile.value.bio || '',
 }
 
+onMounted(async () => {
+  await Promise.all([loadProfile(), loadStats()])
+})
+
 async function handleSubmit() {
+  if (!profile.value) {
+    return
+  }
+
+  saveError.value = null
+  saveSuccess.value = false
+
+  if (!form.value.name.trim()) {
+    saveError.value = 'Name cannot be empty'
+    return
+  }
+
   loading.value = true
   try {
-    // TODO: Implement API call to update profile
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // email is intentionally not sent: the backend resolves this profile by the
+    // account email, so letting the two drift apart would orphan the profile.
+    const response = await apiClient.updateCurrentUserProfile({
+      name: form.value.name.trim(),
+      organization: form.value.organization.trim(),
+      description: form.value.bio.trim(),
+    })
 
-    // Update profile with form data
-    profile.value = {
-      ...profile.value,
-      name: form.value.name,
-      email: form.value.email,
-      organization: form.value.organization,
-      bio: form.value.bio,
+    const saved = response?.data
+    if (saved) {
+      profile.value = saved
+      form.value = {
+        name: saved.name || '',
+        email: saved.email || form.value.email,
+        organization: saved.organization || '',
+        bio: saved.description || '',
+      }
     }
-
-    // TODO: Show success message
+    saveSuccess.value = true
   }
-  catch (error) {
-    console.error('Failed to update profile:', error)
-    // TODO: Show error message
+  catch (err: any) {
+    saveError.value = err?.message || 'Failed to save your profile'
   }
   finally {
     loading.value = false
@@ -199,7 +232,29 @@ async function handleExportData() {
 }
 
 function handleDeleteAccount() {
-  // TODO: Implement account deletion
+  showDeleteConfirm.value = !showDeleteConfirm.value
+  deleteError.value = null
+  deleteConfirmText.value = ''
+}
+
+async function confirmDeleteAccount() {
+  if (deleteConfirmText.value !== 'DELETE') {
+    deleteError.value = 'Type DELETE to confirm'
+    return
+  }
+
+  deleteError.value = null
+  deleteLoading.value = true
+  try {
+    await apiClient.deleteMyData()
+    // The data this session pointed at is gone; the session should not outlive it.
+    useAuthStore().logout()
+    await navigateTo('/')
+  }
+  catch (err: any) {
+    deleteError.value = err?.message || 'Failed to delete your account'
+    deleteLoading.value = false
+  }
 }
 
 function formatDate(date: string) {
@@ -243,6 +298,19 @@ useHead({
         <div class="lg:col-span-2">
           <div class="bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-lg">
             <form class="space-y-6" @submit.prevent="handleSubmit">
+              <div v-if="profileLoading" class="text-sm text-text-secondary">
+                Loading your profile…
+              </div>
+              <div v-if="profileError" class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ profileError }}
+              </div>
+              <div v-if="saveSuccess" class="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+                Profile saved.
+              </div>
+              <div v-if="saveError" class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ saveError }}
+              </div>
+
               <!-- Personal Information -->
               <div class="space-y-4">
                 <div>
@@ -266,9 +334,13 @@ useHead({
                     id="email"
                     v-model="form.email"
                     type="email"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3458eb] focus:border-transparent"
+                    disabled
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-text-secondary cursor-not-allowed placeholder-gray-400 focus:outline-none"
                     placeholder="Enter your email"
                   >
+                  <p class="mt-1 text-xs text-text-secondary">
+                    Tied to your account email, which is how your profile is found. Changing it here would orphan the profile.
+                  </p>
                 </div>
 
                 <div>
@@ -302,7 +374,7 @@ useHead({
               <div>
                 <button
                   type="submit"
-                  :disabled="loading"
+                  :disabled="loading || profileLoading || !profile"
                   class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-white bg-[#3458eb] hover:bg-[#3458eb]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3458eb] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span v-if="!loading">Save Changes</span>
@@ -452,8 +524,35 @@ useHead({
                 @click="handleDeleteAccount"
               >
                 <span>Delete Account</span>
-                <div class="w-5 h-5 i-heroicons-trash" />
+                <div class="w-5 h-5" :class="showDeleteConfirm ? 'i-heroicons-chevron-up' : 'i-heroicons-trash'" />
               </button>
+              <div v-if="showDeleteConfirm" class="border border-red-200 bg-red-50/50 rounded-lg p-4 space-y-3">
+                <p class="text-sm text-red-700">
+                  This permanently erases your profile, the achievements you created and the
+                  credentials you issued or received. Certificates already handed out will stop
+                  verifying. It cannot be undone.
+                </p>
+                <p class="text-sm text-text-secondary">
+                  Export your data first if you might want it back.
+                </p>
+                <div v-if="deleteError" class="text-sm text-red-600">
+                  {{ deleteError }}
+                </div>
+                <input
+                  v-model="deleteConfirmText"
+                  type="text"
+                  placeholder="Type DELETE to confirm"
+                  class="w-full px-3 py-2 border border-red-200 rounded-lg text-sm focus:outline-none focus:border-red-500"
+                  autocomplete="off"
+                >
+                <button
+                  class="w-full py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="deleteLoading || deleteConfirmText !== 'DELETE'"
+                  @click="confirmDeleteAccount"
+                >
+                  {{ deleteLoading ? 'Deleting…' : 'Permanently delete my account' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>

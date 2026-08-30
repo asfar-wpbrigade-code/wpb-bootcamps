@@ -28,6 +28,9 @@
     "description": {
       "type": "text"
     },
+    "organization": {
+      "type": "string"
+    },
     "image": {
       "type": "media",
       "multiple": false,

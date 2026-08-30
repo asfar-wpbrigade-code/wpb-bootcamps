@@ -17,6 +17,19 @@ export default {
         },
       },
     },
+    // Update the current user's own profile (name/organization/description)
+    {
+      method: 'PUT',
+      path: '/profiles/me',
+      handler: 'profile.updateMe',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: ['api::profile.profile.updateMe'],
+        },
+      },
+    },
     // Export everything associated with the current user's own profile
     {
       method: 'GET',

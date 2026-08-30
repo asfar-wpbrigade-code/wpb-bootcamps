@@ -186,10 +186,14 @@ export class ApiClient {
   }
 
   /**
-   * DELETE request
+   * DELETE request. Takes an optional body - Strapi's right-to-erasure
+   * endpoint requires an explicit confirmation payload.
    */
-  delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' })
+  delete<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'DELETE',
+      body: data ? JSON.stringify(data) : undefined,
+    })
   }
 
   // Badge-specific methods
@@ -544,6 +548,25 @@ export class ApiClient {
    */
   async getCurrentUserProfile() {
     return this.get<any>('/api/profiles/me')
+  }
+
+  /**
+   * Update the current user's profile. The backend resolves which profile
+   * that is from the auth token, so there is no id to pass and no way to
+   * address someone else's. Only name/organization/description are writable.
+   */
+  async updateCurrentUserProfile(data: { name?: string, organization?: string, description?: string }) {
+    return this.put<{ data: any }>('/api/profiles/me', { data })
+  }
+
+  /**
+   * GDPR right-to-erasure for the current user. Irreversible.
+   */
+  async deleteMyData() {
+    return this.delete<{ success: boolean, summary?: Record<string, number> }>(
+      '/api/profiles/me/data',
+      { confirm: true },
+    )
   }
 
   /**

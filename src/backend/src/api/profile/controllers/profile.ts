@@ -113,6 +113,68 @@ export default factories.createCoreController('api::profile.profile', ({ strapi 
   },
 
   /**
+   * Update the current user's own profile.
+   *
+   * Deliberately not routed through PUT /profiles/:id: the profile is resolved
+   * server-side from the authenticated user, the same way me/exportMyData/
+   * deleteMyData do it, so a caller can never address someone else's profile
+   * and the frontend never has to know an id.
+   *
+   * `email` is not writable here. All of those handlers find the profile by
+   * `ctx.state.user.email`, so letting the profile email drift away from the
+   * account email would orphan the profile and lock its owner out of their own
+   * data. Changing it belongs to the account-email flow, with verification.
+   */
+  async updateMe(ctx) {
+    try {
+      if (!ctx.state.user) {
+        return ctx.unauthorized('You must be logged in');
+      }
+
+      const profiles = await strapi.entityService.findMany('api::profile.profile', {
+        filters: { email: ctx.state.user.email },
+        status: 'published',
+        limit: 1,
+      });
+
+      if (!profiles || profiles.length === 0) {
+        return ctx.notFound('Profile not found for the current user');
+      }
+
+      const body = ctx.request.body?.data ?? ctx.request.body ?? {};
+
+      // Whitelist. Anything else the client sends - owner, publicKey, did,
+      // profileType - is dropped rather than trusted.
+      const WRITABLE = ['name', 'organization', 'description'];
+      const data: Record<string, any> = {};
+      for (const field of WRITABLE) {
+        if (body[field] !== undefined) data[field] = body[field];
+      }
+
+      if (Object.keys(data).length === 0) {
+        return ctx.badRequest('No editable fields supplied');
+      }
+
+      // name is required by the schema; an empty string would pass the
+      // presence check above but fail deeper with a less useful message.
+      if (data.name !== undefined && !String(data.name).trim()) {
+        return ctx.badRequest('Name cannot be empty');
+      }
+
+      const updated = await strapi.entityService.update(
+        'api::profile.profile',
+        profiles[0].id,
+        { data },
+      );
+
+      return { data: updated };
+    } catch (err) {
+      console.error('Error updating current user profile:', err);
+      return ctx.badRequest('Error updating profile', { error: err });
+    }
+  },
+
+  /**
    * Export everything associated with the current user's own profile:
    * achievements it created, credentials it issued or received, and their
    * evidence. See services/data-portability.ts.
