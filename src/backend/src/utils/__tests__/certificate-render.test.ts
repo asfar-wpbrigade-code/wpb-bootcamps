@@ -43,13 +43,17 @@ describe('certificate rendering', () => {
 
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-')
 
-    const parsed = await PDFDocument.load(pdf)
+    // updateMetadata: false, or load() overwrites Producer with pdf-lib's own
+    // value in memory and the assertion below tests pdf-lib rather than us.
+    const parsed = await PDFDocument.load(pdf, { updateMetadata: false })
     expect(parsed.getPageCount()).toBe(1)
 
     const { width, height } = parsed.getPage(0).getSize()
     expect(Math.round(width)).toBe(CERTIFICATE_WIDTH)
     expect(Math.round(height)).toBe(CERTIFICATE_HEIGHT)
     expect(parsed.getTitle()).toBe('Certificate')
+    expect(parsed.getAuthor()).toBe('WPBrigade')
+    expect(parsed.getProducer()).toBe('WPBrigade Credentials')
   })
 
   it('renders without system fonts, so output does not depend on the host', () => {
