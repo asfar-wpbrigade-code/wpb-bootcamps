@@ -137,8 +137,12 @@ recipient twice over: whether the **certificate** was created, and whether the
 
 ## The certificate design
 
-Certificates are generated as SVG on request — nothing is stored — so a design
-change applies to every certificate ever issued, without reissuing anything.
+Certificates are generated on request — nothing is stored — so a design change
+applies to every certificate ever issued, without reissuing anything.
+
+The SVG is the original; PDF and PNG are rendered from it server-side, so all
+three always show the same design. Recipients get all three from the download
+button on their certificate page.
 
 The design lives in **`src/backend/src/utils/certificate-template.ts`** on a
 792 × 612 canvas (US Letter, landscape). Supporting artwork sits in
@@ -279,7 +283,7 @@ Full OpenAPI documentation at http://localhost:1337/documentation.
 |---|---|
 | `GET /api/credentials/:id` | Certificate as Open Badges 3.0 JSON |
 | `GET /api/credentials/:id/verify` | Verify signature, expiry and revocation |
-| `GET /api/credentials/:id/certificate` | The certificate as SVG |
+| `GET /api/credentials/:id/certificate` | The certificate. `?format=pdf` or `?format=png`; SVG by default |
 | `GET /api/achievements` | Published templates |
 
 `:id` accepts the `urn:uuid:` credential id, Strapi's documentId, or the numeric
@@ -327,9 +331,11 @@ Worth knowing before promising any of it to a customer:
   list of indices rather than the spec's compressed bitstring. Our own verify
   page handles it; a third-party verifier may not.
 - **Local passwords only** — no OAuth or single sign-on.
-- **Certificates download as SVG.** PNG and PDF aren't implemented yet.
-- Backend test coverage is focused on signing, verification and issuance;
-  Playwright doesn't run in CI.
+- Backend test coverage is focused on signing, verification and issuance. The
+  Playwright suite runs in CI but only checks that pages render.
+- **PDF and PNG are rasterised**, so their text is not selectable or
+  searchable. They print at roughly 288 DPI, which is past what the eye picks
+  up on paper, but a PDF reader will not find words in one.
 
 ## Built on Certo
 

@@ -546,8 +546,11 @@ export class ApiClient {
   /**
    * Get the public URL for a certificate
    */
-  getCertificateUrl(id: number | string): string {
-    return `${this.baseUrl}/api/credentials/${encodeURIComponent(id)}/certificate`
+  getCertificateUrl(id: number | string, format: 'svg' | 'png' | 'pdf' = 'svg'): string {
+    const base = `${this.baseUrl}/api/credentials/${encodeURIComponent(id)}/certificate`
+    // svg is the endpoint default and is served inline, which is what the
+    // credential page needs when it uses this URL as an <img> source.
+    return format === 'svg' ? base : `${base}?format=${format}`
   }
 
   /**

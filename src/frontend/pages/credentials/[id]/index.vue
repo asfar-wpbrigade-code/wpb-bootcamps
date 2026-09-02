@@ -388,34 +388,55 @@ async function shareCredential() {
   }
 }
 
-async function downloadCredential() {
-  const imageUrl = displayImageUrl.value
-  if (!imageUrl) {
+const DOWNLOAD_FORMATS = [
+  { format: 'pdf' as const, label: 'PDF', hint: 'Best for printing' },
+  { format: 'png' as const, label: 'PNG', hint: 'Best for sharing' },
+  { format: 'svg' as const, label: 'SVG', hint: 'Scalable original' },
+]
+
+const showDownloadMenu = ref(false)
+const downloadingFormat = ref<string | null>(null)
+const downloadError = ref<string | null>(null)
+
+/**
+ * Certificates are rendered by the backend, so all three formats come from the
+ * same endpoint and the same artwork. Fetched as a blob rather than followed as
+ * a link because the API is on a different origin: a cross-origin <a download>
+ * has its filename ignored, and the SVG is served inline so the browser would
+ * display it instead of saving it.
+ */
+async function downloadCertificate(format: 'pdf' | 'png' | 'svg') {
+  const id = credential.value?.id
+  if (!id) {
     return
   }
 
+  showDownloadMenu.value = false
+  downloadError.value = null
+  downloadingFormat.value = format
+
   try {
-    const response = await fetch(imageUrl)
+    const response = await fetch(apiClient.getCertificateUrl(id, format))
+    if (!response.ok) {
+      throw new Error(`The server could not produce a ${format.toUpperCase()} (${response.status})`)
+    }
+
     const blob = await response.blob()
     const downloadUrl = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
 
-    // Name the file after what was actually downloaded. This was hardcoded to
-    // .png while the certificate endpoint returns SVG, so the saved file had
-    // an extension that didn't match its contents and wouldn't open.
-    const extension = blob.type === 'image/svg+xml'
-      ? 'svg'
-      : (blob.type.split('/')[1] || 'png')
-
     a.href = downloadUrl
-    a.download = `${credential.value?.name || 'credential'}.${extension}`
+    a.download = `${credential.value?.name || 'certificate'}.${format}`
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(downloadUrl)
     document.body.removeChild(a)
   }
-  catch (err) {
-    console.error('Error downloading credential:', err)
+  catch (err: any) {
+    downloadError.value = err?.message || 'Download failed'
+  }
+  finally {
+    downloadingFormat.value = null
   }
 }
 
@@ -779,14 +800,40 @@ async function submitRenewal() {
             class="w-full h-full object-contain"
             @error="handleImageError"
           >
+          <p
+            v-if="downloadError"
+            class="absolute bottom-4 left-4 right-20 text-xs text-red-700 bg-white/95 rounded-lg px-3 py-2 shadow"
+          >
+            {{ downloadError }}
+          </p>
           <div class="absolute bottom-4 right-4 flex gap-2">
-            <button
-              class="p-2 rounded-lg bg-white/90 hover:bg-white shadow-lg transition-colors"
-              title="Download image"
-              @click="downloadCredential"
-            >
-              <div class="i-lucide-download w-5 h-5" />
-            </button>
+            <div class="relative">
+              <button
+                class="p-2 rounded-lg bg-white/90 hover:bg-white shadow-lg transition-colors disabled:opacity-60"
+                :title="downloadingFormat ? 'Preparing download…' : 'Download certificate'"
+                :disabled="!!downloadingFormat"
+                @click="showDownloadMenu = !showDownloadMenu"
+              >
+                <div
+                  class="w-5 h-5"
+                  :class="downloadingFormat ? 'i-lucide-loader-2 animate-spin' : 'i-lucide-download'"
+                />
+              </button>
+              <div
+                v-if="showDownloadMenu"
+                class="absolute bottom-full right-0 mb-2 w-44 rounded-lg bg-white shadow-xl border border-gray-100 overflow-hidden z-10"
+              >
+                <button
+                  v-for="option in DOWNLOAD_FORMATS"
+                  :key="option.format"
+                  class="w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors"
+                  @click="downloadCertificate(option.format)"
+                >
+                  <span class="block text-sm font-medium text-gray-800">{{ option.label }}</span>
+                  <span class="block text-xs text-gray-500">{{ option.hint }}</span>
+                </button>
+              </div>
+            </div>
             <button
               class="p-2 rounded-lg bg-white/90 hover:bg-white shadow-lg transition-colors"
               title="Share credential"

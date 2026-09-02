@@ -2,7 +2,31 @@
  * Certificate service for generating visual certificates
  */
 
+import { renderCertificatePdf, renderCertificatePng } from '../../../utils/certificate-render'
 import { generateCertificateSvg } from '../../../utils/certificate-template'
+
+/** Formats the certificate endpoint can return. */
+export type CertificateFormat = 'svg' | 'png' | 'pdf'
+
+const CONTENT_TYPES: Record<CertificateFormat, string> = {
+  svg: 'image/svg+xml',
+  png: 'image/png',
+  pdf: 'application/pdf',
+}
+
+/** Safe for a Content-Disposition filename on any platform. */
+function toFileStem(...parts: (string | undefined)[]): string {
+  const stem = parts
+    .filter(Boolean)
+    .join('-')
+    .normalize('NFKD')
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/[\s-]+/g, '-')
+    .slice(0, 80)
+
+  return stem || 'certificate'
+}
 
 /** Relations the certificate template needs to render. */
 const CERTIFICATE_POPULATE = {
@@ -65,13 +89,65 @@ export default ({ strapi }) => ({
    * @returns {string} The SVG certificate
    */
   async generateCertificate(credentialId: number | string): Promise<string> {
+    const credential = await this.findCredentialForCertificate(credentialId)
+
+    if (!credential) {
+      throw new Error('Credential not found')
+    }
+
+    return this.buildCertificateSvg(credential)
+  },
+
+  /**
+   * Render the certificate for a credential in the requested format.
+   *
+   * Returns the body along with what the response needs to describe it, so the
+   * controller does not have to keep its own format table in step with this
+   * one. The credential is looked up once and reused for both the artwork and
+   * the filename.
+   *
+   * @param {number|string} credentialId - Any identifier findCredentialForCertificate accepts
+   * @param {CertificateFormat} format - svg, png or pdf
+   */
+  async generateCertificateFile(
+    credentialId: number | string,
+    format: CertificateFormat,
+  ): Promise<{ body: string | Buffer, contentType: string, filename: string }> {
+    const credential = await this.findCredentialForCertificate(credentialId)
+
+    if (!credential) {
+      throw new Error('Credential not found')
+    }
+
+    const svg = await this.buildCertificateSvg(credential)
+    const filename = `${toFileStem(
+      credential.recipient?.name,
+      credential.achievement?.name || credential.name,
+    )}.${format}`
+
+    if (format === 'svg') {
+      return { body: svg, contentType: CONTENT_TYPES.svg, filename }
+    }
+
+    if (format === 'png') {
+      return { body: renderCertificatePng(svg), contentType: CONTENT_TYPES.png, filename }
+    }
+
+    const pdf = await renderCertificatePdf(svg, {
+      title: [credential.recipient?.name, credential.achievement?.name].filter(Boolean).join(' - '),
+      author: credential.issuer?.name || 'WPBrigade',
+    })
+
+    return { body: pdf, contentType: CONTENT_TYPES.pdf, filename }
+  },
+
+  /**
+   * Build the certificate artwork for an already-loaded credential.
+   *
+   * @param {object} credential - A credential populated with CERTIFICATE_POPULATE
+   */
+  async buildCertificateSvg(credential: any): Promise<string> {
     try {
-      const credential = await this.findCredentialForCertificate(credentialId)
-
-      if (!credential) {
-        throw new Error('Credential not found')
-      }
-
       // Get required data
       const recipientName = credential.recipient?.name || 'Recipient'
       const achievementName = credential.achievement?.name || credential.name || 'Achievement'

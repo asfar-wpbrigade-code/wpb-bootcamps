@@ -504,7 +504,14 @@ export default factories.createCoreController('api::credential.credential', ({ s
   },
 
   /**
-   * Get a certificate for a credential
+   * Get a certificate for a credential, as SVG, PNG or PDF.
+   *
+   * `?format=` selects; SVG remains the default because the credential page
+   * uses this same URL as an <img> source. SVG is therefore served inline,
+   * while PNG and PDF are sent as attachments with a filename built from the
+   * recipient and achievement - a browser asked to display a PDF inline will
+   * navigate away from the page instead of saving it.
+   *
    * @param {Object} ctx - The context object
    */
   async getCertificate(ctx) {
@@ -514,16 +521,28 @@ export default factories.createCoreController('api::credential.credential', ({ s
       if (!id) {
         return ctx.badRequest('Credential ID is required')
       }
+
+      const format = String(ctx.query.format || 'svg').toLowerCase()
+
+      if (!['svg', 'png', 'pdf'].includes(format)) {
+        return ctx.badRequest(`Unsupported certificate format '${format}'. Use svg, png or pdf.`)
+      }
       
       // Get the certificate service
       const certificateService = strapi.service('api::credential.certificate')
-      
-      // Generate the certificate SVG
-      const svg = await certificateService.generateCertificate(id)
 
-      // Set the content type and return the SVG
-      ctx.set('Content-Type', 'image/svg+xml')
-      return svg
+      const { body, contentType, filename } = await certificateService.generateCertificateFile(
+        id,
+        format as 'svg' | 'png' | 'pdf',
+      )
+
+      ctx.set('Content-Type', contentType)
+
+      if (format !== 'svg') {
+        ctx.set('Content-Disposition', `attachment; filename="${filename}"`)
+      }
+
+      return body
     } catch (error) {
       // The detail goes to the log, not to the caller. Returning
       // `error.message` here meant a lookup failure answered the browser with
