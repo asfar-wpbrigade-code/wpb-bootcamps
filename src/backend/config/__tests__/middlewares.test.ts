@@ -17,7 +17,7 @@ function ctxWithOrigin(origin?: string) {
 describe('CORS origin function', () => {
   it('allows a default whitelisted origin', () => {
     const origin = buildOriginFn()
-    expect(origin(ctxWithOrigin('https://certo.schroedinger-hat.org'))).toBe('https://certo.schroedinger-hat.org')
+    expect(origin(ctxWithOrigin('https://bootcamp.labspk.com'))).toBe('https://bootcamp.labspk.com')
   })
 
   it('does not throw and returns a string for a non-whitelisted origin (regression for #75)', () => {
@@ -42,8 +42,13 @@ describe('CORS origin function', () => {
     expect(origin(ctxWithOrigin('https://not-allowed.example.com'))).toBe('')
   })
 
-  it('matches Netlify deploy-preview URLs via the existing regex', () => {
+  it('rejects the upstream project domains and deploy previews', () => {
     const origin = buildOriginFn()
-    expect(origin(ctxWithOrigin('https://deploy-preview-42--certo.netlify.app'))).toBe('https://deploy-preview-42--certo.netlify.app')
+    // Removed in c5ab9ce: a wildcard for the upstream project's Netlify
+    // previews meant anyone opening a pull request there got an origin this
+    // API trusted. These must stay rejected.
+    expect(origin(ctxWithOrigin('https://deploy-preview-42--certo.netlify.app'))).toBe('')
+    expect(origin(ctxWithOrigin('https://certo.schroedinger-hat.org'))).toBe('')
+    expect(origin(ctxWithOrigin('https://certo.netlify.app'))).toBe('')
   })
 })

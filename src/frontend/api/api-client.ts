@@ -8,6 +8,50 @@ import type {
 /**
  * API client for interacting with the Strapi backend
  */
+/**
+ * localStorage is not reliably usable even when `import.meta.client` is true.
+ * A browser with site data blocked throws on access, and the Nuxt test
+ * environment supplies a stub object without the Storage methods - which threw
+ * `localStorage.getItem is not a function` while this module was still being
+ * imported, taking the whole frontend suite down with it (12 files, 0 tests
+ * run). Losing the stored token is survivable; crashing on it is not.
+ */
+const tokenStorage = {
+  get(key: string): string | null {
+    if (!import.meta.client) {
+      return null
+    }
+    try {
+      return globalThis.localStorage.getItem(key)
+    }
+    catch {
+      return null
+    }
+  },
+  set(key: string, value: string): void {
+    if (!import.meta.client) {
+      return
+    }
+    try {
+      globalThis.localStorage.setItem(key, value)
+    }
+    catch {
+      // Session just won't survive a reload.
+    }
+  },
+  remove(key: string): void {
+    if (!import.meta.client) {
+      return
+    }
+    try {
+      globalThis.localStorage.removeItem(key)
+    }
+    catch {
+      // Already effectively cleared as far as this page is concerned.
+    }
+  },
+}
+
 export class ApiClient {
   private baseUrl: string
   private token: string | null
@@ -17,11 +61,9 @@ export class ApiClient {
     this.token = null
 
     // Initialize token from localStorage if available
-    if (import.meta.client) {
-      const storedToken = localStorage.getItem('token')
-      if (storedToken) {
-        this.token = storedToken
-      }
+    const storedToken = tokenStorage.get('token')
+    if (storedToken) {
+      this.token = storedToken
     }
   }
 
@@ -32,9 +74,7 @@ export class ApiClient {
     this.token = token
 
     // Also store in localStorage for persistence
-    if (import.meta.client) {
-      localStorage.setItem('token', token)
-    }
+    tokenStorage.set('token', token)
   }
 
   /**
@@ -43,9 +83,7 @@ export class ApiClient {
   clearToken() {
     this.token = null
 
-    if (import.meta.client) {
-      localStorage.removeItem('token')
-    }
+    tokenStorage.remove('token')
   }
 
   /**
@@ -60,9 +98,9 @@ export class ApiClient {
     // Get token from instance, localStorage, or cookie
     let token = this.token
 
-    if (!token && import.meta.client) {
+    if (!token) {
       // Try localStorage
-      const localToken = localStorage.getItem('token')
+      const localToken = tokenStorage.get('token')
       if (localToken) {
         token = localToken
         this.token = localToken // Update instance token
@@ -295,7 +333,7 @@ export class ApiClient {
 
     try {
       // Ensure we have a valid token
-      const token = this.token || (import.meta.client ? localStorage.getItem('token') : null)
+      const token = this.token || tokenStorage.get('token')
       if (!token) {
         throw new Error('Authentication required. Please log in to issue badges.')
       }
@@ -591,7 +629,7 @@ export class ApiClient {
       credentialsReceived: 0,
       achievementsCreated: 0,
       uniqueRecipients: 0,
-      topAchievements: [] as { id: number; name: string; count: number }[],
+      topAchievements: [] as { id: number, name: string, count: number }[],
       memberSince: new Date().toISOString(),
     }
     try {
@@ -719,7 +757,7 @@ export class ApiClient {
       throw new Error('At least one recipient is required')
     }
     try {
-      const token = this.token || (import.meta.client ? localStorage.getItem('token') : null)
+      const token = this.token || tokenStorage.get('token')
       if (!token) {
         throw new Error('Authentication required. Please log in to issue badges.')
       }
