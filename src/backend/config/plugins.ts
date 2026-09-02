@@ -1,9 +1,18 @@
+import { getBranding } from '../src/utils/branding';
+
+// Same source the issuance and expiration emails already use, so the
+// organisation's name is configured once (BRAND_NAME) rather than hardcoded in
+// each place that sends something out. These five spots still said "Certo",
+// the upstream project's name - most visibly in the password-reset email,
+// which told WPBrigade's recipients to reset a "Certo account".
+const brand = getBranding();
+
 export default ({ env }) => ({
   documentation: {
     enabled: true,
     config: {
       info: {
-        title: 'Certo API',
+        title: `${brand.name} API`,
         description: 'Open Badges 3.0 / Verifiable Credentials API for issuing, managing, and verifying digital credentials.',
         version: '1.0.0',
       },
@@ -29,17 +38,18 @@ export default ({ env }) => ({
         email_confirmation: false,
         email_reset_password: {
           from: {
-            name: 'Certo Support',
+            name: `${brand.name} Support`,
             email: env('SMTP_FROM', 'gw7t4cqccle4qv53@ethereal.email'),
           },
-          subject: 'Reset your password for Certo',
+          subject: `Reset your password for ${brand.name}`,
+          // <%= URL %> and <%= TOKEN %> are filled in by Strapi, not here.
           message: `<p>Hello,</p>
-<p>We received a request to reset your password for your Certo account.</p>
+<p>We received a request to reset your password for your ${brand.name} account.</p>
 <p>Please click the link below to set a new password:</p>
 <p><%= URL %>?code=<%= TOKEN %></p>
 <p>If you did not request this, please ignore this email.</p>
 <p>Thanks,</p>
-<p>The Certo Team</p>`,
+<p>The ${brand.name} Team</p>`,
         },
         email_confirmation_redirection: null,
         default_role: 'authenticated',

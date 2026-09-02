@@ -6,7 +6,8 @@
  * Authenticator, Authy, 1Password, and any other TOTP-compliant app.
  *
  * Env:
- *   TOTP_ISSUER — the issuer shown in authenticator apps (default "Certo")
+ *   TOTP_ISSUER — the issuer shown in authenticator apps (defaults to
+ *     BRAND_NAME, i.e. "WPBrigade" unless configured otherwise)
  *   TOTP_ALGORITHM — "sha1" (default), "sha256", or "sha512"
  *   TOTP_DIGITS — code length (default 6)
  *   TOTP_PERIOD — seconds per code (default 30)
@@ -16,6 +17,7 @@
  * totp_verified to indicate 2FA has been enabled.
  */
 
+import { getBranding } from '../../../utils/branding'
 import { encrypt, decrypt } from '../../../utils/key-encryption'
 import { TOTP } from 'otplib'
 
@@ -36,7 +38,8 @@ export default ({ strapi }) => ({
   async setup(profile) {
     const totp = createTotp()
 
-    const issuer = process.env.TOTP_ISSUER || 'Certo'
+    // Shown as the account name in the user's authenticator app.
+    const issuer = process.env.TOTP_ISSUER || getBranding().name
     const secret = totp.generateSecret()
 
     // Encrypt the secret before storing it.
