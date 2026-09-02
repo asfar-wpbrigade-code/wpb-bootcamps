@@ -1,33 +1,34 @@
 /**
  * GET /.well-known/api-catalog
  *
- * RFC 9727 API Catalog — machine-readable discovery of WPBrigade's REST API.
+ * RFC 9727 API Catalog - machine-readable discovery of the REST API.
  * Content-Type: application/linkset+json
  * https://www.rfc-editor.org/rfc/rfc9727
+ *
+ * No `service-desc` entry: it used to point at
+ * /api/documentation/v1.0.0/full_documentation.json, which 404s.
+ * @strapi/plugin-documentation is enabled but is not currently serving a
+ * generated OpenAPI spec, so there is no machine-readable description to
+ * advertise. `service-doc` points at the Swagger UI, which does load.
  */
 export default defineEventHandler((event) => {
   setResponseHeader(event, 'Content-Type', 'application/linkset+json')
+  const api = apiOrigin(event)
+
   return {
     linkset: [
       {
-        anchor: 'https://wpbrigade.com/api',
-        'service-desc': [
-          {
-            href: 'https://wpbrigade.com/api/documentation/v1.0.0/full_documentation.json',
-            type: 'application/vnd.oai.openapi+json',
-            title: 'WPBrigade OpenAPI 3.0 specification',
-          },
-        ],
+        'anchor': `${api}/api`,
         'service-doc': [
           {
-            href: 'https://wpbrigade.com/api/documentation',
+            href: apiDocsUrl(event),
             type: 'text/html',
             title: 'WPBrigade API documentation (Swagger UI)',
           },
         ],
-        status: [
+        'status': [
           {
-            href: 'https://wpbrigade.com/api/health',
+            href: `${api}/api/health`,
             type: 'application/json',
             title: 'Health check endpoint',
           },
@@ -35,7 +36,7 @@ export default defineEventHandler((event) => {
         // Prometheus metrics
         'https://www.iana.org/assignments/link-relations/monitoring': [
           {
-            href: 'https://wpbrigade.com/api/metrics',
+            href: `${api}/api/metrics`,
             type: 'text/plain',
             title: 'Prometheus metrics endpoint',
           },

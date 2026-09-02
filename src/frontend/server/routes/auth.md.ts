@@ -6,22 +6,29 @@
  *
  * Returns text/markdown so agents can parse human-readable + machine-readable
  * registration guidance in one document.
+ *
+ * URLs are built from the request and from NUXT_PUBLIC_API_URL rather than
+ * hardcoded: the API and admin panel are on the backend host, the auth.md and
+ * .well-known documents on this one. See server/utils/discovery.ts.
  */
 export default defineEventHandler((event) => {
   setResponseHeader(event, 'Content-Type', 'text/markdown; charset=utf-8')
+  const api = apiOrigin(event)
+  const docs = apiDocsUrl(event)
+
   return `# Auth Instructions for WPBrigade
 
 ## Overview
 
 WPBrigade is a platform for issuing and verifying Open Badges 3.0 and W3C Verifiable Credentials.
 
-The API lives at \`https://wpbrigade.com/api\`.
+The API lives at \`${api}/api\`.
 Public endpoints (e.g. \`GET /api/credentials/:id/verify\`) require no authentication.
 Write endpoints require a Bearer token.
 
 ## Getting an API Token
 
-1. Log in to the WPBrigade admin panel at \`https://wpbrigade.com/admin\`
+1. Log in to the WPBrigade admin panel at \`${api}/admin\`
 2. Go to **Settings → API Tokens**
 3. Click **Create new API Token**
 4. Choose a name, expiry, and permission level (\`Full access\` or \`Custom\`)
@@ -60,17 +67,20 @@ WPBrigade uses Strapi role-based permissions. Common roles:
 
 ## MCP Server
 
-For AI agents, use the \`@certo/mcp\` MCP server instead of raw API calls.
-See: \`/.well-known/mcp/server-card.json\`
+An MCP server covering these operations exists, but it is not published to a
+public package registry — contact the operator for access. Its tool inventory
+and configuration are described at \`/.well-known/mcp/server-card.json\`.
+
+Once built, point it at this instance:
 
 \`\`\`json
 {
   "mcpServers": {
     "wpbrigade": {
-      "command": "npx",
-      "args": ["-y", "@certo/mcp"],
+      "command": "node",
+      "args": ["mcp/dist/index.js"],
       "env": {
-        "CERTO_API_URL": "https://wpbrigade.com",
+        "CERTO_API_URL": "${api}",
         "CERTO_API_TOKEN": "YOUR_API_TOKEN"
       }
     }
@@ -85,6 +95,6 @@ See: \`/.well-known/mcp/server-card.json\`
 - API Catalog: \`/.well-known/api-catalog\`
 - Agent Skills: \`/.well-known/agent-skills/index.json\`
 - MCP Server Card: \`/.well-known/mcp/server-card.json\`
-- OpenAPI: \`/api/documentation\`
+- API documentation (Swagger UI): ${docs}
 `
 })

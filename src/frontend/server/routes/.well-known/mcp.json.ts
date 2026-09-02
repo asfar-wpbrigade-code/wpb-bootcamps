@@ -2,54 +2,69 @@
  * GET /.well-known/mcp.json
  *
  * Machine-readable MCP server discovery file.
- * AI tools and agent frameworks can GET this URL to discover the
- * WPBrigade MCP server (@certo/mcp package) and how to configure it.
+ * AI tools and agent frameworks can GET this URL to discover the WPBrigade
+ * MCP server and how to configure it.
  *
  * Similar pattern to /.well-known/openid-configuration for OIDC.
+ *
+ * This used to advertise `npx -y @certo/mcp`. That package name came from the
+ * upstream project and is not published on npm (the registry returns 404), so
+ * the instruction could never work. The server itself lives in this project's
+ * `mcp/` workspace and is not currently distributed, which `distribution`
+ * below states plainly rather than handing agents a command that fails.
  */
-export default defineEventHandler(() => ({
-  // serverInfo required by MCP Server Card spec (SEP-1649)
-  serverInfo: {
-    name: 'wpbrigade',
-    version: '0.1.0',
-    description: 'Platform for issuing and verifying Open Badges 3.0 / Verifiable Credentials',
-  },
-  // Legacy top-level name field (backward compat)
-  name: 'WPBrigade',
-  mcp_server: {
-    package: '@certo/mcp',
-    install: 'npx -y @certo/mcp',
-    version: '0.1.0',
-    transport: 'stdio',
-    configuration: {
-      required: [],
-      optional: [
-        {
-          env: 'CERTO_API_URL',
-          description: 'Base URL of your WPBrigade backend',
-          default: 'http://localhost:1337',
-        },
-        {
-          env: 'CERTO_API_TOKEN',
-          description: 'Strapi API token — required for write operations',
-        },
-      ],
+const TOOLS = [
+  { name: 'verify_credential', auth: false, description: 'Verify a credential by URN or ID' },
+  { name: 'list_achievements', auth: false, description: 'List available badge definitions' },
+  { name: 'get_credential', auth: false, description: 'Get full credential details' },
+  { name: 'list_credentials', auth: true, description: 'List credentials for the authenticated user' },
+  { name: 'issue_credential', auth: true, description: 'Issue a credential to a recipient' },
+  { name: 'revoke_credential', auth: true, description: 'Revoke a credential' },
+  { name: 'renew_credential', auth: true, description: 'Renew a credential with a new expiry' },
+  { name: 'run_expiration_check', auth: true, description: 'Trigger expiration notification scan' },
+  { name: 'export_profile_data', auth: true, description: 'Export all profile data' },
+]
+
+export default defineEventHandler((event) => {
+  const api = apiOrigin(event)
+
+  return {
+    // serverInfo required by MCP Server Card spec (SEP-1649)
+    serverInfo: {
+      name: 'wpbrigade',
+      version: '0.1.0',
+      description: 'Platform for issuing and verifying Open Badges 3.0 / Verifiable Credentials',
     },
-    tools: [
-      { name: 'verify_credential',      auth: false,  description: 'Verify a credential by URN or ID' },
-      { name: 'list_achievements',      auth: false,  description: 'List available badge definitions' },
-      { name: 'get_credential',         auth: false,  description: 'Get full credential details' },
-      { name: 'list_credentials',       auth: true,   description: 'List credentials for the authenticated user' },
-      { name: 'issue_credential',       auth: true,   description: 'Issue a credential to a recipient' },
-      { name: 'revoke_credential',      auth: true,   description: 'Revoke a credential' },
-      { name: 'renew_credential',       auth: true,   description: 'Renew a credential with a new expiry' },
-      { name: 'run_expiration_check',   auth: true,   description: 'Trigger expiration notification scan' },
-      { name: 'export_profile_data',    auth: true,   description: 'Export all profile data' },
-    ],
-  },
-  api: {
-    base_url: 'https://wpbrigade.com/api',
-    openapi: 'https://wpbrigade.com/api/documentation',
-    health: 'https://wpbrigade.com/api/health',
-  },
-}))
+    // Legacy top-level name field (backward compat)
+    name: 'WPBrigade',
+    mcp_server: {
+      version: '0.1.0',
+      transport: 'stdio',
+      distribution: {
+        status: 'not-published',
+        detail: 'Bundled in the WPBrigade platform repository under mcp/. '
+          + 'Not available from a public package registry; contact the operator for access.',
+      },
+      configuration: {
+        required: [],
+        optional: [
+          {
+            env: 'CERTO_API_URL',
+            description: 'Base URL of your WPBrigade backend',
+            default: api,
+          },
+          {
+            env: 'CERTO_API_TOKEN',
+            description: 'Strapi API token — required for write operations',
+          },
+        ],
+      },
+      tools: TOOLS,
+    },
+    api: {
+      base_url: `${api}/api`,
+      openapi: apiDocsUrl(event),
+      health: `${api}/api/health`,
+    },
+  }
+})
