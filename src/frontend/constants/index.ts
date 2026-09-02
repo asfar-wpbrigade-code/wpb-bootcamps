@@ -17,10 +17,10 @@ export const WEBSITE_URL = import.meta.env?.NUXT_PUBLIC_WEBSITE_URL
  * for the moment before translations resolve.
  */
 export const HEADER_NAV_LINKS = [
-  { name: 'Home',             href: '/',          i18nKey: 'home' },
-  { name: 'About',            href: '/about',      i18nKey: 'about' },
-  { name: 'My certificates',  href: '/dashboard',  i18nKey: 'dashboard' },
-  { name: 'Issue',            href: '/issue',      i18nKey: 'issue' },
-  { name: 'Verify',           href: '/verify',     i18nKey: 'verify' },
+  { name: 'Home', href: '/', i18nKey: 'home' },
+  { name: 'About', href: '/about', i18nKey: 'about' },
+  { name: 'My certificates', href: '/dashboard', i18nKey: 'dashboard' },
+  { name: 'Issue', href: '/issue', i18nKey: 'issue' },
+  { name: 'Verify', href: '/verify', i18nKey: 'verify' },
 ]
 export const CONTACT_MAIL = 'mailto:info@autops.online'

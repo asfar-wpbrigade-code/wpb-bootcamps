@@ -39,14 +39,17 @@ export default defineNuxtConfig({
       // Each public credential URL is independently indexable
       routes: async () => {
         try {
-          const apiUrl = process.env['NUXT_PUBLIC_API_URL'] || 'http://localhost:1337'
+          const apiUrl = process.env.NUXT_PUBLIC_API_URL || 'http://localhost:1337'
           const res = await fetch(`${apiUrl}/api/credentials?fields[0]=credentialId&pagination[pageSize]=1000`)
-          if (!res.ok) return []
+          if (!res.ok) {
+            return []
+          }
           const data = await res.json() as { data?: Array<{ credentialId?: string }> }
           return (data.data ?? [])
-            .filter((c) => c.credentialId)
-            .map((c) => `/credentials/${encodeURIComponent(c.credentialId!)}`)
-        } catch {
+            .filter(c => c.credentialId)
+            .map(c => `/credentials/${encodeURIComponent(c.credentialId!)}`)
+        }
+        catch {
           return []
         }
       },

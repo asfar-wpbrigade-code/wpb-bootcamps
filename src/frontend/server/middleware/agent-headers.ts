@@ -43,7 +43,8 @@ export default defineEventHandler(async (event) => {
           setResponseHeader(event, 'Vary', 'Accept')
           return llmsTxt
         }
-      } catch {
+      }
+      catch {
         // Fall through to normal HTML rendering if llms.txt isn't available
       }
     }

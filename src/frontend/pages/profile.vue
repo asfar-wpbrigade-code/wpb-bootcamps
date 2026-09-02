@@ -481,21 +481,21 @@ useHead({
                   placeholder="Current password"
                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#3458eb]"
                   autocomplete="current-password"
-                />
+                >
                 <input
                   v-model="passwordForm.newPassword"
                   type="password"
                   placeholder="New password"
                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#3458eb]"
                   autocomplete="new-password"
-                />
+                >
                 <input
                   v-model="passwordForm.confirmPassword"
                   type="password"
                   placeholder="Confirm new password"
                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#3458eb]"
                   autocomplete="new-password"
-                />
+                >
                 <button
                   class="w-full py-2 bg-[#3458eb] text-white rounded-lg text-sm font-medium hover:bg-[#3458eb]/90 transition-colors disabled:opacity-50"
                   :disabled="passwordLoading"

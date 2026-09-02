@@ -36,14 +36,16 @@ const apiUrl = config.public.apiUrl || ''
 const { data: verificationData, error: fetchError, status, refresh } = await useAsyncData<VerificationResult | null>(
   `credential-${credentialId}`,
   async () => {
-    if (!credentialId) return null
+    if (!credentialId) {
+      return null
+    }
 
     const url = `${apiUrl}/api/credentials/${encodeURIComponent(credentialId)}/verify`
-    console.log(`[${import.meta.server ? 'SSR' : 'Client'}] Fetching: ${url}`)
+    console.info(`[${import.meta.server ? 'SSR' : 'Client'}] Fetching: ${url}`)
 
     try {
       const result = await $fetch<VerificationResult>(url)
-      console.log(`[${import.meta.server ? 'SSR' : 'Client'}] Fetch success:`, result?.credential?.name || result?.rawCredential?.name)
+      console.info(`[${import.meta.server ? 'SSR' : 'Client'}] Fetch success:`, result?.credential?.name || result?.rawCredential?.name)
       return result
     }
     catch (err) {
@@ -54,8 +56,8 @@ const { data: verificationData, error: fetchError, status, refresh } = await use
   },
   {
     // Nuxt 3.10+ options
-    server: true,   // Fetch on server for SSR
-    lazy: false,    // Block render until fetch completes (needed for SEO)
+    server: true, // Fetch on server for SSR
+    lazy: false, // Block render until fetch completes (needed for SEO)
     default: () => null,
   }
 )
@@ -63,10 +65,10 @@ const { data: verificationData, error: fetchError, status, refresh } = await use
 // Client-side retry if SSR fetch failed (e.g., localhost not reachable from server)
 onMounted(async () => {
   if (!verificationData.value && credentialId) {
-    console.log('[Client] SSR data missing, retrying with apiClient...')
+    console.info('[Client] SSR data missing, retrying with apiClient...')
     try {
       verificationData.value = await apiClient.verifyBadge(credentialId)
-      console.log('[Client] Retry success:', verificationData.value?.credential?.name)
+      console.info('[Client] Retry success:', verificationData.value?.credential?.name)
     }
     catch (err) {
       console.error('[Client] Retry failed:', err)
@@ -91,14 +93,18 @@ onMounted(async () => {
 // ============================================================================
 const credential = computed<AchievementCredential | null>(() => {
   const data = verificationData.value
-  if (!data) return null
+  if (!data) {
+    return null
+  }
   return data.credential || data.rawCredential as AchievementCredential || null
 })
 
 const verificationResult = computed(() => verificationData.value)
 const loading = computed(() => status.value === 'pending')
 const error = computed(() => {
-  if (fetchError.value) return fetchError.value.message
+  if (fetchError.value) {
+    return fetchError.value.message
+  }
   if (status.value === 'error' && !verificationData.value && credentialId) {
     return 'Failed to verify or fetch credential details'
   }
@@ -142,7 +148,9 @@ useSeoMeta({
   // Description
   description: () => {
     const desc = getCredentialDescription()
-    if (desc) return desc
+    if (desc) {
+      return desc
+    }
 
     const name = getCredentialName()
     if (name) {
@@ -165,9 +173,13 @@ useSeoMeta({
   },
   ogDescription: () => {
     const desc = getCredentialDescription()
-    if (desc) return desc
+    if (desc) {
+      return desc
+    }
     const name = getCredentialName()
-    if (name) return `View and verify "${name}" issued by ${getIssuerName()} via WPBrigade.`
+    if (name) {
+      return `View and verify "${name}" issued by ${getIssuerName()} via WPBrigade.`
+    }
     return 'View and verify this digital credential issued via WPBrigade.'
   },
   ogImage: ogImageUrl,
@@ -186,9 +198,13 @@ useSeoMeta({
   },
   twitterDescription: () => {
     const desc = getCredentialDescription()
-    if (desc) return desc
+    if (desc) {
+      return desc
+    }
     const name = getCredentialName()
-    if (name) return `View and verify "${name}" issued by ${getIssuerName()} via WPBrigade.`
+    if (name) {
+      return `View and verify "${name}" issued by ${getIssuerName()} via WPBrigade.`
+    }
     return 'View and verify this digital credential issued via WPBrigade.'
   },
   twitterImage: ogImageUrl,
@@ -210,7 +226,9 @@ useHead({
       type: 'application/ld+json',
       innerHTML: () => {
         const cred = verificationData.value?.credential ?? verificationData.value?.rawCredential
-        if (!cred) return JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebPage' })
+        if (!cred) {
+          return JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebPage' })
+        }
         return JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'EducationalOccupationalCredential',
@@ -221,11 +239,13 @@ useHead({
           'credentialCategory': 'badge',
           'dateCreated': cred.issuanceDate ?? undefined,
           'expires': cred.expirationDate ?? undefined,
-          'recognizedBy': cred.issuer ? {
-            '@type': 'Organization',
-            'name': typeof cred.issuer === 'string' ? cred.issuer : cred.issuer.name ?? '',
-            'url': typeof cred.issuer === 'object' ? cred.issuer.url ?? undefined : undefined,
-          } : undefined,
+          'recognizedBy': cred.issuer
+            ? {
+                '@type': 'Organization',
+                'name': typeof cred.issuer === 'string' ? cred.issuer : cred.issuer.name ?? '',
+                'url': typeof cred.issuer === 'object' ? cred.issuer.url ?? undefined : undefined,
+              }
+            : undefined,
           'image': verificationData.value?.rawCredential?.achievement?.image?.url ?? undefined,
           // Open Badges 3.0 extension
           'identifier': credentialId,
@@ -263,19 +283,25 @@ const imageLoadError = ref(false)
 // Format dates with proper localization
 const formattedIssuanceDate = computed(() => {
   const date = credential.value?.issuanceDate
-  if (!date) return 'Unknown'
+  if (!date) {
+    return 'Unknown'
+  }
   return formatDate(date)
 })
 
 const formattedExpirationDate = computed(() => {
   const date = credential.value?.expirationDate
-  if (!date) return 'No expiration'
+  if (!date) {
+    return 'No expiration'
+  }
   return formatDate(date)
 })
 
 // Get all possible image URLs for display
 const imageUrlOptions = computed(() => {
-  if (!credential.value) return []
+  if (!credential.value) {
+    return []
+  }
 
   const cred = credential.value
   const rawCred = verificationData.value?.rawCredential
@@ -306,7 +332,9 @@ const imageUrlOptions = computed(() => {
 
 // Get the current image URL based on the current index
 const displayImageUrl = computed(() => {
-  if (imageUrlOptions.value.length === 0) return null
+  if (imageUrlOptions.value.length === 0) {
+    return null
+  }
   return imageUrlOptions.value[currentImageIndex.value]
 })
 
@@ -321,7 +349,9 @@ function handleImageError() {
 }
 
 function formatDate(dateString: string) {
-  if (!dateString) return 'Unknown'
+  if (!dateString) {
+    return 'Unknown'
+  }
 
   try {
     const date = new Date(dateString)
@@ -360,7 +390,9 @@ async function shareCredential() {
 
 async function downloadCredential() {
   const imageUrl = displayImageUrl.value
-  if (!imageUrl) return
+  if (!imageUrl) {
+    return
+  }
 
   try {
     const response = await fetch(imageUrl)
@@ -390,7 +422,9 @@ async function downloadCredential() {
 const { buildAddToProfileUrl } = useLinkedInShare()
 
 function getLinkedInAddToProfileUrl() {
-  if (!credential.value) return '#'
+  if (!credential.value) {
+    return '#'
+  }
 
   const cert = credential.value
   return buildAddToProfileUrl({
@@ -411,7 +445,9 @@ const isExpired = computed(() => {
 
 const daysUntilExpiry = computed(() => {
   const d = credential.value?.expirationDate
-  if (!d) return null
+  if (!d) {
+    return null
+  }
   const diff = new Date(d).getTime() - Date.now()
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 })
@@ -426,12 +462,16 @@ const renewalError = ref('')
 const renewalNewExpiry = ref('')
 
 async function submitRenewal() {
-  if (!renewalNewExpiry.value) return
+  if (!renewalNewExpiry.value) {
+    return
+  }
   renewalState.value = 'loading'
   renewalError.value = ''
   try {
     const numericId = verificationData.value?.rawCredential?.id
-    if (!numericId) throw new Error('Credential ID not available')
+    if (!numericId) {
+      throw new Error('Credential ID not available')
+    }
     await apiClient.renewCredential(numericId, renewalNewExpiry.value)
     renewalState.value = 'success'
     await refreshCredentialDetails()
@@ -701,10 +741,10 @@ async function submitRenewal() {
                   <!-- Check name with friendly label -->
                   <div class="font-semibold text-gray-800">
                     {{
-                      check.check === 'not_revoked' ? t('credential.checks.not_revoked') :
-                      check.check === 'not_expired' ? t('credential.checks.not_expired') :
-                      check.check === 'proof' ? 'Valid Signature' :
-                      check.check.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                      check.check === 'not_revoked' ? t('credential.checks.not_revoked')
+                      : check.check === 'not_expired' ? t('credential.checks.not_expired')
+                        : check.check === 'proof' ? 'Valid Signature'
+                          : check.check.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
                     }}
                   </div>
 
@@ -714,9 +754,9 @@ async function submitRenewal() {
                       check.result === 'error' || check.result === 'warning'
                         ? (check.message || 'Verification check failed')
                         : check.check === 'not_revoked' ? 'This credential has not been revoked by the issuer'
-                        : check.check === 'not_expired' ? 'This credential is within its validity period'
-                        : check.check === 'proof' ? 'Cryptographic signature verified successfully'
-                        : 'Verification check completed'
+                          : check.check === 'not_expired' ? 'This credential is within its validity period'
+                            : check.check === 'proof' ? 'Cryptographic signature verified successfully'
+                              : 'Verification check completed'
                     }}
                   </p>
                 </div>

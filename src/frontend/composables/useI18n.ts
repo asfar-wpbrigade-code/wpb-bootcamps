@@ -30,7 +30,9 @@ function resolve(obj: Record<string, any>, key: string): string | undefined {
   const parts = key.split('.')
   let cur: any = obj
   for (const p of parts) {
-    if (cur == null || typeof cur !== 'object') return undefined
+    if (cur == null || typeof cur !== 'object') {
+      return undefined
+    }
     cur = cur[p]
   }
   return typeof cur === 'string' ? cur : undefined

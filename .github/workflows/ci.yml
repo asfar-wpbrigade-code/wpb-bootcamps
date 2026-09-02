@@ -49,6 +49,10 @@ jobs:
         working-directory: src/frontend
         run: npm ci
 
+      - name: Lint
+        working-directory: src/frontend
+        run: npm run lint
+
       - name: Test
         working-directory: src/frontend
         run: npm run test:unit
@@ -56,3 +60,37 @@ jobs:
       - name: Build
         working-directory: src/frontend
         run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 'src/frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: src/frontend
+        run: npm ci
+
+      # chromium only: these are page-render smoke tests, so a second engine
+      # doubles the browser download without adding coverage. playwright.config.ts
+      # also defines firefox - add it here if a rendering difference ever matters.
+      - name: Install Playwright browser
+        working-directory: src/frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        working-directory: src/frontend
+        run: npm run test:e2e -- --project=chromium
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: src/frontend/playwright-report/
+          retention-days: 7

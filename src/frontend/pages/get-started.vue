@@ -1,5 +1,4 @@
 <script setup lang="ts">
-const { t } = useI18n()
 const pageDescription = ref('Get started with WPBrigade, learn how it works')
 
 const { list, title, subtitle, steps, listTitle } = useGetStartedContent()

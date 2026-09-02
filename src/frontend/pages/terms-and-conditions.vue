@@ -1,5 +1,4 @@
 <script setup lang="ts">
-const { t } = useI18n()
 import { format } from '@formkit/tempo'
 
 const pageDescription = ref('Terms and conditions that apply whenever utilizing WPBrigade')
@@ -36,7 +35,7 @@ const lastUpdated = format(termsContent.lastUpdated, 'long')
             {{ section.title }}
           </h2>
           <p v-if="section.type === 'paragraph'" v-html="section.content" />
-          <ul v-else="section.type === 'list'" class="list-disc list-inside">
+          <ul v-else-if="section.type === 'list'" class="list-disc list-inside">
             <li v-for="item in section.content as string[]" :key="item">
               {{ item }}
             </li>

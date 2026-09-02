@@ -1,5 +1,4 @@
 <script setup lang="ts">
-const { t } = useI18n()
 const pageDescription = ref('Read everything regarding the WPBrigade privacy and policy')
 
 useSeoMeta({

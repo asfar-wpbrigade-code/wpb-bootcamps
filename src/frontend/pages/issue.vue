@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Recipient } from '~/composables/useApiClient'
 import type { CsvRowIssue } from '~/composables/useRecipientsCsv'
+
 const { t } = useI18n()
 const pageDescription = ref('Issue badges utilizing WPBrigade software')
 

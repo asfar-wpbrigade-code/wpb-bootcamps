@@ -9,11 +9,15 @@
  * that don't support WebMCP yet.
  */
 export default defineNuxtPlugin(() => {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    return
+  }
 
   // WebMCP is still in origin trial — check before calling
   const ctx = (navigator as any).modelContext
-  if (typeof ctx?.provideContext !== 'function') return
+  if (typeof ctx?.provideContext !== 'function') {
+    return
+  }
 
   const config = useRuntimeConfig()
   const apiUrl = config.public.apiUrl || ''
@@ -23,8 +27,8 @@ export default defineNuxtPlugin(() => {
       {
         name: 'verify_credential',
         description:
-          'Verify an Open Badges 3.0 credential by its URN or ID. ' +
-          'No authentication required. Returns validity status and per-check details.',
+          'Verify an Open Badges 3.0 credential by its URN or ID. '
+          + 'No authentication required. Returns validity status and per-check details.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -59,7 +63,9 @@ export default defineNuxtPlugin(() => {
         execute() {
           // Returns the credential ID from the current URL if on a credential page
           const match = window.location.pathname.match(/\/credentials\/(.+)$/)
-          if (!match) return { error: 'Not on a credential page' }
+          if (!match) {
+            return { error: 'Not on a credential page' }
+          }
           return { credential_id: decodeURIComponent(match[1]!) }
         },
       },

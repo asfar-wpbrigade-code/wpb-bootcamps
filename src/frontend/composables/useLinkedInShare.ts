@@ -17,7 +17,7 @@ export interface AddToProfileParams {
  * This lived as four copy-pasted URLSearchParams blocks (the credential page,
  * the dashboard, the certificate card, and the issuance email), each with the
  * upstream project's own company id hardcoded - so every button credited
- * *their* organisation for certificates issued here, and fixing one copy left
+ * their* organisation for certificates issued here, and fixing one copy left
  * three wrong. One builder, one configured identity.
  *
  * The organisation is identified by `organizationId` when configured, since a
@@ -49,8 +49,12 @@ export function useLinkedInShare() {
       params.set('issueMonth', (issued.getMonth() + 1).toString())
     }
 
-    if (certId) params.set('certId', certId)
-    if (certUrl) params.set('certUrl', certUrl)
+    if (certId) {
+      params.set('certId', certId)
+    }
+    if (certUrl) {
+      params.set('certUrl', certUrl)
+    }
 
     return `https://www.linkedin.com/profile/add?${params.toString()}`
   }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { apiClient } from '~/api/api-client'
+
 const { t } = useI18n()
 definePageMeta({
   middleware: ['auth']

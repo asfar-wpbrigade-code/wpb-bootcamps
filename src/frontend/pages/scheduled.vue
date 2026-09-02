@@ -24,6 +24,7 @@ const loading = ref(true)
 const activeFilter = ref<ScheduledIssuance['status'] | 'all'>('all')
 const cancelling = ref<number | null>(null)
 const cancelReason = ref('')
+const cancelError = ref<string | null>(null)
 
 async function load() {
   loading.value = true
@@ -38,6 +39,7 @@ async function load() {
 }
 
 async function cancel(id: number) {
+  cancelError.value = null
   try {
     await apiClient.cancelScheduledIssuance(id, cancelReason.value || undefined)
     cancelling.value = null
@@ -45,7 +47,7 @@ async function cancel(id: number) {
     await load()
   }
   catch (e: any) {
-    alert(e?.data?.error?.message || e.message || 'Cancel failed')
+    cancelError.value = e?.data?.error?.message || e.message || 'Cancel failed'
   }
 }
 
@@ -70,8 +72,12 @@ const STATUS_COLOR: Record<string, string> = {
   <div class="container mx-auto py-10 px-4 max-w-4xl">
     <div class="flex items-center justify-between mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">Scheduled Issuances</h1>
-        <p class="text-gray-500 mt-1">Credentials queued for automatic issuance at a future date</p>
+        <h1 class="text-3xl font-bold text-gray-900">
+          Scheduled Issuances
+        </h1>
+        <p class="text-gray-500 mt-1">
+          Credentials queued for automatic issuance at a future date
+        </p>
       </div>
       <div v-if="pendingCount > 0" class="flex items-center gap-2 px-3 py-1.5 bg-blue-100 rounded-full">
         <div class="i-lucide-clock w-4 h-4 text-blue-500" />
@@ -99,7 +105,7 @@ const STATUS_COLOR: Record<string, string> = {
 
     <div v-else-if="filtered.length === 0" class="text-center py-16 text-gray-400">
       <div class="i-lucide-calendar-x w-12 h-12 mx-auto mb-3 opacity-40" />
-      <p>No {{ activeFilter === 'all' ? '' : activeFilter + ' ' }}scheduled issuances</p>
+      <p>No {{ activeFilter === 'all' ? '' : `${activeFilter} ` }}scheduled issuances</p>
     </div>
 
     <div v-else class="space-y-4">
@@ -123,8 +129,12 @@ const STATUS_COLOR: Record<string, string> = {
             <p class="text-sm text-gray-500 mt-0.5">
               Scheduled for: <span class="font-medium text-gray-700">{{ new Date(item.scheduledDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) }}</span>
             </p>
-            <p v-if="item.note" class="text-sm text-gray-500 mt-1 italic">"{{ item.note }}"</p>
-            <p v-if="item.failureReason" class="text-sm text-red-600 mt-1">Error: {{ item.failureReason }}</p>
+            <p v-if="item.note" class="text-sm text-gray-500 mt-1 italic">
+              "{{ item.note }}"
+            </p>
+            <p v-if="item.failureReason" class="text-sm text-red-600 mt-1">
+              Error: {{ item.failureReason }}
+            </p>
             <NuxtLink
               v-if="item.issuedCredentialId"
               :to="`/credentials/${encodeURIComponent(item.issuedCredentialId)}`"
@@ -140,7 +150,7 @@ const STATUS_COLOR: Record<string, string> = {
             <div v-if="cancelling !== item.id">
               <button
                 class="px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
-                @click="cancelling = item.id; cancelReason = ''"
+                @click="cancelling = item.id; cancelReason = ''; cancelError = null"
               >
                 Cancel
               </button>
@@ -152,6 +162,9 @@ const STATUS_COLOR: Record<string, string> = {
                 placeholder="Cancel reason (optional)"
                 class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-300"
               >
+              <p v-if="cancelError" class="text-sm text-red-600">
+                {{ cancelError }}
+              </p>
               <div class="flex gap-2">
                 <button
                   class="px-3 py-1 text-sm font-medium rounded-lg bg-red-500 hover:bg-red-600 text-white"
@@ -159,7 +172,7 @@ const STATUS_COLOR: Record<string, string> = {
                 >
                   Confirm cancel
                 </button>
-                <button class="text-sm text-gray-400 hover:text-gray-600" @click="cancelling = null">
+                <button class="text-sm text-gray-400 hover:text-gray-600" @click="cancelling = null; cancelError = null">
                   Back
                 </button>
               </div>

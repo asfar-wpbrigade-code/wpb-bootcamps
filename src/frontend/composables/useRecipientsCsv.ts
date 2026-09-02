@@ -21,7 +21,7 @@ export interface CsvParseResult {
 }
 
 /** Good enough to catch typos and mangled rows; the server validates properly. */
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]{2,}$/
 
 /** Only unambiguous, sortable dates - see validateExpiry. */
 const ISO_DATE_PATTERN = /^(\d{4})[-/](\d{2})[-/](\d{2})$/
@@ -47,7 +47,9 @@ export function normaliseHeader(header: string): string {
 export function validateExpiry(raw: string): { value?: string, problem?: string } {
   const trimmed = (raw ?? '').trim()
 
-  if (!trimmed) return { value: '' }
+  if (!trimmed) {
+    return { value: '' }
+  }
 
   const match = trimmed.match(ISO_DATE_PATTERN)
 
@@ -103,7 +105,9 @@ export function buildRecipients(
     const organization = (row.organization ?? '').trim()
 
     // A row that is entirely blank is not worth complaining about.
-    if (!name && !email) return
+    if (!name && !email) {
+      return
+    }
 
     if (!name) {
       issues.push({ line, problem: 'no name' })

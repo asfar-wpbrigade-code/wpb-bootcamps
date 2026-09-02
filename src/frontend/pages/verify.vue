@@ -110,9 +110,9 @@ useHead({
 
       <!-- FAQ Section -->
       <div class="mt-16">
-            <h3 class="text-lg font-medium text-text-primary mb-2">
-              Frequently Asked Questions
-            </h3>
+        <h3 class="text-lg font-medium text-text-primary mb-2">
+          Frequently Asked Questions
+        </h3>
 
         <div class="max-w-3xl mx-auto space-y-4">
           <div
