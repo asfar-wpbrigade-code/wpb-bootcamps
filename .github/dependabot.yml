@@ -1,0 +1,63 @@
+# Dependency update PRs.
+#
+# GitHub raises security *alerts* regardless of this file; what this adds is
+# scheduled pull requests that actually move the versions, which is what was
+# missing while 345 alerts accumulated unattended.
+#
+# Only the two applications that run in production are configured. cli/, sdk/,
+# mcp/ and netlify/ carry their own manifests but nothing builds, tests or
+# deploys them, so update PRs there would be noise against code no one owns -
+# their alerts still surface in the security tab. Settle whether those are kept
+# before adding them here.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /src/backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Every @strapi/* package is pinned to one exact version and they must
+      # move together - upgrading one alone produces an unresolvable tree. This
+      # is also the group that matters most: Strapi's pinning is what freezes
+      # the rest of the dependency tree, so essentially every backend advisory
+      # is waiting on it.
+      strapi:
+        patterns:
+          - "@strapi/*"
+          - "strapi"
+      production-dependencies:
+        dependency-type: production
+      development-dependencies:
+        dependency-type: development
+    labels:
+      - dependencies
+      - backend
+
+  - package-ecosystem: npm
+    directory: /src/frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      nuxt:
+        patterns:
+          - "nuxt"
+          - "@nuxt/*"
+          - "@nuxtjs/*"
+      production-dependencies:
+        dependency-type: production
+      development-dependencies:
+        dependency-type: development
+    labels:
+      - dependencies
+      - frontend
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - ci
