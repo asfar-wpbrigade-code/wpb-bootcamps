@@ -11,10 +11,24 @@ export default ({ env }) => ({
   documentation: {
     enabled: true,
     config: {
+      // Everything below overrides a Strapi default that would otherwise be
+      // published as-is: the generated spec was serving TEAM /
+      // contact-email@something.io / mywebsite.io / YOUR_TERMS_OF_SERVICE_URL,
+      // and claiming Apache 2.0 for a project that is AGPL-3.0.
       info: {
         title: `${brand.name} API`,
         description: 'Open Badges 3.0 / Verifiable Credentials API for issuing, managing, and verifying digital credentials.',
         version: '1.0.0',
+        contact: {
+          name: `${brand.name} Support`,
+          email: brand.contactEmail,
+          url: env('FRONTEND_URL', 'http://localhost:3000'),
+        },
+        license: {
+          name: 'AGPL-3.0-or-later',
+          url: 'https://www.gnu.org/licenses/agpl-3.0.html',
+        },
+        termsOfService: `${env('FRONTEND_URL', 'http://localhost:3000')}/terms-and-conditions`,
       },
     },
   },

@@ -132,3 +132,8 @@ build
 
 # scripts/backup.js output (see docs/self-hosting.md)
 backups
+# @strapi/plugin-documentation output. Regenerated on every boot by
+# src/bootstrap/documentation-refresh.ts, so a committed copy only goes stale
+# and gets published as if it described the running API.
+src/extensions/documentation/documentation/
+src/extensions/documentation/public/

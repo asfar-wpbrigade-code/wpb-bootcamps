@@ -38,6 +38,28 @@ describe('plugins config branding', () => {
     expect(loadPlugins().documentation.config.info.title).toBe('WPBrigade API')
   })
 
+  it('publishes real contact details, not the Strapi placeholders', () => {
+    delete process.env.BRAND_NAME
+    const { info } = loadPlugins().documentation.config
+
+    // The generated spec shipped TEAM / contact-email@something.io /
+    // mywebsite.io / YOUR_TERMS_OF_SERVICE_URL to anyone reading the docs.
+    const asText = JSON.stringify(info)
+    expect(asText).not.toContain('YOUR_TERMS_OF_SERVICE_URL')
+    expect(asText).not.toContain('contact-email@something.io')
+    expect(asText).not.toContain('mywebsite.io')
+    expect(asText).not.toMatch(/"name":\s*"TEAM"/)
+
+    expect(info.contact.name).toBe('WPBrigade Support')
+    expect(info.contact.email).toMatch(/@/)
+    expect(info.termsOfService).toMatch(/\/terms-and-conditions$/)
+  })
+
+  it('declares the licence the project actually uses', () => {
+    // The default said Apache 2.0; the repository is AGPL-3.0.
+    expect(loadPlugins().documentation.config.info.license.name).toBe('AGPL-3.0-or-later')
+  })
+
   it('sends the password reset as the brand, not the upstream project', () => {
     delete process.env.BRAND_NAME
     const reset = loadPlugins()['users-permissions'].config.advanced.email_reset_password

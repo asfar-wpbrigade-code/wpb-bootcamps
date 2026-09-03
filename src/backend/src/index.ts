@@ -3,6 +3,7 @@ import { seedDevelopmentData } from './bootstrap/seed-data';
 import { setupPermissions } from './bootstrap/permissions-setup';
 import { warnIfDefaultAdminCredentials } from './bootstrap/default-credentials-warning';
 import { setupEmailTemplates } from './bootstrap/email-templates-setup';
+import { refreshApiDocumentation } from './bootstrap/documentation-refresh';
 import { scheduleBackups } from './bootstrap/scheduled-backup';
 import { warnOnInsecureDefaults } from './bootstrap/insecure-defaults-warning';
 import { registerMonitoringRoutes } from './monitoring/routes';
@@ -100,6 +101,10 @@ export default {
 
     // Same idea for the secrets shipped in docker-compose.yml
     warnOnInsecureDefaults(strapi);
+
+    // Keep the published OpenAPI spec in step with the routes that are
+    // actually running (see bootstrap/documentation-refresh.ts)
+    await refreshApiDocumentation(strapi);
 
     // Schedule daily credential expiration scan.
     // Run once at startup (30s delay to let Strapi fully settle) and then every 24h.
