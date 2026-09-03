@@ -17,6 +17,33 @@
  * spec matching the code actually deployed. Failure is logged and swallowed:
  * out-of-date documentation is not a reason to refuse to start.
  */
+import { customRouteDocumentation } from '../documentation/custom-routes'
+
+/**
+ * Registers the hand-written OpenAPI for the routes the generator cannot see.
+ *
+ * Must run in register(), not bootstrap(): outside production the plugin
+ * generates the spec in its own bootstrap, which runs first, so an override
+ * registered any later would miss that pass entirely.
+ *
+ * No excludeFromGeneration - the override is merged over the generated paths,
+ * so the auto-documented CRUD for each content type survives.
+ */
+export function registerCustomRouteDocumentation(strapi: any): void {
+  const documentation = strapi.plugin('documentation')
+
+  if (!documentation) {
+    return
+  }
+
+  try {
+    documentation.service('override').registerOverride(customRouteDocumentation)
+  }
+  catch (error: any) {
+    strapi.log.error(`[documentation] Could not register custom route docs: ${error?.message}`)
+  }
+}
+
 export async function refreshApiDocumentation(strapi: any): Promise<void> {
   // Outside production the plugin has already done this in its own bootstrap,
   // which runs before this one; repeating it only slows local startup.

@@ -3,7 +3,7 @@ import { seedDevelopmentData } from './bootstrap/seed-data';
 import { setupPermissions } from './bootstrap/permissions-setup';
 import { warnIfDefaultAdminCredentials } from './bootstrap/default-credentials-warning';
 import { setupEmailTemplates } from './bootstrap/email-templates-setup';
-import { refreshApiDocumentation } from './bootstrap/documentation-refresh';
+import { refreshApiDocumentation, registerCustomRouteDocumentation } from './bootstrap/documentation-refresh';
 import { scheduleBackups } from './bootstrap/scheduled-backup';
 import { warnOnInsecureDefaults } from './bootstrap/insecure-defaults-warning';
 import { registerMonitoringRoutes } from './monitoring/routes';
@@ -25,6 +25,11 @@ export default {
     // (server.initRouting()) partway through its own bootstrap(), before
     // this app's bootstrap({ strapi }) hook runs - see monitoring/routes.ts.
     registerMonitoringRoutes(strapi);
+
+    // Must also happen here: outside production the documentation plugin
+    // generates its spec in its own bootstrap, which runs before this app's -
+    // an override registered later would miss that pass.
+    registerCustomRouteDocumentation(strapi);
   },
 
   /**
