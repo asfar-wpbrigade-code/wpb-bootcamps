@@ -206,12 +206,15 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   const dateLine = period ? `From: ${period}` : `Issued: ${formatDate(issueDate)}`
 
   const citation = description ? wrapText(description, 92, 3) : []
-  const citationTop = 336
-  const programmeY = citation.length > 0 ? citationTop + citation.length * 17 + 26 : 372
-  const dateY = programmeY + 24
+  const citationTop = 335.5
+  const CITATION_LEADING = 18
+  const programmeY = citation.length > 0
+    ? citationTop + (citation.length - 1) * CITATION_LEADING + 42.5
+    : 378
+  const dateY = programmeY + 20.4
 
-  const nameOutline = renderNameOutline(recipientName, CENTRE, 292, 500, 76)
-  const achievementSize = fitFontSize(achievementName, 430, 22, 0.6)
+  const nameOutline = renderNameOutline(recipientName, CENTRE, 289.5, 500, 80)
+  const achievementSize = fitFontSize(achievementName.toUpperCase(), 470, 18, 0.62)
 
   const qrSize = 72
   const qrCodeSvg = await generateQrCodeSvg(verifyUrl, qrSize)
@@ -265,18 +268,18 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
 
   <!-- Heading, as outlines lifted from the source artwork -->
   <g fill="${INK}">${HEADING_PATHS}</g>
-  <text x="${CENTRE}" y="209" font-family="${SERIF}" font-size="13" font-style="italic" text-anchor="middle" fill="${MUTED}">This certificate is proudly presented to</text>
+  <text x="${CENTRE}" y="205" font-family="${SERIF}" font-size="10" font-style="italic" text-anchor="middle" fill="${MUTED}">This Certificate is Proudly Presented to</text>
 
   <!-- Recipient, drawn as outlines so the script survives any renderer -->
   <path d="${nameOutline}" fill="${NAVY}" />
   <line x1="${CENTRE - 250}" y1="308" x2="${CENTRE + 250}" y2="308" stroke="${MUTED}" stroke-width="0.7" />
 
   <!-- Citation -->
-  ${citation.map((line, index) => `<text x="${CENTRE}" y="${citationTop + index * 17}" font-family="${SERIF}" font-size="11.5" font-style="italic" text-anchor="middle" fill="${MUTED}">${escapeXml(line)}</text>`).join('\n  ')}
+  ${citation.map((line, index) => `<text x="${CENTRE}" y="${citationTop + index * CITATION_LEADING}" font-family="${SERIF}" font-size="10" font-style="italic" text-anchor="middle" fill="${MUTED}">${escapeXml(line)}</text>`).join('\n  ')}
 
   <!-- Programme -->
-  <text x="${CENTRE}" y="${programmeY}" font-family="${SERIF}" font-size="${achievementSize.toFixed(1)}" font-weight="bold" text-anchor="middle" fill="${NAVY}">“${escapeXml(achievementName)}”</text>
-  <text x="${CENTRE}" y="${dateY}" font-family="${SERIF}" font-size="12" font-weight="bold" text-anchor="middle" fill="${INK}">${escapeXml(dateLine)}</text>
+  <text x="${CENTRE}" y="${programmeY}" font-family="${SERIF}" font-size="${achievementSize.toFixed(1)}" font-weight="bold" letter-spacing="1.2" text-anchor="middle" fill="${NAVY}">${escapeXml(achievementName.toUpperCase())}</text>
+  <text x="${CENTRE}" y="${dateY}" font-family="${SANS}" font-size="10" font-weight="bold" text-anchor="middle" fill="${INK}">${escapeXml(dateLine)}</text>
 
   <!-- Verification seal -->
   <g transform="translate(152, 476)">
@@ -293,10 +296,10 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
     ${signatureImageDataUri
       ? `<image href="${signatureImageDataUri}" x="-85" y="452" width="170" height="46" preserveAspectRatio="xMidYMax meet" />`
       : ''}
-    <line x1="-95" y1="506" x2="95" y2="506" stroke="${INK}" stroke-width="0.8" />
-    <text x="0" y="522" font-family="${SANS}" font-size="10.5" font-weight="bold" letter-spacing="0.6" text-anchor="middle" fill="${INK}">${escapeXml((signatoryName || issuerName || '').toUpperCase())}</text>
+    <line x1="-95" y1="513.5" x2="95" y2="513.5" stroke="${INK}" stroke-width="0.8" />
+    <text x="0" y="529.5" font-family="${SANS}" font-size="10" font-weight="bold" letter-spacing="0.6" text-anchor="middle" fill="${INK}">${escapeXml((signatoryName || issuerName || '').toUpperCase())}</text>
     ${signatoryTitle
-      ? `<text x="0" y="536" font-family="${SANS}" font-size="9" text-anchor="middle" fill="${MUTED}">${escapeXml(signatoryTitle)}</text>`
+      ? `<text x="0" y="540.7" font-family="${SANS}" font-size="8" font-weight="bold" text-anchor="middle" fill="${MUTED}">${escapeXml(signatoryTitle)}</text>`
       : ''}
   </g>
 
