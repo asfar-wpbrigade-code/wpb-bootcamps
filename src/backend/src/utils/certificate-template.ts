@@ -22,7 +22,7 @@
  */
 
 import opentype from 'opentype.js'
-import { generateQrCodeSvg } from './qr-code'
+import { generateVerificationSealSvg } from './verification-seal'
 import { EMBLEM_PATHS, LOGO_VIEWBOX, WORDMARK_PATHS } from './certificate-assets/logo'
 import { ALEX_BRUSH_BASE64 } from './certificate-assets/alex-brush'
 import { HEADING_PATHS } from './certificate-assets/heading'
@@ -216,8 +216,8 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   const nameOutline = renderNameOutline(recipientName, CENTRE, 289.5, 500, 80)
   const achievementSize = fitFontSize(achievementName.toUpperCase(), 470, 18, 0.62)
 
-  const qrSize = 72
-  const qrCodeSvg = await generateQrCodeSvg(verifyUrl, qrSize)
+  const sealDiameter = 124
+  const verificationSeal = generateVerificationSealSvg(verifyUrl, sealDiameter)
 
   const watermarkTile = 132
   const watermarkScale = 0.42
@@ -237,12 +237,6 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
         ${EMBLEM_PATHS.join('\n        ')}
       </g>
     </pattern>
-
-    <linearGradient id="sealGold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f6e27a" />
-      <stop offset="45%" stop-color="#d4af37" />
-      <stop offset="100%" stop-color="#b8860b" />
-    </linearGradient>
   </defs>
 
   <!-- Navy border -->
@@ -281,15 +275,9 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   <text x="${CENTRE}" y="${programmeY}" font-family="${SERIF}" font-size="${achievementSize.toFixed(1)}" font-weight="bold" letter-spacing="1.2" text-anchor="middle" fill="${NAVY}">${escapeXml(achievementName.toUpperCase())}</text>
   <text x="${CENTRE}" y="${dateY}" font-family="${SANS}" font-size="10" font-weight="bold" text-anchor="middle" fill="${INK}">${escapeXml(dateLine)}</text>
 
-  <!-- Verification seal -->
-  <g transform="translate(152, 476)">
-    <circle cx="0" cy="0" r="62" fill="url(#sealGold)" />
-    <circle cx="0" cy="0" r="52" fill="#ffffff" />
-    <circle cx="0" cy="0" r="52" fill="none" stroke="#b8860b" stroke-width="1.2" />
-    <g transform="translate(${-qrSize / 2}, ${-qrSize / 2 + 5})">${qrCodeSvg}</g>
-    <text x="0" y="-36" font-family="${SANS}" font-size="4.6" letter-spacing="0.3" text-anchor="middle" fill="#8a6d1f">CLICK OR SCAN TO VERIFY</text>
-    <text x="0" y="45" font-family="${SANS}" font-size="4.6" letter-spacing="0.7" text-anchor="middle" fill="#8a6d1f">WPBRIGADE</text>
-  </g>
+  <!-- Verification seal. Its frame, legends and QR all come from
+       verification-seal.ts; only where it sits is decided here. -->
+  <g transform="translate(152, 476)">${verificationSeal}</g>
 
   <!-- Signature block -->
   <g transform="translate(${CENTRE + 128}, 0)">
