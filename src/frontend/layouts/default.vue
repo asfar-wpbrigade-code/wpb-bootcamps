@@ -27,7 +27,7 @@
 }
 
 body {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   color: var(--text-primary);
 }
 
