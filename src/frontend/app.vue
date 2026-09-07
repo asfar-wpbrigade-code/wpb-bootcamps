@@ -4,6 +4,7 @@ const pageTitle = ref('WPBrigade - Digital Credential Platform')
 
 const { locale } = useI18n()
 const branding = useBranding()
+const siteUrl = useSiteUrl()
 
 // Keep <html lang="..."> in sync with the active locale — important for SEO
 // and accessibility (screen readers use this to pick the right voice)
@@ -19,11 +20,11 @@ useHead({
 useSeoMeta({
   description: pageDescription.value,
   ogDescription: pageDescription.value,
-  ogImage: `${WEBSITE_URL}/og-default.png`,
+  ogImage: `${siteUrl}/og-default.png`,
   ogTitle: pageTitle.value,
-  ogUrl: WEBSITE_URL,
+  ogUrl: siteUrl,
   twitterCard: 'summary_large_image',
-  twitterImage: `${WEBSITE_URL}/og-default.png`,
+  twitterImage: `${siteUrl}/og-default.png`,
 })
 </script>
 

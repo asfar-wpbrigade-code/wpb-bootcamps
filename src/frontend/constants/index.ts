@@ -1,16 +1,16 @@
 /**
- * URL of the WPBrigade website.
+ * The site's own public origin is *not* a constant here.
  *
- * Defaults to the production URL for convenience but can be overridden
- * via the NUXT_PUBLIC_WEBSITE_URL env var for self-hosted deployments.
- * This powers canonical links, OG images, shareable URLs, and QR codes
- * on certificates.
+ * It lives in runtimeConfig (`public.websiteUrl`, set from
+ * NUXT_PUBLIC_WEBSITE_URL in nuxt.config.ts) and is read through
+ * `useSiteUrl()`. A module constant is inlined into the client bundle at
+ * build time, so the container's runtime NUXT_PUBLIC_WEBSITE_URL applied on
+ * the server and was ignored in the browser - one page then advertised two
+ * different canonical URLs depending on who rendered it.
  *
- * @see docs/known-issues-and-dev-notes.md item 33
+ * @see composables/useSiteUrl.ts
+ * @see docs/known-issues-and-dev-notes.md items 33 and 39
  */
-export const WEBSITE_URL = import.meta.env?.NUXT_PUBLIC_WEBSITE_URL
-  ?? process.env.NUXT_PUBLIC_WEBSITE_URL
-  ?? 'https://wpbrigade.com'
 
 /**
  * Wording lives in locales/en.json under `nav.*`; `name` is only a fallback
@@ -23,4 +23,9 @@ export const HEADER_NAV_LINKS = [
   { name: 'Issue', href: '/issue', i18nKey: 'issue' },
   { name: 'Verify', href: '/verify', i18nKey: 'verify' },
 ]
-export const CONTACT_MAIL = 'mailto:info@autops.online'
+/**
+ * Where the footer and the legal pages send questions - including privacy
+ * and erasure requests, so it has to be an inbox WPBrigade actually reads.
+ */
+export const CONTACT_EMAIL = 'bootcamp@wpbrigade.com'
+export const CONTACT_MAIL = `mailto:${CONTACT_EMAIL}`

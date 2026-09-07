@@ -1,16 +1,18 @@
 <script setup lang="ts">
 const pageDescription = ref('Step-by-step guide to adding your WPBrigade certificate to your LinkedIn profile')
 
+const siteUrl = useSiteUrl()
+
 useSeoMeta({
   description: pageDescription.value,
   ogDescription: pageDescription.value,
-  ogUrl: `${WEBSITE_URL}/linkedin`
+  ogUrl: `${siteUrl}/linkedin`
 })
 
 useHead({
   title: 'LinkedIn Guide',
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/linkedin` }
+    { rel: 'canonical', href: `${siteUrl}/linkedin` }
   ]
 })
 </script>

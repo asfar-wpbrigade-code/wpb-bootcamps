@@ -1,16 +1,18 @@
 <script setup lang="ts">
 const pageDescription = ref('WPBrigade runs hands-on bootcamps in WordPress, web development and AI, each ending in a certificate anyone can verify.')
 
+const siteUrl = useSiteUrl()
+
 useSeoMeta({
   description: pageDescription.value,
   ogDescription: pageDescription.value,
-  ogUrl: `${WEBSITE_URL}/about`
+  ogUrl: `${siteUrl}/about`
 })
 
 useHead({
   title: 'About',
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/about` }
+    { rel: 'canonical', href: `${siteUrl}/about` }
   ]
 })
 </script>

@@ -91,10 +91,10 @@
           <ul class="space-y-2">
             <li>
               <a
-                href="mailto:info@autops.online"
+                :href="CONTACT_MAIL"
                 class="text-text-secondary hover:text-text-primary transition-colors"
               >
-                info@autops.online
+                {{ CONTACT_EMAIL }}
               </a>
             </li>
             <li>

@@ -82,16 +82,18 @@ async function handleSubmit() {
   }
 }
 
+const siteUrl = useSiteUrl()
+
 useSeoMeta({
   description: pageDescription.value,
   ogDescription: pageDescription.value,
-  ogUrl: `${WEBSITE_URL}/register`
+  ogUrl: `${siteUrl}/register`
 })
 
 useHead({
   title: 'Register',
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/register` }
+    { rel: 'canonical', href: `${siteUrl}/register` }
   ]
 })
 </script>

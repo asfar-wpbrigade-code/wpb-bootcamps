@@ -19,8 +19,28 @@ const credentialId = rawId
   ? decodeURIComponent(Array.isArray(rawId) ? rawId[0] : rawId)
   : ''
 
-const shareableUrl = `${WEBSITE_URL}/credentials/${encodeURIComponent(credentialId)}`
-const ogImageUrl = `${WEBSITE_URL}/.netlify/functions/og-credential?id=${encodeURIComponent(credentialId)}`
+const siteUrl = useSiteUrl()
+
+const shareableUrl = `${siteUrl}/credentials/${encodeURIComponent(credentialId)}`
+
+// The share preview is the certificate itself, rendered by the backend's
+// public `?format=png` endpoint - no auth, and the same image a recipient
+// downloads (a 792x612 artboard at 2x, so 1584x1224).
+//
+// It used to point at /.netlify/functions/og-credential, which only exists
+// when the site is deployed on Netlify. This one runs on Dokploy behind
+// Traefik, so that path returned the SPA's 404 HTML and every certificate
+// shared to LinkedIn or WhatsApp came out with no preview image at all.
+//
+// og:image has to be absolute - a scraper has no page context to resolve a
+// path against and simply drops the tag - so an unset or relative API URL
+// falls back to the site's static card rather than emitting one that is
+// silently ignored.
+const apiBase = String(config.public.apiUrl || '').replace(/\/+$/, '')
+const showsCertificateImage = /^https?:\/\//i.test(apiBase)
+const ogImageUrl = showsCertificateImage
+  ? `${apiBase}/api/credentials/${encodeURIComponent(credentialId)}/certificate?format=png`
+  : `${siteUrl}/og-default.png`
 
 // ============================================================================
 // 2. DATA FETCHING
@@ -183,8 +203,11 @@ useSeoMeta({
     return 'View and verify this digital credential issued via WPBrigade.'
   },
   ogImage: ogImageUrl,
-  ogImageWidth: 1200,
-  ogImageHeight: 630,
+  // The certificate's real pixel size (a 792x612 artboard at 2x), or the
+  // static card's when that is what we are pointing at. A wrong hint makes
+  // scrapers reserve the wrong shape and the preview arrives distorted.
+  ogImageWidth: showsCertificateImage ? 1584 : 1200,
+  ogImageHeight: showsCertificateImage ? 1224 : 630,
   ogImageAlt: () => {
     const name = getCredentialName()
     return name ? `${name} - verified credential` : 'WPBrigade credential'
@@ -215,14 +238,24 @@ useSeoMeta({
 
   // Author
   author: () => getIssuerName(),
+
+  // Reachable by anyone holding the link or scanning the QR code, but kept
+  // out of search results: the description above names the recipient, and
+  // nobody accepting a certificate agreed to have their name searchable.
+  // `follow` is deliberate - crawlers may still follow the verification and
+  // issuer links away from the page, they just may not list the page itself.
+  robots: 'noindex, follow',
 })
 
 useHead({
   link: [{ rel: 'canonical', href: shareableUrl }],
   script: [
     {
-      // JSON-LD structured data — schema.org EducationalOccupationalCredential
-      // Makes credential pages indexable by Google and understandable by AI crawlers
+      // JSON-LD structured data — schema.org EducationalOccupationalCredential.
+      // The page is noindex (see useSeoMeta above), so this is not here to win
+      // a search listing: it describes the credential to anything that fetches
+      // the page directly, such as an employer's tooling or an AI crawler
+      // following a link someone pasted to it.
       type: 'application/ld+json',
       innerHTML: () => {
         const cred = verificationData.value?.credential ?? verificationData.value?.rawCredential
@@ -251,8 +284,11 @@ useHead({
           'identifier': credentialId,
           'publisher': {
             '@type': 'Organization',
+            // The organisation, not this app: publisher identifies who awarded
+            // the credential, and WPBrigade's identity on the web is its main
+            // site rather than the host this page happens to be served from.
+            'url': 'https://wpbrigade.com',
             'name': 'WPBrigade',
-            'url': WEBSITE_URL,
           },
         })
       },

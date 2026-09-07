@@ -17,11 +17,11 @@ WPBrigade lets organizations issue tamper-proof digital credentials (badges, cer
 
 ## API
 
-- [OpenAPI / Swagger UI](https://wpbrigade.com/api/documentation)
-- [API base URL](https://wpbrigade.com/api/v1)
-- [Verify a credential](https://wpbrigade.com/api/credentials/{id}/verify) — GET, no auth required
-- [Health check](https://wpbrigade.com/api/health)
-- [Prometheus metrics](https://wpbrigade.com/api/metrics)
+- [OpenAPI / Swagger UI](https://bootcamp-api.wpbrigade.com/documentation)
+- [API base URL](https://bootcamp-api.wpbrigade.com/api/v1)
+- [Verify a credential](https://bootcamp-api.wpbrigade.com/api/credentials/{id}/verify) — GET, no auth required
+- [Health check](https://bootcamp-api.wpbrigade.com/api/health)
+- [Prometheus metrics](https://bootcamp-api.wpbrigade.com/api/metrics)
 
 ## MCP Server (for AI assistants)
 
@@ -34,7 +34,7 @@ Use WPBrigade from Claude Desktop, Cursor, or VS Code Copilot:
       "command": "npx",
       "args": ["-y", "@certo/mcp"],
       "env": {
-        "CERTO_API_URL": "https://wpbrigade.com",
+        "CERTO_API_URL": "https://bootcamp-api.wpbrigade.com",
         "CERTO_API_TOKEN": "your-api-token"
       }
     }

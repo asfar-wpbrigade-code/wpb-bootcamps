@@ -11,16 +11,18 @@ const config = useRuntimeConfig()
 const apiUrl = config.public.apiUrl
 const pageDescription = ref('Set a new password for your WPBrigade account.')
 
+const siteUrl = useSiteUrl()
+
 useSeoMeta({
   description: pageDescription.value,
   ogDescription: pageDescription.value,
-  ogUrl: `${WEBSITE_URL}/reset-password`
+  ogUrl: `${siteUrl}/reset-password`
 })
 
 useHead({
   title: 'Reset Password',
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/reset-password` }
+    { rel: 'canonical', href: `${siteUrl}/reset-password` }
   ]
 })
 

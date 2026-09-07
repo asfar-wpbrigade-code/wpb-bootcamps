@@ -19,7 +19,7 @@ import { generateVerificationSealSvg } from '../verification-seal'
 const DIAMETER = 124
 
 /** A realistic verification URL: an origin, "/credentials/", and a urn:uuid. */
-const URL = 'https://credentials.wpbrigade.com/credentials/urn:uuid:0c4e5a1b-9d3f-4c8a-9f21-7ab6d5e40912'
+const URL = 'https://bootcamp.wpbrigade.com/credentials/urn:uuid:0c4e5a1b-9d3f-4c8a-9f21-7ab6d5e40912'
 
 /** The dots the QR is drawn with, as (x, y, radius) triples. */
 const dots = (svg: string): Array<{ x: number, y: number, r: number }> => {

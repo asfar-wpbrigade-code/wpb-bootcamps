@@ -49,10 +49,12 @@ useSeoMeta({
   ogDescription: pageDescription.value
 })
 
+const siteUrl = useSiteUrl()
+
 useHead({
   title: t('dashboard.title'),
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/dashboard` }
+    { rel: 'canonical', href: `${siteUrl}/dashboard` }
   ]
 })
 

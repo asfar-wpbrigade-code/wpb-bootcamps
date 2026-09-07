@@ -265,16 +265,18 @@ function formatDate(date: string) {
   })
 }
 
+const siteUrl = useSiteUrl()
+
 useSeoMeta({
   description: pageDescription.value,
   ogDescription: pageDescription.value,
-  ogUrl: `${WEBSITE_URL}/profile`
+  ogUrl: `${siteUrl}/profile`
 })
 
 useHead({
   title: t('profile.title'),
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/profile` }
+    { rel: 'canonical', href: `${siteUrl}/profile` }
   ]
 })
 </script>

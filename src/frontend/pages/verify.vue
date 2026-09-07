@@ -29,16 +29,18 @@ const faqs = ref([
   }
 ])
 
+const siteUrl = useSiteUrl()
+
 useSeoMeta({
   description: pageDescription.value,
   ogDescription: pageDescription.value,
-  ogUrl: `${WEBSITE_URL}/verify`
+  ogUrl: `${siteUrl}/verify`
 })
 
 useHead({
   title: t('verify.title'),
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/verify` }
+    { rel: 'canonical', href: `${siteUrl}/verify` }
   ]
 })
 </script>

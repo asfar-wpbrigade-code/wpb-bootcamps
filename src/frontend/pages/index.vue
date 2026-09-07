@@ -2,6 +2,17 @@
 const { t } = useI18n()
 const { sections, features, registrationSteps } = useHomeContent()
 
+// The homepage names itself, like every other page. It used to inherit a
+// site-wide canonical from nuxt.config.ts that pointed at wpbrigade.com,
+// which told search engines this page was a copy of a different site's.
+const siteUrl = useSiteUrl()
+
+useHead({
+  link: [
+    { rel: 'canonical', href: siteUrl }
+  ]
+})
+
 // Dialled, not linked, so it is kept as digits-only for the tel: href and
 // spaced separately for reading.
 const CONSULTATION_PHONE = '+923030748828'
