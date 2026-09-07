@@ -4,6 +4,7 @@
 
 import { renderCertificatePdf, renderCertificatePng } from '../../../utils/certificate-render'
 import { generateCertificateSvg } from '../../../utils/certificate-template'
+import { qrPayloadUrl } from '../../../utils/verify-url'
 
 /** Formats the certificate endpoint can return. */
 export type CertificateFormat = 'svg' | 'png' | 'pdf'
@@ -172,8 +173,13 @@ export default ({ strapi }) => ({
       // The certificate's QR code links here - same self-hosting-aware
       // frontend.url config credential.ts already uses for notification
       // emails, not a hardcoded production URL.
+      //
+      // The QR carries the short form of that address rather than the page's
+      // own URL: it is a third fewer characters, which is a third fewer QR
+      // modules across a seal whose size is fixed, and that is the difference
+      // between a symbol a phone can read and one it cannot. See verify-url.ts.
       const frontendUrl = strapi.config.get('frontend.url', 'http://localhost:3000')
-      const verifyUrl = `${frontendUrl}/credentials/${encodeURIComponent(credential.credentialId)}`
+      const verifyUrl = qrPayloadUrl(frontendUrl, credential.credentialId)
 
       // The signature is read off disk and inlined rather than linked. An SVG
       // shown through an <img> tag cannot fetch anything external, and a

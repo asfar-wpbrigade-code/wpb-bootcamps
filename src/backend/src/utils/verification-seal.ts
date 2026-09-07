@@ -137,12 +137,30 @@ const ERROR_CORRECTION = 'H'
 
 /**
  * Plain circles read as cleaner and less cluttered than rounded squares at this
- * density, and the extra gap round each one gives the pattern room to breathe.
- * Both radii are a fraction of the module: the mark's dots are bigger and
- * tighter-packed so it pops against the data instead of blending in.
+ * density. Both radii are a fraction of the module: the mark's dots are bigger
+ * and tighter-packed so it pops against the data instead of blending in.
+ *
+ * DOT_RADIUS has a floor that is not aesthetic. A circle of radius r inks
+ * pi*r^2 of its module, so the 0.31 this used to be covered 30% of each dark
+ * module and left a gap between neighbours. A decoder thresholds the image it
+ * is given, and every scale but 1:1 averages a module's ink with the paper
+ * around it - so a "dark" module arrived as light grey and read as white. The
+ * certificate's QR only decoded from the raw 2x PNG at 100%; on screen, in
+ * print, or from any resize it failed. The ratio is scale-invariant, which is
+ * why the symptom did not improve with a larger seal, and why the failures
+ * came and went with rasterisation rather than with size.
+ *
+ * At 0.45 a dot inks 64% of its module and neighbours touch. Measured against
+ * jsQR, the whole certificate then decodes down to a 1200px render instead of
+ * only at 1584px, and to 900px once the payload is the short URL below.
  */
-const DOT_RADIUS = 0.31
-const MARK_DOT_RADIUS = 0.42
+export const DOT_RADIUS = 0.45
+/**
+ * Kept above DOT_RADIUS so the mark still reads as strokes against the data
+ * rather than dissolving into it - at 0.5 its dots meet, which is what makes
+ * the glyphs continuous. It was 0.42, chosen when the data dots were 0.31.
+ */
+export const MARK_DOT_RADIUS = 0.5
 
 /**
  * Hand-drawn dot-matrix glyphs for the centre mark. A real typeface's curves
