@@ -1,22 +1,35 @@
 import QRCode from 'qrcode'
-import { generateVerificationSealSvg } from '../verification-seal'
+import { DOT_RADIUS, generateVerificationSealSvg, MARK_DOT_RADIUS } from '../verification-seal'
 
 /**
  * The seal's proportions are qr_gold.py's, and these pin them as fractions of
  * the diameter so the port cannot drift from the design it came from.
  *
- * The one thing the markup cannot show is whether the result still scans with
- * the brand mark punched through it. That was checked against zbar, over
- * verification URLs from 47 to 283 characters - which covers QR versions 6
- * through 18 - and it is why the clear zone is a fixed count of modules rather
- * than the fraction of the symbol qr_gold.py uses: a fraction swallows an
- * ever-larger count as the version climbs, and fails outright at versions 13
- * and 18. Testing that here in CI would need a decoder as forgiving as a phone
- * camera, and the pure-JavaScript ones are not - they read the dotted modules
- * unreliably at some scales and fine at others. What is pinned instead is the
- * budget the clear zone spends, which is the part a change could quietly break.
+ * The clear zone is a fixed count of modules rather than the fraction of the
+ * symbol qr_gold.py uses, because a fraction swallows an ever-larger count as
+ * the version climbs and fails outright at versions 13 and 18. What is pinned
+ * here is the budget that zone spends.
+ *
+ * This comment used to say that a decode test could not run in CI, because
+ * "the pure-JavaScript decoders read the dotted modules unreliably at some
+ * scales and fine at others". That observation was correct and the conclusion
+ * drawn from it was wrong. The unreliability was not the decoder being less
+ * forgiving than a phone: the data dots inked 30% of their modules, so at any
+ * scale but 1:1 a dark module averaged to light grey and read as white, and
+ * whether that tipped either way depended on where the module grid fell
+ * against the pixel grid. jsQR was reporting a real defect, and the seal
+ * shipped with a QR that phones could not read. It is tested by decoding now -
+ * see verification-seal-scan.test.ts.
  */
 const DIAMETER = 124
+
+/**
+ * Splits data dots from mark dots by radius. Derived from the two constants
+ * rather than written as a literal, which is what broke when they changed:
+ * a hardcoded 0.35 sat between 0.31 and 0.42 and below both of their
+ * replacements, so every dot counted as part of the mark.
+ */
+const DOT_BOUNDARY = (DOT_RADIUS + MARK_DOT_RADIUS) / 2
 
 /** A realistic verification URL: an origin, "/credentials/", and a urn:uuid. */
 const URL = 'https://bootcamp.labspk.com/credentials/urn:uuid:0c4e5a1b-9d3f-4c8a-9f21-7ab6d5e40912'
@@ -42,8 +55,9 @@ const symbol = (verifyUrl: string) => {
  * over the symbol plus its four-module quiet zone on each side.
  *
  * Recovering it from a drawn dot's radius instead would divide a coordinate
- * already rounded to three decimals by 0.42, and by the time that reaches the
- * mark's outermost column it has been multiplied by more than twenty.
+ * already rounded to three decimals by a fraction under one, and by the time
+ * that reaches the mark's outermost column it has been multiplied by more
+ * than twenty.
  */
 const moduleBox = (verifyUrl: string, diameter: number): number =>
   (diameter * 0.625) / (symbol(verifyUrl).size + 4 * 2)
@@ -87,7 +101,7 @@ describe('verification seal', () => {
     const svg = generateVerificationSealSvg(verifyUrl, DIAMETER)
     const drawn = dots(svg)
     const box = moduleBox(verifyUrl, DIAMETER)
-    const data = drawn.filter(dot => dot.r < box * 0.35)
+    const data = drawn.filter(dot => dot.r < box * DOT_BOUNDARY)
     const { set, total } = setModulesOutsideFinders(verifyUrl)
 
     // Level H recovers around 30% of the symbol. The clear zone is 27 modules
@@ -100,7 +114,7 @@ describe('verification seal', () => {
   it('sets the mark on the QR"s own grid, centred', () => {
     const drawn = dots(generateVerificationSealSvg(URL, DIAMETER))
     const box = moduleBox(URL, DIAMETER)
-    const mark = drawn.filter(dot => dot.r > box * 0.35)
+    const mark = drawn.filter(dot => dot.r > box * DOT_BOUNDARY)
 
     // 53 lit cells across "WPB", bigger and tighter-packed than the data dots.
     expect(mark).toHaveLength(53)
