@@ -1,6 +1,19 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { defineNuxtConfig } from 'nuxt/config'
 
+/**
+ * Where this app is served. Everything that has to name the site to the
+ * outside world - canonical links, the sitemap, OG URLs, certificate QR
+ * codes - comes from here, so there is one value to change when the domain
+ * does, and no page can disagree with another about what site it belongs to.
+ *
+ * This is the certificate platform's own host, not wpbrigade.com: the
+ * marketing site is a different origin, and claiming its URL as canonical
+ * told Google every page here was a duplicate of a page there.
+ */
+const SITE_URL = (process.env.NUXT_PUBLIC_WEBSITE_URL || 'https://bootcamp.wpbrigade.com')
+  .replace(/\/+$/, '')
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-06-12',
   devtools: { enabled: true },
@@ -21,38 +34,35 @@ export default defineNuxtConfig({
       },
       debug: false
     }],
+    // @nuxtjs/sitemap v7. `hostname`, `staticRoutes`, `gzip` and
+    // `trailingSlash` were v5 option names: v7 ignores unknown keys silently,
+    // so the previous config did nothing at all and the module fell back to
+    // listing every prerenderable page - /dashboard, /login, /profile and
+    // /issue included, each of which robots.txt disallows in the same breath.
+    // The site's URL now comes from `site.url` below.
     ['@nuxtjs/sitemap', {
-      hostname: 'https://wpbrigade.com',
-      gzip: true,
-      trailingSlash: false,
-      // Only include public routes. Authenticated dashboards and admin flows
-      // should not be presented as indexable content.
-      staticRoutes: [
-        '/',
-        '/about',
-        '/get-started',
-        '/verify',
-        '/privacy-policy',
-        '/terms-and-conditions',
+      // An exclude list rather than an allow list: a new public page should
+      // be found on its own, and forgetting to add one costs traffic, while
+      // forgetting to exclude a private one is what happened here.
+      exclude: [
+        '/dashboard',
+        '/profile',
+        '/issue',
+        '/scheduled',
+        '/login',
+        '/register',
+        '/forgot-password',
+        '/reset-password',
+        '/auth/**',
+        // Individual certificates stay publicly reachable - that is the point
+        // of a verifiable credential, and a link or QR code still resolves
+        // for anyone - but listing them submitted every recipient's name to
+        // search engines. Being verifiable by whoever holds the link is not
+        // the same as being findable by name, and recipients never chose the
+        // latter. The pages send `noindex` to match; see pages/credentials/[id].
+        '/credentials/**',
       ],
-      // Dynamic credential pages fetched from the public verify endpoint
-      // Each public credential URL is independently indexable
-      routes: async () => {
-        try {
-          const apiUrl = process.env.NUXT_PUBLIC_API_URL || 'http://localhost:1337'
-          const res = await fetch(`${apiUrl}/api/credentials?fields[0]=credentialId&pagination[pageSize]=1000`)
-          if (!res.ok) {
-            return []
-          }
-          const data = await res.json() as { data?: Array<{ credentialId?: string }> }
-          return (data.data ?? [])
-            .filter(c => c.credentialId)
-            .map(c => `/credentials/${encodeURIComponent(c.credentialId!)}`)
-        }
-        catch {
-          return []
-        }
-      },
+      sortEntries: true,
     }],
   ],
   svgo: {
@@ -77,15 +87,11 @@ export default defineNuxtConfig({
         'vertical-align': 'middle',
       },
     },
-    safelist: [
-      // Simple Icons for sponsors
-      'i-simple-icons-slack',
-      'i-simple-icons-netflix',
-      'i-simple-icons-fitbit',
-      'i-simple-icons-google',
-      'i-simple-icons-airbnb',
-      'i-simple-icons-uber',
-    ]
+    // Nothing to safelist. The previous entries were the upstream project's
+    // demo sponsor logos (Netflix, Fitbit, Airbnb, Uber...); no component
+    // renders them, and shipping other companies' marks on a page of ours
+    // would imply a relationship that does not exist.
+    safelist: []
   },
   app: {
     head: {
@@ -99,10 +105,12 @@ export default defineNuxtConfig({
         { rel: 'sitemap', type: 'application/xml', href: '/sitemap.xml' },
         { rel: 'describedby', type: 'text/plain', href: '/llms.txt' },
 
-        { rel: 'canonical', href: 'https://wpbrigade.com' },
+        // No site-wide canonical: one href here applies to every route, so
+        // it can only ever be right for one of them. Each page sets its own
+        // from useSiteUrl().
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap'
+          href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap'
         },
       ],
       script: [
@@ -113,7 +121,7 @@ export default defineNuxtConfig({
             '@type': 'SoftwareApplication',
             'name': 'WPBrigade',
             'description': 'WPBrigade platform for issuing, managing, and verifying digital credentials based on Open Badges 3.0 and W3C Verifiable Credentials.',
-            'url': 'https://wpbrigade.com',
+            'url': SITE_URL,
             'applicationCategory': 'BusinessApplication',
             'operatingSystem': 'Linux, macOS, Windows',
             'author': {
@@ -137,9 +145,25 @@ export default defineNuxtConfig({
       }
     }
   },
+  // Read by nuxt-site-config, which @nuxtjs/sitemap uses to build absolute
+  // URLs. Without it the module infers the origin from whatever host the
+  // request arrived on.
+  //
+  // This one is baked at build time. `public.websiteUrl` below can also be
+  // overridden at runtime (Nuxt maps NUXT_PUBLIC_WEBSITE_URL onto it), so a
+  // deployment that changes only that variable would move every canonical
+  // link and leave the sitemap behind. Set NUXT_SITE_URL to the same value,
+  // or rebuild, if the domain is ever changed without touching this file.
+  site: {
+    url: SITE_URL,
+    name: 'WPBrigade Certificates',
+  },
   runtimeConfig: {
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL,
+      // Overridable at runtime, unlike a build-time constant - see SITE_URL
+      // above and composables/useSiteUrl.ts.
+      websiteUrl: SITE_URL,
       brandName: process.env.NUXT_PUBLIC_BRAND_NAME || 'WPBrigade',
       brandLogoUrl: process.env.NUXT_PUBLIC_BRAND_LOGO_URL || '/wpbrigade-logo.png',
       brandPrimaryColor: process.env.NUXT_PUBLIC_BRAND_PRIMARY_COLOR || '#3458eb',

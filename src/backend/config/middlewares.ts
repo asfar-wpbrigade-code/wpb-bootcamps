@@ -13,8 +13,8 @@
 // a pull request there would have received an origin this API trusted.
 const DEFAULT_ALLOWED_ORIGINS = [
   // Production
-  'https://bootcamp.labspk.com',
-  'https://bootcamp-api.labspk.com',
+  'https://bootcamp.wpbrigade.com',
+  'https://bootcamp-api.wpbrigade.com',
 
   // Local development
   'http://localhost:3000',

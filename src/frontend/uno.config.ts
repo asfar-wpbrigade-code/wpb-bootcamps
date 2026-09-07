@@ -16,15 +16,9 @@ export default defineConfig({
       },
     }),
   ],
-  safelist: [
-    // Simple Icons for sponsors
-    'i-simple-icons-slack',
-    'i-simple-icons-netflix',
-    'i-simple-icons-fitbit',
-    'i-simple-icons-google',
-    'i-simple-icons-airbnb',
-    'i-simple-icons-uber',
-  ],
+  // Nothing to safelist - see the note in nuxt.config.ts. These were the
+  // upstream demo's sponsor logos and no component renders them.
+  safelist: [],
   theme: {
     colors: {
       primary: '#3458eb',
@@ -39,8 +33,8 @@ export default defineConfig({
       }
     },
     fontFamily: {
-      sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
-      display: ['Space Grotesk', 'system-ui', 'sans-serif']
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+      display: ['Inter', 'system-ui', 'sans-serif']
     }
   }
 })

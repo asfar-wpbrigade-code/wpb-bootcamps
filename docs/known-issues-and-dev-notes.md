@@ -518,3 +518,58 @@ backup/restore, and basic monitoring.
     [backend.md](./backend.md#event-bus) and
     [self-hosting.md](./self-hosting.md#webhook-delivery-and-retries) for
     details.
+
+## Launch hardening (Sep 2026)
+
+Found while going through the app for its public launch. All four were silent:
+nothing failed a test, and three of them looked correct in the source.
+
+36. **[Fixed] `nuxt build` failed outright, so no image could be
+    deployed.** The frontend production build died with
+    `Expected ',', got 'undefined' in node_modules/papaparse/papaparse.js`,
+    pointing at a dependency whose source is perfectly valid — it parses
+    cleanly through `rollup/parseAst` on its own.
+
+    Nitro's rollup config replaces the *text* `typeof window` with
+    `"undefined"` across the entire server bundle
+    (`nitropack/dist/rollup/index.mjs`, `@rollup/plugin-replace` with no
+    `delimiters`, so string literals are rewritten too). papaparse builds its
+    web worker from a source string containing `typeof window`; the
+    substitution drops a double quote into the middle of a double-quoted
+    string, and the result no longer parses.
+
+    Fixed by keeping papaparse out of the server bundle entirely:
+    `parseRecipientsCsv()` imports it dynamically behind `import.meta.client`,
+    which compiles to `false` on the server, so the branch is removed rather
+    than merely left uncalled. Note that neither a plain dynamic import nor
+    `nitro.externals.external` is enough — both still route the file through
+    that replace pass. papaparse 5.7.0 (latest) still contains the string, so
+    upgrading is not a fix either.
+
+37. **[Fixed] Every page declared wpbrigade.com as its canonical URL.**
+    `nuxt.config.ts` set one site-wide `rel=canonical` to
+    `https://wpbrigade.com` — a different site from the one being served —
+    which tells search engines every page here is a duplicate of a page there.
+    The site-wide tag is gone (one href can only be right for one route) and
+    each page names itself; `pages/index.vue` had been relying on the global
+    one and now sets its own.
+
+38. **[Fixed] The sitemap config had no effect.** `hostname`,
+    `staticRoutes`, `gzip` and `trailingSlash` are @nuxtjs/sitemap v5 option
+    names; the installed module is v7, which ignores unknown keys silently.
+    The public-routes allow list therefore did nothing and the module listed
+    every prerenderable page — `/dashboard`, `/login`, `/profile` and `/issue`
+    among them, each of which `robots.txt` disallows in the same breath. Now
+    an `exclude` list, with the origin coming from `site.url`.
+
+39. **[Fixed] `NUXT_PUBLIC_WEBSITE_URL` was read at build time, not
+    runtime.** `constants/index.ts` exported it as a module constant, which is
+    inlined into the client bundle when the image is built. The Dockerfile
+    builds without that variable, so the value set on the running container
+    applied on the server and was ignored in the browser: the same page could
+    advertise two different canonical URLs depending on who rendered it. It is
+    now `runtimeConfig.public.websiteUrl`, read through `useSiteUrl()`.
+
+    `pages/login.vue` still reads `NUXT_PUBLIC_OAUTH_PROVIDERS` the old way.
+    Harmless while OAuth is unused and the list is empty, but it will not work
+    from a container environment when someone turns it on.

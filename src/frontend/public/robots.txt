@@ -13,18 +13,13 @@ Disallow: /reset-password
 # https://contentsignals.org/
 Content-Signal: ai-train=no, search=yes, ai-input=yes
 
-# AI crawlers — explicitly welcome on credential and public pages
-User-Agent: GPTBot
-Allow: /credentials/
-Allow: /verify
-Allow: /llms.txt
-
-User-Agent: ClaudeBot
-Allow: /credentials/
-Allow: /verify
-Allow: /llms.txt
+# /credentials/ is intentionally crawlable but not indexable. Each page sends
+# `noindex`, which a crawler can only obey if it is allowed to fetch the page
+# and read the header - a Disallow here would hide that instruction and let
+# bare URLs be listed anyway. Certificates stay verifiable by link and QR
+# code; recipients' names stay out of search results.
 
 User-Agent: Googlebot
 Allow: /
 
-Sitemap: https://wpbrigade.com/sitemap.xml
+Sitemap: https://bootcamp.wpbrigade.com/sitemap.xml

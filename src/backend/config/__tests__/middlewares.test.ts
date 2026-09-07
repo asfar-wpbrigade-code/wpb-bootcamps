@@ -17,7 +17,7 @@ function ctxWithOrigin(origin?: string) {
 describe('CORS origin function', () => {
   it('allows a default whitelisted origin', () => {
     const origin = buildOriginFn()
-    expect(origin(ctxWithOrigin('https://bootcamp.labspk.com'))).toBe('https://bootcamp.labspk.com')
+    expect(origin(ctxWithOrigin('https://bootcamp.wpbrigade.com'))).toBe('https://bootcamp.wpbrigade.com')
   })
 
   it('does not throw and returns a string for a non-whitelisted origin (regression for #75)', () => {

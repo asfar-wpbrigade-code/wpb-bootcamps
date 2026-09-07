@@ -8,21 +8,21 @@ defineProps<{
 }>()
 
 const illustrations: Record<Section['id'], ConcreteComponent | string> = {
-  certificate: resolveComponent('HomeGraduationIllustration'),
-  recipient: resolveComponent('HomeCsvIllustration'),
-  export: resolveComponent('HomePlaneIllustration')
+  tracks: resolveComponent('HomeGraduationIllustration'),
+  eligibility: resolveComponent('HomeCsvIllustration'),
+  commitment: resolveComponent('HomePlaneIllustration')
 }
 
 const sectionStyle: Record<Section['id'], string> = {
-  certificate: 'bg-white',
-  export: 'bg-[#E6F7FF]',
-  recipient: 'bg-[#F4F1FF]'
+  commitment: 'bg-[#E6F7FF]',
+  eligibility: 'bg-[#F4F1FF]',
+  tracks: 'bg-white'
 }
 
 const titleStyle: Record<Section['id'], string> = {
-  certificate: 'bg-primary',
-  export: 'bg-[#00B4D8]',
-  recipient: 'bg-[#8B5CF6]'
+  commitment: 'bg-[#00B4D8]',
+  eligibility: 'bg-[#8B5CF6]',
+  tracks: 'bg-primary'
 }
 </script>
 

@@ -32,10 +32,12 @@ async function handleSubmit() {
   }
 }
 
+const siteUrl = useSiteUrl()
+
 useHead({
   title: t('auth.resetPassword'),
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/forgot-password` }
+    { rel: 'canonical', href: `${siteUrl}/forgot-password` }
   ]
 })
 

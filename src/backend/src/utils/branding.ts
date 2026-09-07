@@ -27,7 +27,11 @@ export interface Branding {
 const DEFAULT_BRANDING = {
   name: 'WPBrigade',
   primaryColor: '#3458eb',
-  contactEmail: 'info@autops.online',
+  // Mirrors CONTACT_EMAIL in the frontend's constants/index.ts. This address
+  // is printed in issuance and expiry emails as where to write with
+  // questions, so it has to be an inbox WPBrigade reads - it used to be
+  // info@autops.online, which belongs to someone else entirely.
+  contactEmail: 'bootcamp@wpbrigade.com',
 } as const
 
 /** Guards against a malformed value reaching an inline `style` attribute. */

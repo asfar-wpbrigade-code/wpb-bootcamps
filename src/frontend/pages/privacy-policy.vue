@@ -6,10 +6,12 @@ useSeoMeta({
   ogDescription: pageDescription.value,
 })
 
+const siteUrl = useSiteUrl()
+
 useHead({
   title: 'Privacy and Policy',
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/privacy-policy` }
+    { rel: 'canonical', href: `${siteUrl}/privacy-policy` }
   ]
 })
 </script>
@@ -21,7 +23,7 @@ useHead({
         Privacy Policy
       </h1>
       <p class="text-gray-500 mb-8">
-        Last updated: 2025-06-25
+        Last updated: 2026-09-07
       </p>
       <div class="prose prose-lg max-w-none">
         <p>
@@ -91,7 +93,7 @@ useHead({
         </p>
         <h2>13. Contact</h2>
         <p>
-          If you have questions or requests regarding this Privacy Policy, contact us at <a :href="CONTACT_MAIL">info@autops.online</a>.
+          If you have questions or requests regarding this Privacy Policy, contact us at <a :href="CONTACT_MAIL">{{ CONTACT_EMAIL }}</a>.
         </p>
       </div>
     </div>

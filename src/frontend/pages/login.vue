@@ -34,10 +34,12 @@ useSeoMeta({
   ogDescription: pageDescription.value,
 })
 
+const siteUrl = useSiteUrl()
+
 useHead({
   title: 'Login',
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/login` }
+    { rel: 'canonical', href: `${siteUrl}/login` }
   ]
 })
 

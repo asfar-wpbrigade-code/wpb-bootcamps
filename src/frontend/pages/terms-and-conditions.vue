@@ -4,16 +4,18 @@ import { format } from '@formkit/tempo'
 const pageDescription = ref('Terms and conditions that apply whenever utilizing WPBrigade')
 const { termsContent } = useTermsContent()
 
+const siteUrl = useSiteUrl()
+
 useSeoMeta({
   description: pageDescription.value,
   ogDescription: pageDescription.value,
-  ogUrl: `${WEBSITE_URL}/terms-and-conditions`
+  ogUrl: `${siteUrl}/terms-and-conditions`
 })
 
 useHead({
   title: termsContent.title,
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/terms-and-conditions` }
+    { rel: 'canonical', href: `${siteUrl}/terms-and-conditions` }
   ]
 })
 

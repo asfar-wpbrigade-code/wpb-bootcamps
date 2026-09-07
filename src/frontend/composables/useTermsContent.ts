@@ -13,7 +13,7 @@ interface TermsContent {
 export function useTermsContent() {
   const termsContent: TermsContent = {
     title: 'Terms and conditions',
-    lastUpdated: '2025-06-25',
+    lastUpdated: '2026-09-07',
     sections: [
       {
         title: '1. Acceptance of Terms',
@@ -64,15 +64,14 @@ export function useTermsContent() {
         type: 'paragraph',
         content: 'You agree to indemnify and hold harmless WPBrigade and its affiliates from any claims or damages arising from your violation of these Terms.'
       },
+      // No governing-law clause. The previous one named the laws of Italy and
+      // the courts of Florence, inherited from the upstream project this was
+      // built on - wrong for WPBrigade, and a jurisdiction is not something to
+      // guess at. Add one here once counsel has settled it.
       {
-        title: '10. Governing Law',
+        title: '10. Contact',
         type: 'paragraph',
-        content: 'These Terms are governed by the laws of Italy. Any disputes will be resolved in the courts of Florence, Italy.'
-      },
-      {
-        title: '11. Contact',
-        type: 'paragraph',
-        content: 'For questions about these Terms, contact us at <a style="color: blue;" href="mailto:info@autops.online">info@autops.online</a>.'
+        content: `For questions about these Terms, contact us at <a style="color: blue;" href="${CONTACT_MAIL}">${CONTACT_EMAIL}</a>.`
       }
     ]
   }

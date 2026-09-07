@@ -5,16 +5,18 @@ import type { CsvRowIssue } from '~/composables/useRecipientsCsv'
 const { t } = useI18n()
 const pageDescription = ref('Issue badges utilizing WPBrigade software')
 
+const siteUrl = useSiteUrl()
+
 useSeoMeta({
   description: pageDescription.value,
   ogDescription: pageDescription.value,
-  ogUrl: `${WEBSITE_URL}/issue`
+  ogUrl: `${siteUrl}/issue`
 })
 
 useHead({
   title: t('issue.title'),
   link: [
-    { rel: 'canonical', href: `${WEBSITE_URL}/issue` }
+    { rel: 'canonical', href: `${siteUrl}/issue` }
   ]
 })
 
