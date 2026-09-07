@@ -24,7 +24,7 @@ const SAMPLE = {
   issuerName: 'WPBrigade',
   issueDate: '2026-09-02T00:00:00.000Z',
   credentialId: 'urn:uuid:75ba700b-2f17-4395-a15d-7853c0aff533',
-  verifyUrl: 'https://bootcamp.wpbrigade.com/credentials/urn:uuid:75ba700b',
+  verifyUrl: 'https://bootcamp.labspk.com/credentials/urn:uuid:75ba700b',
   // Long enough to wrap to the three citation lines the reference is drawn
   // around; the programme and date baselines follow from that count.
   description: 'Awarded for successfully completing WPBrigade’s WordPress Development '

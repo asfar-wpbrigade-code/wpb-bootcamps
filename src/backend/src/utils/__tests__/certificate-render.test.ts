@@ -13,7 +13,7 @@ const SAMPLE = {
   issuerName: 'WPBrigade',
   issueDate: '2026-08-01T00:00:00.000Z',
   credentialId: 'urn:uuid:2f8a1c3e-0000-4000-8000-abcdefabcdef',
-  verifyUrl: 'https://bootcamp.wpbrigade.com/credentials/urn:uuid:2f8a1c3e',
+  verifyUrl: 'https://bootcamp.labspk.com/credentials/urn:uuid:2f8a1c3e',
   description: 'Completed the advanced engineering track, covering performance, security and release process.',
   signatoryName: 'Grace Hopper',
   signatoryTitle: 'Programme Director',

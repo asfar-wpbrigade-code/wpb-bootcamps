@@ -12,7 +12,15 @@
 // with a wildcard for that project's Netlify deploy previews - anyone opening
 // a pull request there would have received an origin this API trusted.
 const DEFAULT_ALLOWED_ORIGINS = [
-  // Production
+  // Production, currently served from labspk.com.
+  'https://bootcamp.labspk.com',
+  'https://bootcamp-api.labspk.com',
+
+  // The wpbrigade.com hosts the site moves to later. Listed ahead of the move
+  // on purpose: these are our own names on our own zone, so trusting them
+  // early costs nothing, and it means the cutover is DNS plus environment
+  // variables rather than a backend deploy - the failure it avoids is a site
+  // that loads on the new domain while every request from it is blocked.
   'https://bootcamp.wpbrigade.com',
   'https://bootcamp-api.wpbrigade.com',
 

@@ -11,7 +11,7 @@ import { defineNuxtConfig } from 'nuxt/config'
  * marketing site is a different origin, and claiming its URL as canonical
  * told Google every page here was a duplicate of a page there.
  */
-const SITE_URL = (process.env.NUXT_PUBLIC_WEBSITE_URL || 'https://bootcamp.wpbrigade.com')
+const SITE_URL = (process.env.NUXT_PUBLIC_WEBSITE_URL || 'https://bootcamp.labspk.com')
   .replace(/\/+$/, '')
 
 export default defineNuxtConfig({
