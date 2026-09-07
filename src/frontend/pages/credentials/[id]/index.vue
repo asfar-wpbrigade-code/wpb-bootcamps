@@ -154,7 +154,12 @@ function getIssuerName(): string {
 }
 
 function getRecipientName(): string {
-  return verificationData.value?.rawCredential?.recipient?.name || ''
+  // recipientName is the name as awarded, held on the credential itself; the
+  // profile is a fallback for certificates issued before that was recorded.
+  // Same order as the rendered certificate, so the page and the PDF cannot
+  // disagree about who a certificate belongs to.
+  const raw = verificationData.value?.rawCredential
+  return raw?.recipientName || raw?.recipient?.name || ''
 }
 
 // SEO with getter functions (Nuxt 3 documented pattern)

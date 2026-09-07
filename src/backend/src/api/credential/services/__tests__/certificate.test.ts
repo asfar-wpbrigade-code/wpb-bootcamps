@@ -80,3 +80,48 @@ describe('certificate service formats', () => {
       .rejects.toThrow('Credential not found')
   })
 })
+
+describe('whose name the certificate carries', () => {
+  // A certificate records something that happened. The name printed on it is
+  // the name as awarded, so it cannot follow later edits to the person's
+  // profile - and it has to survive the profile link being lost entirely,
+  // which is what used to print the literal word "Recipient" on real
+  // certificates. See services/credential.ts syncRecipientName.
+  it('prefers the name recorded on the credential over the profile', async () => {
+    const renamed = {
+      ...CREDENTIAL,
+      recipientName: 'Ada Lovelace',
+      recipient: { name: 'Ada Byron' },
+    }
+
+    const result = await createService(renamed).generateCertificateFile(renamed.credentialId, 'svg')
+
+    expect(String(result.body)).toContain('Ada Lovelace')
+    expect(String(result.body)).not.toContain('Ada Byron')
+    expect(result.filename).toBe('Ada-Lovelace-Advanced-WordPress-Engineering.svg')
+  })
+
+  it('still names the recipient when the profile link is gone', async () => {
+    const orphaned = { ...CREDENTIAL, recipientName: 'Ada Lovelace', recipient: null }
+
+    const result = await createService(orphaned).generateCertificateFile(orphaned.credentialId, 'svg')
+
+    expect(String(result.body)).toContain('Ada Lovelace')
+    expect(result.filename).toBe('Ada-Lovelace-Advanced-WordPress-Engineering.svg')
+  })
+
+  it('falls back to the placeholder only when no name was recorded at all', async () => {
+    const nameless = { ...CREDENTIAL, recipientName: null, recipient: null }
+
+    const result = await createService(nameless).generateCertificateFile(nameless.credentialId, 'svg')
+
+    expect(result.filename).toBe('Advanced-WordPress-Engineering.svg')
+    expect(String(result.body)).toContain('<svg')
+  })
+
+  it('falls back to the profile for credentials issued before the field existed', async () => {
+    const result = await createService().generateCertificateFile(CREDENTIAL.credentialId, 'svg')
+
+    expect(String(result.body)).toContain('Ada Lovelace')
+  })
+})
