@@ -1,5 +1,3 @@
-import Papa from 'papaparse'
-
 export interface CsvRecipient {
   name: string
   email: string
@@ -164,8 +162,31 @@ export function buildRecipients(
  * detects the delimiter, so the semicolon-separated files Excel writes in
  * many locales work instead of failing as "empty or invalid", and it strips
  * the byte-order mark Excel puts at the start of UTF-8 files.
+ *
+ * papaparse is imported here, and only in the browser, because it cannot go
+ * through nitro's server build: nitro replaces the text `typeof window` with
+ * `"undefined"` across the whole bundle (nitropack/dist/rollup/index.mjs,
+ * @rollup/plugin-replace with no delimiters, so string literals are rewritten
+ * too), and papaparse builds its web worker from a source string containing
+ * `typeof window`. The replacement drops a double quote into the middle of a
+ * double-quoted string, and `nuxt build` dies with
+ * "Expected ',', got 'undefined'" in a dependency that is itself valid.
+ *
+ * `import.meta.client` compiles to `false` on the server, so this whole
+ * branch - and papaparse with it - is removed from the server bundle rather
+ * than merely left uncalled. A static import, or a dynamic one without the
+ * guard, is still bundled and still breaks the build.
+ *
+ * Nothing needs it server-side regardless: it parses a file the browser has
+ * just read from the user's disk.
  */
-export function parseRecipientsCsv(input: File | string): Promise<CsvParseResult> {
+export async function parseRecipientsCsv(input: File | string): Promise<CsvParseResult> {
+  if (!import.meta.client) {
+    return { recipients: [], issues: [], error: 'CSV files are read in the browser.' }
+  }
+
+  const { default: Papa } = await import('papaparse')
+
   return new Promise((resolve) => {
     Papa.parse<Record<string, string>>(input as any, {
       header: true,
