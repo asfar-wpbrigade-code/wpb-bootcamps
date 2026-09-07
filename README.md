@@ -191,7 +191,7 @@ Outbound emails and the certificate follow these:
 ```bash
 BRAND_NAME=WPBrigade
 BRAND_PRIMARY_COLOR=#3458eb
-BRAND_CONTACT_EMAIL=info@autops.online
+BRAND_CONTACT_EMAIL=bootcamp@wpbrigade.com
 SMTP_FROM_NAME=WPBrigade
 LINKEDIN_ORGANIZATION_ID=          # numeric company page id; blank matches by name
 ```
@@ -311,6 +311,8 @@ cd src/frontend && npm run test:e2e    # Playwright
 
 ## Going to production
 
+- [ ] DNS for both hosts resolving to the Docker host **before** the first deploy — `bootcamp.wpbrigade.com` and `bootcamp-api.wpbrigade.com` in `docker-compose.dokploy.yml`. Traefik asks Let's Encrypt for a certificate on startup, and that fails until the name resolves
+- [ ] `NUXT_PUBLIC_WEBSITE_URL` and `NUXT_PUBLIC_API_URL` set to those same hosts. The first is what canonical links, the sitemap, OG tags and certificate QR codes are built from; the second is the address the *browser* uses to reach the API
 - [ ] `NODE_ENV=production` — the compose file defaults to it. Keeps internal errors out of API responses and stops the development seeder creating a default admin account
 - [ ] Fresh `APP_KEYS`, `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT` — never reuse development values
 - [ ] `ENCRYPTION_KEY` backed up somewhere durable, and unchanged
@@ -319,6 +321,7 @@ cd src/frontend && npm run test:e2e    # Playwright
 - [ ] Mailhog removed from the compose file — it's a development fake inbox
 - [ ] Backups running, and one restore tested
 - [ ] Admin password changed from anything used in development
+- [ ] `BRAND_CONTACT_EMAIL` on an inbox somebody reads — it is printed in every issuance email, and the same address appears in the footer and both legal pages as where privacy and erasure requests go
 
 ## Known limitations
 
@@ -331,6 +334,17 @@ Worth knowing before promising any of it to a customer:
   list of indices rather than the spec's compressed bitstring. Our own verify
   page handles it; a third-party verifier may not.
 - **Local passwords only** — no OAuth or single sign-on.
+- **Certificates are not in search results, by design.** Each certificate page
+  is publicly reachable — a link or a QR scan resolves for anyone, with no
+  login — but it sends `noindex` and is kept out of the sitemap, because the
+  page names its recipient and nobody accepting a certificate agreed to be
+  findable by name. A recipient expecting to Google themselves and find it
+  will not. Change it in `pages/credentials/[id]/index.vue` and the sitemap's
+  `exclude` list in `nuxt.config.ts` if that trade is ever made differently.
+- **The Terms carry no governing-law clause.** The inherited one named Italy
+  and the courts of Florence, which was never right for WPBrigade, so it was
+  removed rather than replaced with a guess. Add the real jurisdiction to
+  `src/frontend/composables/useTermsContent.ts` once counsel settles it.
 - Backend test coverage is focused on signing, verification and issuance. The
   Playwright suite runs in CI but only checks that pages render.
 - **PDF and PNG are rasterised**, so their text is not selectable or
