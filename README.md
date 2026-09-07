@@ -311,7 +311,7 @@ cd src/frontend && npm run test:e2e    # Playwright
 
 ## Going to production
 
-- [ ] DNS for both hosts resolving to the Docker host **before** the first deploy — `bootcamp.wpbrigade.com` and `bootcamp-api.wpbrigade.com` in `docker-compose.dokploy.yml`. Traefik asks Let's Encrypt for a certificate on startup, and that fails until the name resolves
+- [ ] DNS for both hosts resolving to the Docker host **before** the first deploy — `bootcamp.labspk.com` and `bootcamp-api.labspk.com` in `docker-compose.dokploy.yml`. Traefik asks Let's Encrypt for a certificate on startup, and that fails until the name resolves
 - [ ] `NUXT_PUBLIC_WEBSITE_URL` and `NUXT_PUBLIC_API_URL` set to those same hosts. The first is what canonical links, the sitemap, OG tags and certificate QR codes are built from; the second is the address the *browser* uses to reach the API
 - [ ] `NODE_ENV=production` — the compose file defaults to it. Keeps internal errors out of API responses and stops the development seeder creating a default admin account
 - [ ] Fresh `APP_KEYS`, `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT` — never reuse development values
@@ -322,6 +322,37 @@ cd src/frontend && npm run test:e2e    # Playwright
 - [ ] Backups running, and one restore tested
 - [ ] Admin password changed from anything used in development
 - [ ] `BRAND_CONTACT_EMAIL` on an inbox somebody reads — it is printed in every issuance email, and the same address appears in the footer and both legal pages as where privacy and erasure requests go
+
+### Changing the domain
+
+The site currently runs on `bootcamp.labspk.com`, with the API on
+`bootcamp-api.labspk.com`, and is expected to move to `wpbrigade.com`
+subdomains later. Both hosts are named in five places, and a move needs all of
+them — the failure mode when one is missed is silent, because each piece is
+internally consistent and only disagrees with the outside world.
+
+1. **DNS**, before anything else. Create the records and leave them
+   **DNS-only** (grey cloud) in Cloudflare for the first deploy: Traefik's
+   ACME challenge needs to reach the origin, and a proxied record on a zone set
+   to Full (strict) has no valid origin certificate yet — which is the thing
+   being requested. Turn the proxy on once the certificate is issued.
+2. **`docker-compose.dokploy.yml`** — the four Traefik `Host()` rules. Traefik
+   routes on the hostname, so until these match, the new name reaches the
+   origin and gets Traefik's own `404 page not found`.
+3. **Environment** — `NUXT_PUBLIC_WEBSITE_URL`, `NUXT_PUBLIC_API_URL`,
+   `PUBLIC_URL`, `FRONTEND_URL`. Note that `PUBLIC_URL` is embedded in signed
+   payloads and in emails already sent, so certificates issued under the old
+   domain keep pointing at it.
+4. **`src/frontend/public/robots.txt`** and **`llms.txt`** — static files, so
+   they cannot read the environment. The `Sitemap:` line and the API URLs are
+   written out in full.
+5. **`config/middlewares.ts`** — already lists both domains, so no change is
+   needed. Removing the old pair is worth doing once the move has settled.
+
+Canonical links, the sitemap, OG tags and certificate QR codes all derive from
+`NUXT_PUBLIC_WEBSITE_URL` (via `SITE_URL` in `nuxt.config.ts`), so they follow
+step 3 on their own. The sitemap's own origin comes from `site.url`, which is
+baked at build time — set `NUXT_SITE_URL` too, or rebuild.
 
 ## Known limitations
 

@@ -98,7 +98,9 @@ export default () => ({
         credential: { credentialId, id: credential.id },
         frontendUrl,
         user: null,
-        recipientName: credential.recipient?.name ?? null,
+        // Same order as the certificate: the name as awarded first, the
+        // profile only as a fallback.
+        recipientName: credential.recipientName || credential.recipient?.name || null,
         daysLeft,
         expirationDate,
       })

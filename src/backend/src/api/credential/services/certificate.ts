@@ -121,7 +121,7 @@ export default ({ strapi }) => ({
 
     const svg = await this.buildCertificateSvg(credential)
     const filename = `${toFileStem(
-      credential.recipient?.name,
+      credential.recipientName || credential.recipient?.name,
       credential.achievement?.name || credential.name,
     )}.${format}`
 
@@ -134,7 +134,7 @@ export default ({ strapi }) => ({
     }
 
     const pdf = await renderCertificatePdf(svg, {
-      title: [credential.recipient?.name, credential.achievement?.name].filter(Boolean).join(' - '),
+      title: [credential.recipientName || credential.recipient?.name, credential.achievement?.name].filter(Boolean).join(' - '),
       author: credential.issuer?.name || 'WPBrigade',
     })
 
@@ -149,7 +149,12 @@ export default ({ strapi }) => ({
   async buildCertificateSvg(credential: any): Promise<string> {
     try {
       // Get required data
-      const recipientName = credential.recipient?.name || 'Recipient'
+      // The name recorded on the credential when it was awarded comes first;
+      // the profile is only a fallback, for credentials issued before that
+      // field existed. Reading the profile first meant a certificate printed
+      // whatever the person's profile says today, and printed the literal
+      // word "Recipient" whenever the link had been lost.
+      const recipientName = credential.recipientName || credential.recipient?.name || 'Recipient'
       const achievementName = credential.achievement?.name || credential.name || 'Achievement'
       const issuerName = credential.issuer?.name || 'Issuer'
       const issueDate = credential.issuanceDate

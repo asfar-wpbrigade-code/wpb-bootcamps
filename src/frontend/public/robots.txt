@@ -22,4 +22,4 @@ Content-Signal: ai-train=no, search=yes, ai-input=yes
 User-Agent: Googlebot
 Allow: /
 
-Sitemap: https://bootcamp.wpbrigade.com/sitemap.xml
+Sitemap: https://bootcamp.labspk.com/sitemap.xml

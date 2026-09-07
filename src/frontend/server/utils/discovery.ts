@@ -5,12 +5,12 @@
  * whatever they find, so a wrong value here is worse than a missing one. Two
  * different origins are involved, and in production they are NOT the same host:
  *
- *   site - where this Nuxt app is served (e.g. bootcamp.wpbrigade.com). Derived
+ *   site - where this Nuxt app is served (e.g. bootcamp.labspk.com). Derived
  *          from the incoming request, so a document always describes the host
  *          it was actually fetched from and cannot drift when the deployment
  *          is renamed or moved.
  *   api  - the Strapi backend, on its own hostname (e.g.
- *          bootcamp-api.wpbrigade.com). Only configuration knows this one.
+ *          bootcamp-api.labspk.com). Only configuration knows this one.
  *
  * Every URL in these documents was previously hardcoded to
  * `https://wpbrigade.com`, which is neither of those hosts.

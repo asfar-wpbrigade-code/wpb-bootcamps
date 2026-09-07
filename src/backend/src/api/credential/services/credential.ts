@@ -111,6 +111,15 @@ export default factories.createCoreService('api::credential.credential', ({ stra
           achievement: achievement.id,
           issuer: issuerId,
           recipient: recipientEntity.id,
+          // The name as awarded, kept on the credential itself. The relation
+          // alone was not enough: it points at a profile whose name changes
+          // when the same person is issued another certificate under a
+          // different spelling, and whose row is replaced by any republish -
+          // either way the certificate silently started printing a different
+          // name, or "Recipient" when the link had been cascade-deleted.
+          // Deliberately not part of the signed payload above, so existing
+          // proofs are unaffected.
+          recipientName: recipientEntity.name || undefined,
           issuanceDate: new Date(),
           revoked: false,
           publishedAt: new Date(),
@@ -436,23 +445,32 @@ export default factories.createCoreService('api::credential.credential', ({ stra
       return profile
     }
 
-    await strapi.entityService.update('api::profile.profile', profile.id, {
-      data: { name, publishedAt: new Date() },
-    })
+    // Written through the query engine, in place, rather than
+    // `entityService.update(..., { publishedAt })`.
+    //
+    // That republishes the profile, and a Strapi 5 republish *deletes* the
+    // published row and inserts a new one. `credentials_recipient_lnk`'s
+    // profile_id is ON DELETE CASCADE, so the delete took the recipient link
+    // off every certificate already issued to that person: their certificates
+    // rendered "Recipient" instead of a name, and disappeared from their
+    // dashboard, which lists them through that same link. Re-reading the new
+    // row afterwards fixed the credential being issued *now* and could do
+    // nothing for the ones issued earlier - the damage is to their rows, not
+    // this one's.
+    //
+    // A name is a plain scalar with no relations to maintain, so updating both
+    // the draft and published rows for this document leaves every link intact.
+    const where = profile.documentId
+      ? { documentId: profile.documentId }
+      : { id: profile.id }
 
-    // That update replaces the profile's published row with a new numeric id
-    // (see resolveCurrentIssuerId for the same hazard on the issuer side), so
-    // re-read it by documentId - the caller is about to link a credential to
-    // whatever this returns.
-    const current = profile.documentId
-      ? await strapi.db.query('api::profile.profile').findOne({
-          where: { documentId: profile.documentId, publishedAt: { $notNull: true } },
-        })
-      : null
+    await strapi.db.query('api::profile.profile').updateMany({ where, data: { name } })
 
     strapi.log.info(`[credential.issue] Recipient ${profile.email} renamed from "${profile.name ?? ''}" to "${name}"`)
 
-    return current ?? { ...profile, name }
+    // The row id is unchanged - nothing was deleted - so the caller can link a
+    // credential to it safely.
+    return { ...profile, name }
   },
 
   /**

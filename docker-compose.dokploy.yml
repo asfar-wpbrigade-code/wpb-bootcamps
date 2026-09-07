@@ -132,10 +132,10 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=dokploy-network
-      - traefik.http.routers.bootcamp-backend-web.rule=Host(`bootcamp-api.wpbrigade.com`)
+      - traefik.http.routers.bootcamp-backend-web.rule=Host(`bootcamp-api.labspk.com`)
       - traefik.http.routers.bootcamp-backend-web.entrypoints=web
       - traefik.http.routers.bootcamp-backend-web.service=bootcamp-backend-service
-      - traefik.http.routers.bootcamp-backend-websecure.rule=Host(`bootcamp-api.wpbrigade.com`)
+      - traefik.http.routers.bootcamp-backend-websecure.rule=Host(`bootcamp-api.labspk.com`)
       - traefik.http.routers.bootcamp-backend-websecure.entrypoints=websecure
       - traefik.http.routers.bootcamp-backend-websecure.tls=true
       - traefik.http.routers.bootcamp-backend-websecure.tls.certresolver=letsencrypt
@@ -161,10 +161,10 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=dokploy-network
-      - traefik.http.routers.bootcamp-frontend-web.rule=Host(`bootcamp.wpbrigade.com`)
+      - traefik.http.routers.bootcamp-frontend-web.rule=Host(`bootcamp.labspk.com`)
       - traefik.http.routers.bootcamp-frontend-web.entrypoints=web
       - traefik.http.routers.bootcamp-frontend-web.service=bootcamp-frontend-service
-      - traefik.http.routers.bootcamp-frontend-websecure.rule=Host(`bootcamp.wpbrigade.com`)
+      - traefik.http.routers.bootcamp-frontend-websecure.rule=Host(`bootcamp.labspk.com`)
       - traefik.http.routers.bootcamp-frontend-websecure.entrypoints=websecure
       - traefik.http.routers.bootcamp-frontend-websecure.tls=true
       - traefik.http.routers.bootcamp-frontend-websecure.tls.certresolver=letsencrypt
