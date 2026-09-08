@@ -573,3 +573,87 @@ nothing failed a test, and three of them looked correct in the source.
     `pages/login.vue` still reads `NUXT_PUBLIC_OAUTH_PROVIDERS` the old way.
     Harmless while OAuth is unused and the list is empty, but it will not work
     from a container environment when someone turns it on.
+
+## Image build (Sep 2026)
+
+40. **[Fixed] A locally built backend image was 3.63GB and carried
+    the development `.env`.** The backend Dockerfile was a single stage ending
+    in `COPY . .`, with no `.dockerignore` anywhere in the repository - and
+    `.dockerignore` was itself listed in `.gitignore`, which is why there was
+    none. Two consequences, both scoped to images built from a working tree:
+
+    * `/app/.env` shipped inside the image - the development `APP_KEYS`,
+      `JWT_SECRET`, `ENCRYPTION_KEY` and SMTP password. Compose environment
+      variables take precedence at runtime, so nothing misbehaved and nothing
+      pointed at it.
+    * The host's `node_modules` (1.09GB) was copied over the ones `npm ci` had
+      just installed inside the image (1.54GB) - built for a different
+      platform, and paid for twice.
+
+    Both files are gitignored, and Dokploy builds from a clone, so the
+    *deployed* image never carried either: its `COPY . .` saw tracked files
+    only. What the `.dockerignore` files fix is the local build, which is the
+    one anybody actually looks at and measures.
+
+    The image is now three stages: a builder with the full tree (the admin
+    panel needs the devDependencies to build), a deps stage running
+    `npm ci --omit=dev` against the same lockfile, and a runtime stage holding
+    the production tree, `dist`, and nothing else. 3.63GB to 1.61GB. The
+    frontend's runtime image was already clean - its multi-stage build copies
+    only `.output` - but it gained a `.dockerignore` too, which took it from
+    316MB to 285MB and stops `.env` reaching even the builder.
+
+    Two things the runtime stage must carry that are easy to miss, both found
+    by booting the result rather than by reading it:
+
+    * `tsconfig.json` **and** the TypeScript sources. `strapi start` calls
+      `tsUtils.resolveOutDir`, which parses the tsconfig; with no sources for
+      its `include` globs to match, TypeScript reports "TS18003: No inputs
+      were found in config file" and Strapi treats that as fatal. It does not
+      recompile them - `dist` is what runs - and together they are under 2MB.
+    * `database/migrations`. They are plain `.js`, so `strapi build` does not
+      compile them into `dist`. Leaving them out is silent: the app boots and
+      the migration simply never runs.
+
+41. **Where the size actually is, and why 700MB is out of reach.**
+
+    Docker's own numbers disagree with each other here, so compare like with
+    like. `docker images` reports the sum of the layer sizes, which
+    double-counts a file that a later layer overwrites - that is why the local
+    build read 3.63GB while its filesystem held 1.73GB. Measuring
+    `du -sx /` inside each image gives one comparable figure:
+
+    | image | filesystem |
+    |---|---|
+    | old Dockerfile, built from a working tree | 1.73GB |
+    | old Dockerfile, built from a clone (what deployed) | 1.63GB |
+    | three-stage | 1.21GB |
+
+    The breakdown of that 420MB is not what it looks like from the outside:
+
+    | | old (clone) | three-stage |
+    |---|---|---|
+    | `/app/node_modules` | 1.1GB | 1.0GB |
+    | `/root/.npm` | 383.5MB | gone |
+
+    So the single biggest win was **discarding npm's download cache**, which a
+    single-stage build leaves behind and which `npm cache clean --force` or a
+    separate stage removes. Dropping devDependencies came to about 100MB,
+    because the packages that dominate are Strapi's *runtime* dependencies:
+    `@strapi` 276MB, `@swc` 105MB, `@formatjs` 41MB, `date-fns` 33MB,
+    `typescript` 31MB, `@types` 25MB, `hls.js` 20MB, `@mux` 18MB, `node-plop`
+    17MB. Anyone chasing this further should start from that table, not from
+    `docker images`.
+
+    Deleting the build-only ones in the same layer as the install (a later
+    `rm -rf` only adds a whiteout - the files stay in the layer below and the
+    image does not shrink) takes it to 1.31GB, and the result boots and serves
+    both `/api/health` and `/admin`. It is not committed, because those
+    packages are Strapi's to require and a lazily-loaded path could still want
+    one. Two of them are load-bearing and were only found by trying:
+    `typescript`, via `resolveOutDir` above, and `date-fns`, without which the
+    server exits at boot with `Cannot find module 'date-fns'`.
+
+    As filesystem sizes: 1.21GB supported, about 0.98GB if you accept the
+    unsupported prune, and 700MB not without going inside `@strapi` itself,
+    which is 276MB of the total.

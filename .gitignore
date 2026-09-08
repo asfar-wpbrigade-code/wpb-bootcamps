@@ -19,7 +19,9 @@ ed25519*
 /out
 
 # Docker
-.dockerignore
+# .dockerignore is deliberately NOT ignored: it is what keeps .env and the
+# host node_modules out of the build context, and an ignored one is a rule
+# that exists on the author machine and nowhere else.
 
 # System files
 .DS_Store

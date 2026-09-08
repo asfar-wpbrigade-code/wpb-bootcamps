@@ -322,6 +322,7 @@ cd src/frontend && npm run test:e2e    # Playwright
 - [ ] Backups running, and one restore tested
 - [ ] Admin password changed from anything used in development
 - [ ] `BRAND_CONTACT_EMAIL` on an inbox somebody reads — it is printed in every issuance email, and the same address appears in the footer and both legal pages as where privacy and erasure requests go
+- [ ] No `.env` in either image. Both directories carry a `.dockerignore` that excludes it; secrets reach a container through its environment, never a file in the build context. `docker run --rm --entrypoint sh <image> -c 'ls -a'` is enough to check
 
 ### Changing the domain
 

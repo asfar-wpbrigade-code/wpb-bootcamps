@@ -1,0 +1,40 @@
+# The runtime image is already clean - the multi-stage build copies only
+# .output - but without this file every build still uploads the host's
+# node_modules and .nuxt as build context, and .env reaches the builder stage.
+
+# Installed inside the image, for the image's own platform.
+node_modules
+npm-debug.log*
+
+# Secrets. The example is kept: it documents the variables without holding any.
+.env
+.env.*
+!.env.example
+
+# Build output and caches, all regenerated inside the image.
+.output
+.nuxt
+.nitro
+.cache
+dist
+
+# Tests and their artefacts. The server bundle never loads them.
+e2e
+playwright-report
+test-results
+**/__tests__
+*.test.ts
+*.spec.ts
+vitest.config.ts
+vitest.setup.ts
+playwright.config.ts
+
+# Documentation and editor state.
+*.md
+.vscode
+.idea
+.DS_Store
+
+# Git history.
+.git
+.gitignore

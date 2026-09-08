@@ -1,0 +1,56 @@
+# Everything here was previously copied into the image by `COPY . .`, which had
+# no exclusions at all:
+#
+#   * node_modules from the *host* landed on top of the ones installed inside
+#     the image - 1.09GB of the 3.63GB - and they are built for the host's
+#     platform, not the container's.
+#   * .env went in with it, so a locally built image carried the development
+#     APP_KEYS, JWT_SECRET, ENCRYPTION_KEY and SMTP password.
+#
+# Both are gitignored, so a build from a clone - which is what the deployment
+# does - never saw either. This file makes a local build behave the same way.
+# Secrets belong in the container's environment, not in the build context.
+
+# Installed inside the image, for the image's own platform.
+node_modules
+npm-debug.log*
+
+# Secrets. The example is kept: it documents the variables without holding any.
+.env
+.env.*
+!.env.example
+
+# Build output. The image builds its own from source, and a stale local copy
+# would otherwise shadow it.
+dist
+build
+.strapi
+.strapi-updater.json
+.cache
+.tmp
+
+# Local database and generated data. .tmp/data.db is the sqlite file used when
+# running without Docker; it has no business in a production image.
+*.db
+*.sqlite
+*.sqlite3
+backups
+exports
+
+# Tests and their fixtures: the runtime never loads them, and jest and ts-jest
+# are devDependencies that the runtime stage does not install.
+**/__tests__
+*.test.ts
+*.spec.ts
+jest.config.js
+
+# Documentation and editor state.
+*.md
+.vscode
+.idea
+.DS_Store
+
+# Git history. Nothing at runtime reads it, and it carries every version of
+# every file that has ever been committed.
+.git
+.gitignore
