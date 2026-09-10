@@ -180,6 +180,21 @@ export const customRouteDocumentation = {
       },
     },
 
+    '/status-lists/{id}': {
+      get: {
+        tags: ['Credential'],
+        summary: 'StatusList2021Credential for an issuer',
+        description: 'The status list a credential\'s `credentialStatus.statusListCredential` '
+          + 'points at. Returns a signed StatusList2021Credential whose '
+          + '`credentialSubject.encodedList` is a GZIP-compressed, base64url-encoded bitstring; '
+          + 'bit N is set if the credential holding `statusListIndex` N has been revoked. '
+          + 'Public and deliberately so - a third-party verifier has to be able to fetch this '
+          + 'without an account here. Carries no recipient data.',
+        parameters: [pathId('id', 'Revocation list row id.')],
+        responses: { 200: success('StatusList2021Credential'), 404: NOT_FOUND },
+      },
+    },
+
     '/verify/{id}': {
       get: {
         tags: ['Credential'],

@@ -82,11 +82,10 @@ history rather than pointing anywhere.
    use), the revoke controller flips that slot too, `open-badge.ts` emits a
    `credentialStatus` (StatusList2021Entry) object in the serialized OBv3
    JSON, and `verification.ts` also checks the list alongside the `revoked`
-   boolean. `checkStatusInList` remains a simplified comma-separated-indices
-   implementation, not a real GZIP+base64 bitstring — documented as a known
-   simplification rather than fixed, since publishing a standards-compliant
-   external status list credential is a separate, larger task. See
-   [open-badges.md](./open-badges.md) and
+   boolean. `checkStatusInList` was a simplified comma-separated-indices
+   implementation rather than a real GZIP+base64 bitstring, and the list was
+   not published anywhere a third party could fetch it; both are now done —
+   see item 43. See [open-badges.md](./open-badges.md) and
    [strapi-and-credentials.md](./strapi-and-credentials.md).
 
 ## Correctness / config bugs
@@ -721,3 +720,72 @@ nothing failed a test, and three of them looked correct in the source.
       is a deliberate trade: hand-made staff accounts are rare, and the
       alternative was a public endpoint that produced a broken account for
       everyone who found it.
+
+## Revocation (Sep 2026)
+
+43. **[Fixed] The status list was not in the format the specification
+    describes, and was not published anywhere a verifier could fetch it.**
+    Two halves of the same gap, and neither was visible from inside: our own
+    `/verify` page decoded the list with `split(',')`, so every test and every
+    manual check passed.
+
+    `encodedList` held a comma-separated list of revoked indices. The
+    specification says the field is a bitstring — bit N set if entry N is
+    revoked — GZIP-compressed and base64url-encoded, padded to a 16KB minimum
+    so the list does not disclose how many credentials an issuer has issued.
+    A third party who fetched `3,17` could not parse it, and had no way to
+    distinguish "cannot read this" from "nothing is revoked".
+
+    It could not fetch it anyway. `credentialStatus.statusListCredential` — the
+    field whose entire job is to name the document a verifier dereferences —
+    was set to the list's own `urn:uuid:`, which resolves nowhere. A verifier
+    was left holding an index and no list to check it in, which is the same
+    position as having no revocation mechanism at all.
+
+    Now: `src/utils/status-list.ts` encodes and decodes the bitstring;
+    `GET /api/status-lists/:id` serves the list as a signed
+    `StatusList2021Credential` (public, `auth: false` — a verifier who has
+    never heard of this instance is exactly who it is for, and it carries no
+    recipient data); and `statusListCredential` names that URL.
+
+    Four things worth keeping:
+
+    * **The change does not invalidate any signature.** `credentialStatus` is
+      assembled in `open-badge.ts` at serialisation and is not part of the
+      payload `generateProof()` signed at issuance, so credentials already in
+      the wild pick up the new URL and still verify. This was checked against a
+      credential issued before the change, not assumed.
+    * **Bit order is most-significant-first** — index 0 is `0b10000000` of byte
+      0. LSB-first decodes to a *different* set of revoked credentials rather
+      than to an error, so it is the kind of mistake that would have shipped.
+    * **An unreadable list now fails the check.** `checkStatusInList` used to
+      catch everything and return `false`, which reported a credential as valid
+      on the strength of a list nobody could read. It throws, and
+      `verifyCredential` and `GET /credentials/:id/status` both turn that into a
+      visible error.
+    * **The old format is still read**, so a restore from a pre-migration
+      backup does not break verification. The migration
+      (`2026-09-10_encode_status_lists.js`) converts stored lists, and is
+      reversible — rolling the app back without also rolling the data back
+      would leave the old `split(',')` reader parsing a bitstring, producing
+      `NaN` and reporting every revoked credential as valid.
+
+    The migration carries its own copy of the encoder, because migrations are
+    plain CommonJS and are not compiled into `dist` (item 40), so it cannot
+    import from `src/utils`. `src/utils/__tests__/status-list.test.ts` drives
+    the migration and asserts the two produce byte-identical output.
+
+44. **[Fixed] `GET /credentials/:id/status` read a field that has never
+    existed.** The handler looked up `list.revokedCredentials[credentialId]` on
+    the issuer's most recently updated revocation list. `revokedCredentials` is
+    not an attribute of the `revocation-list` content type — it appears only in
+    an interface declared in the controller file — so the lookup was always
+    `undefined` and the branch always answered "not revoked".
+
+    It agreed with the truth only because the revoke controller sets the
+    `revoked` boolean as well, and that is checked first. Anything that flipped
+    a bit in the status list alone — the migration, a direct database fix, a
+    future bulk revocation — would have been reported as valid by this
+    endpoint while `/verify` correctly reported it as revoked. It now consults
+    the credential's own slot through `checkStatusInList`, and fails closed on
+    a list it cannot read.

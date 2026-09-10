@@ -1,4 +1,5 @@
 import { revocationListExtension } from '../revocation-list'
+import { decodeStatusList } from '../../../../utils/status-list'
 
 const LIST_UID = 'api::revocation-list.revocation-list'
 
@@ -146,9 +147,68 @@ describe('revocation-list service', () => {
     const list = await service.createStatusListCredential(1)
 
     await service.revokeCredentialInStatusList(list.id, 5)
+    const once = await strapi.entityService.findOne('api::revocation-list.revocation-list', list.id)
     await service.revokeCredentialInStatusList(list.id, 5)
+    const twice = await strapi.entityService.findOne('api::revocation-list.revocation-list', list.id)
+
+    // Asserted through the encoding rather than against a literal: the field
+    // holds a GZIP+base64url bitstring now, not '5'. Byte-identical output for
+    // the same index set is what makes "twice changed nothing" checkable.
+    expect(decodeStatusList(twice.encodedList)).toEqual([5])
+    expect(twice.encodedList).toBe(once.encodedList)
+  })
+
+  it('a second revocation does not clear the first', async () => {
+    // The bitstring is rewritten whole on every revocation, so the existing
+    // one has to be decoded first. Building it from only the new index would
+    // un-revoke everything already in the list - and would have looked
+    // correct, because the newly revoked credential still reads as revoked.
+    const { strapi } = createFakeStrapi()
+    const service = revocationListExtension({ strapi } as any)
+    const list = await service.createStatusListCredential(1)
+
+    await service.revokeCredentialInStatusList(list.id, 2)
+    await service.revokeCredentialInStatusList(list.id, 9)
     const updatedList = await strapi.entityService.findOne('api::revocation-list.revocation-list', list.id)
 
-    expect(updatedList.encodedList).toBe('5')
+    expect(decodeStatusList(updatedList.encodedList)).toEqual([2, 9])
+    expect(await service.checkStatusInList(updatedList, 2)).toBe(true)
+    expect(await service.checkStatusInList(updatedList, 9)).toBe(true)
+  })
+
+  it('a new list is a parseable bitstring, not an empty string', async () => {
+    // The list is published at /api/status-lists/:id as soon as the issuer's
+    // first credential exists, so a verifier can fetch it before anything has
+    // been revoked - and '' is not something a verifier can parse.
+    const { strapi } = createFakeStrapi()
+    const service = revocationListExtension({ strapi } as any)
+    const list = await service.createStatusListCredential(1)
+
+    expect(list.encodedList).not.toBe('')
+    expect(decodeStatusList(list.encodedList)).toEqual([])
+  })
+
+  it('still reads a list written before the bitstring change', async () => {
+    // Credentials issued against these lists are in the wild, and a restore
+    // from an older backup brings the format back.
+    const { strapi } = createFakeStrapi()
+    const service = revocationListExtension({ strapi } as any)
+
+    const legacy = { id: 99, encodedList: '3,17' } as any
+
+    expect(await service.checkStatusInList(legacy, 17)).toBe(true)
+    expect(await service.checkStatusInList(legacy, 4)).toBe(false)
+  })
+
+  it('checkStatusInList throws on an unreadable list rather than passing it', async () => {
+    // Fails closed. verification.ts and the status controller turn this into
+    // "revocation cannot be confirmed"; answering false would report a
+    // credential as valid on the strength of a list nobody could read.
+    const { strapi } = createFakeStrapi()
+    const service = revocationListExtension({ strapi } as any)
+
+    const corrupt = { id: 98, encodedList: 'not-a-bitstring!!' } as any
+
+    await expect(service.checkStatusInList(corrupt, 0)).rejects.toThrow(/could not be decoded/)
   })
 })

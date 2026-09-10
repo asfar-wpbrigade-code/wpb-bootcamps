@@ -477,14 +477,27 @@ export default ({ strapi }) => ({
       }
       
       // Add credentialStatus (StatusList2021) if this credential has a slot
-      // in an issuer status list
+      // in an issuer status list.
+      //
+      // `statusListCredential` names the document a verifier dereferences to
+      // get the bitstring, so it has to be a URL. It used to be the list's
+      // `statusListCredential` field - a `urn:uuid:` that resolves nowhere -
+      // which left a verifier with an index and no list to check it against.
+      // It is now the public /api/status-lists/:id endpoint, and both this and
+      // `id` are built from the same URL so they cannot drift apart.
+      //
+      // Safe to change: credentialStatus is assembled here, at serialisation,
+      // and is not part of the payload the JWS was made over at issuance (see
+      // credential.ts's `credentialPayload`), so credentials already in the
+      // wild pick up the new URL and keep their signatures.
       if (credential.statusList && credential.statusListIndex != null) {
+        const statusListUrl = `${baseUrl}/api/status-lists/${credential.statusList.id}`
         obCredential.credentialStatus = {
-          id: `${baseUrl}/api/revocation-lists/${credential.statusList.id}#${credential.statusListIndex}`,
+          id: `${statusListUrl}#${credential.statusListIndex}`,
           type: 'StatusList2021Entry',
           statusPurpose: credential.statusList.statusPurpose || 'revocation',
           statusListIndex: String(credential.statusListIndex),
-          statusListCredential: credential.statusList.statusListCredential
+          statusListCredential: statusListUrl
         }
       }
 

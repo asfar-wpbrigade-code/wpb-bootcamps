@@ -5,6 +5,7 @@
 import { factories } from '@strapi/strapi'
 import { errors } from '@strapi/utils'
 import crypto from 'crypto'
+import { decodeStatusList, encodeStatusList, statusListHasIndex } from '../../../utils/status-list'
 const { ApplicationError } = errors
 
 interface RevocationList {
@@ -54,23 +55,21 @@ export const revocationListExtension = ({ strapi }: { strapi: any }) => ({
   /**
    * Check if a credential is revoked in a specific status list.
    *
-   * Known simplification: encodedList is a comma-separated list of revoked
-   * indices, not a real StatusList2021 GZIP+base64 bitstring. Fine as an
-   * internal representation for a single-instance deployment; a real
-   * bitstring encoding (for publishing a standards-compliant status list
-   * credential externally) is a separate, larger task.
+   * `encodedList` is a StatusList2021 bitstring (see utils/status-list.ts).
+   * Lists written before that change hold a comma-separated list of indices
+   * instead, and are still read correctly - the migration in
+   * database/migrations converts them, but a list restored from an older
+   * backup would arrive in the old format again.
+   *
+   * A list that decodes as neither propagates the error rather than answering
+   * `false`: "the list is unreadable" is not "this credential is valid", and
+   * verification.ts turns it into a failed check the caller can see.
    */
   async checkStatusInList(statusList: RevocationList, statusListIndex: number) {
-    try {
-      const encodedList = statusList.encodedList
-      if (!encodedList) return false
+    const encodedList = statusList.encodedList
+    if (!encodedList) return false
 
-      const revokedIndices = encodedList.split(',').map(i => parseInt(i.trim(), 10))
-      return revokedIndices.includes(statusListIndex)
-    } catch (error) {
-      console.error('Error checking status in list:', error)
-      return false
-    }
+    return statusListHasIndex(encodedList, statusListIndex)
   },
 
   /**
@@ -106,7 +105,11 @@ export const revocationListExtension = ({ strapi }: { strapi: any }) => ({
           issuer: issuerId,
           statusListCredential: statusListId,
           statusPurpose: purpose,
-          encodedList: '', // Empty list to start
+          // A valid bitstring with nothing set, not an empty string: the list
+          // is published for third parties to fetch from the moment the
+          // issuer's first credential exists, and an empty `encodedList` is
+          // not something a verifier can parse.
+          encodedList: encodeStatusList([]),
           nextIndex: 0,
           lastUpdated: new Date(),
           publishedAt: new Date()
@@ -118,6 +121,69 @@ export const revocationListExtension = ({ strapi }: { strapi: any }) => ({
       console.error('Error creating status list credential:', error)
       throw new ApplicationError(`Error creating status list credential: ${error.message}`)
     }
+  },
+
+  /**
+   * The StatusList2021Credential for a list, as a third party would fetch it.
+   *
+   * A bitstring nobody can retrieve is no more verifiable than the old
+   * comma-separated one: `credentialStatus.statusListCredential` has to name a
+   * document a verifier can dereference, follow to `credentialSubject
+   * .encodedList`, and check its own credential's index in. That used to be
+   * the list's `urn:uuid:`, which resolves nowhere.
+   *
+   * Signed with the issuer's own key, through the same `generateProof()` that
+   * signs credentials - an unsigned status list would let anyone who can
+   * intercept the response un-revoke a credential by serving their own.
+   *
+   * @param {number|string} listId - The revocation list row id
+   */
+  async buildStatusListCredential(listId: number | string) {
+    const baseUrl = strapi.config.get('server.url', 'http://localhost:1337')
+
+    const statusList = await strapi.db.query('api::revocation-list.revocation-list').findOne({
+      where: { id: listId },
+      populate: ['issuer'],
+    })
+
+    if (!statusList) {
+      throw new ApplicationError('Status list not found')
+    }
+
+    const listUrl = `${baseUrl}/api/status-lists/${statusList.id}`
+    const issuerId = statusList.issuer?.id
+
+    const payload: Record<string, any> = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        'https://w3id.org/vc/status-list/2021/v1',
+      ],
+      id: listUrl,
+      type: ['VerifiableCredential', 'StatusList2021Credential'],
+      issuer: issuerId ? `${baseUrl}/api/profiles/${issuerId}` : listUrl,
+      // `validFrom` is the VC 2.0 name; `issuanceDate` is what the
+      // StatusList2021 context and every verifier built against it expects,
+      // and it is what the credentials this list covers carry too.
+      issuanceDate: new Date(statusList.lastUpdated || Date.now()).toISOString(),
+      credentialSubject: {
+        id: `${listUrl}#list`,
+        type: 'StatusList2021',
+        statusPurpose: statusList.statusPurpose || 'revocation',
+        encodedList: statusList.encodedList,
+      },
+    }
+
+    // A list belonging to a profile that has since been deleted is still
+    // worth serving unsigned - the alternative is a 500 on a URL baked into
+    // credentials already in the wild, which reads to a verifier as "the
+    // issuer's infrastructure is gone" rather than "this key is missing".
+    if (issuerId) {
+      payload.proof = await strapi
+        .service('api::credential.credential')
+        .generateProof(issuerId, payload)
+    }
+
+    return payload
   },
 
   /**
@@ -180,9 +246,11 @@ export const revocationListExtension = ({ strapi }: { strapi: any }) => ({
         throw new ApplicationError('Status list not found')
       }
 
-      // Update the encoded list to include the new index
-      const encodedList = statusList.encodedList || ''
-      const indices = encodedList ? encodedList.split(',').map(i => parseInt(i.trim())) : []
+      // Decode, add, re-encode. Reading the existing list first is what makes
+      // this safe to run twice, and what stops a second revocation from
+      // clearing the first: the bitstring is rewritten whole, so it has to be
+      // built from the indices already in it.
+      const indices = decodeStatusList(statusList.encodedList || '')
 
       if (!indices.includes(statusListIndex)) {
         indices.push(statusListIndex)
@@ -192,7 +260,7 @@ export const revocationListExtension = ({ strapi }: { strapi: any }) => ({
       await strapi.db.query('api::revocation-list.revocation-list').update({
         where: { id: statusListId },
         data: {
-          encodedList: indices.join(','),
+          encodedList: encodeStatusList(indices),
           lastUpdated: new Date()
         }
       })

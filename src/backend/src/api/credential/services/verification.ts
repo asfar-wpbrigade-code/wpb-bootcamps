@@ -143,7 +143,27 @@ export default {
     // coverage for externally-issued credentials.
     if (credential.statusList && credential.statusListIndex != null) {
       const revocationListService = strapi.service('api::revocation-list.revocation-list');
-      const revokedInList = await revocationListService.checkStatusInList(credential.statusList, credential.statusListIndex);
+
+      // An unreadable status list fails the check rather than passing it. The
+      // list is a bitstring now (utils/status-list.ts) and a corrupt one used
+      // to be swallowed and answered `false`, which reported a credential as
+      // valid on the strength of a list nobody could read.
+      let revokedInList: boolean;
+      try {
+        revokedInList = await revocationListService.checkStatusInList(credential.statusList, credential.statusListIndex);
+      } catch (error) {
+        strapi.log.error(`[verification] Status list ${credential.statusList.id} could not be read: ${error.message}`);
+        credentialsVerifiedTotal.inc({ result: 'invalid' });
+        return {
+          verified: false,
+          checks: [
+            { check: 'not_revoked', result: 'error', message: 'The issuer\'s revocation status list could not be read, so revocation cannot be confirmed' }
+          ],
+          credential: serializedCredential,
+          rawCredential: credential
+        };
+      }
+
       if (revokedInList) {
         credentialsVerifiedTotal.inc({ result: 'invalid' });
         return {

@@ -109,16 +109,36 @@ on the `credential` row, **and** also flips the credential's
 slot in its issuer's `revocation-list` via `revokeCredentialInStatusList`,
 if it has one — older credentials issued before status lists existed won't,
 in which case `revoked: true` alone is authoritative. `verifyCredential`
-checks both. `checkStatusInList` remains a simplified comma-separated-indices
-implementation rather than a real StatusList2021 GZIP+base64 bitstring — see
-[open-badges.md](./open-badges.md#signing) and
-[known-issues-and-dev-notes.md](./known-issues-and-dev-notes.md) item 6.
+checks both.
 
 Every new credential is assigned a slot in its issuer's revocation list at
 issuance time (`credential.ts`'s `issue()`, via
 `api::revocation-list.revocation-list`'s `getOrCreateActiveListForIssuer`/
-`assignNextIndex`), and the serialized OBv3 credential now includes a
+`assignNextIndex`), and the serialized OBv3 credential includes a
 `credentialStatus` (StatusList2021Entry) object pointing at it.
+
+### The status list a third party fetches
+
+`encodedList` is a StatusList2021 bitstring: GZIP-compressed, base64url-encoded,
+bit N set if the credential holding `statusListIndex` N is revoked, padded to
+the specification's 16KB minimum so the list does not disclose how many
+credentials an issuer has issued. `src/utils/status-list.ts` owns the encoding
+and documents the two details that are easy to get wrong — bit order is
+most-significant-first, and there is no multibase prefix (StatusList2021, not
+its successor). It also still reads the comma-separated indices this field held
+before, which the migration in `database/migrations` converts.
+
+`GET /api/status-lists/:id` (public, `auth: false`) serves the list as a signed
+`StatusList2021Credential`, signed with the issuer's own key through the same
+`generateProof()` that signs credentials. That URL is what
+`credentialStatus.statusListCredential` names, so a verifier who has never
+heard of this instance can follow it, decode the bitstring and check the
+index — which is the whole promise of a verifiable credential, and was not
+possible while the field held a `urn:uuid:` that resolved nowhere.
+
+An unreadable list fails the check rather than passing it: `checkStatusInList`
+throws, and both `verifyCredential` and `GET /credentials/:id/status` turn that
+into a visible error instead of "not revoked".
 
 ## Webhooks
 

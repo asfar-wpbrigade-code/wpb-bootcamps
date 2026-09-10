@@ -291,6 +291,7 @@ Full OpenAPI documentation at http://localhost:1337/documentation.
 | `GET /api/credentials/:id/verify` | Verify signature, expiry and revocation |
 | `GET /api/credentials/:id/certificate` | The certificate. `?format=pdf` or `?format=png`; SVG by default |
 | `GET /api/achievements` | Published templates |
+| `GET /api/status-lists/:id` | The issuer's revocation status list, as a signed StatusList2021Credential |
 
 `:id` accepts the `urn:uuid:` credential id, Strapi's documentId, or the numeric
 row id.
@@ -369,9 +370,6 @@ Worth knowing before promising any of it to a customer:
   that email address — issuance creates the account and the profile together.
   Anyone else, including staff, needs one made in the admin panel. Recipients
   never receive a password, so their way in is "Forgot password?" on `/login`.
-- **Revocation isn't fully standards-compliant.** StatusList2021 is stored as a
-  list of indices rather than the spec's compressed bitstring. Our own verify
-  page handles it; a third-party verifier may not.
 - **Local passwords only** — no OAuth or single sign-on.
 - **Certificates are not in search results, by design.** Each certificate page
   is publicly reachable — a link or a QR scan resolves for anyone, with no
