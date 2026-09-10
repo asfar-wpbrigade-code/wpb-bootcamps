@@ -39,7 +39,7 @@ only "provider" concept in the codebase).
    this client, not just repointing a base URL.
 
 4. **Auth is Strapi's `users-permissions` plugin**, its specific endpoints
-   (`/api/auth/local`, `/api/auth/local/register`, `/api/users/me`), and its
+   (`/api/auth/local`, `/api/users/me` — registration is disabled), and its
    role model (`public`/`authenticated`/custom `issuer`). No OAuth2/OIDC
    abstraction exists.
 

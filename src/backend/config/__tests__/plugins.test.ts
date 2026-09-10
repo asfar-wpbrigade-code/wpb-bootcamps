@@ -86,6 +86,13 @@ describe('plugins config branding', () => {
       .toBe((reset.message.match(/<\/p>/g) || []).length)
   })
 
+  it('leaves self-registration disabled', () => {
+    // The only way to get an account is to be issued a certificate, because
+    // that is the path that also creates the profile. An account without one
+    // can log in and then finds every page it can reach empty.
+    expect(loadPlugins()['users-permissions'].config.advanced.allow_register).toBe(false)
+  })
+
   it('follows BRAND_NAME when set', () => {
     process.env.BRAND_NAME = 'Acme Academy'
     const config = loadPlugins()

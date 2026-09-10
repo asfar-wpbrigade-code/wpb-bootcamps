@@ -19,14 +19,6 @@ interface LoginResponse {
   }
 }
 
-interface RegisterResponse extends LoginResponse {}
-
-interface RegisterData {
-  username: string
-  email: string
-  password: string
-}
-
 interface LoginData {
   identifier: string
   password: string
@@ -54,31 +46,11 @@ export class AuthClient {
   }
 
   /**
-   * Register a new user
-   */
-  async register(data: RegisterData): Promise<RegisterResponse> {
-    try {
-      const response = await apiClient.post<RegisterResponse>('/api/auth/local/register', data)
-
-      // Store auth data
-      if (response.jwt) {
-        this.saveToken(response.jwt)
-        this.saveUser(response.user)
-        apiClient.setToken(response.jwt)
-        // Fetch and save the full user with role
-        await this.fetchAndSaveFullUser()
-      }
-
-      return response
-    }
-    catch (error) {
-      console.error('Registration failed:', error)
-      throw error
-    }
-  }
-
-  /**
    * Login a user
+   *
+   * There is no register() counterpart: `/api/auth/local/register` is disabled
+   * on the backend (`allow_register: false`), because issuance is what creates
+   * an account and the profile that goes with it. See config/plugins.ts.
    */
   async login(data: LoginData): Promise<LoginResponse> {
     try {
@@ -105,7 +77,7 @@ export class AuthClient {
    * Complete an OAuth/OIDC login given a JWT Strapi's users-permissions
    * provider callback already issued (see /auth/callback and
    * docs/oauth-setup.md for how a provider gets configured) - unlike
-   * login()/register(), there's no /api/auth/local(...) call to make first.
+   * login(), there's no /api/auth/local call to make first.
    */
   async loginWithToken(jwt: string): Promise<{ jwt: string, user: any }> {
     this.saveToken(jwt)

@@ -218,6 +218,16 @@ onMounted(() => {
             </button>
           </div>
         </div>
+
+        <!-- There is no sign-up link to offer, so this says where an account
+             comes from instead. Without it the only route for someone who has
+             a certificate but has never logged in is "Forgot password?", which
+             does not read as the way in. -->
+        <div class="mt-6 pt-6 border-t border-gray-200 text-center">
+          <p class="text-sm text-text-secondary">
+            {{ t('auth.noAccountYet') }}
+          </p>
+        </div>
       </div>
     </div>
   </div>

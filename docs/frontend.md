@@ -80,8 +80,11 @@ stable app-level contract — relevant if you're evaluating what "swap the
 backend" would actually require (see [tool-agnostic.md](./tool-agnostic.md)).
 
 `api/auth-client.ts` (`AuthClient`) talks directly to Strapi's built-in
-`users-permissions` auth endpoints: `/api/auth/local`, `/api/auth/local/register`,
-`/api/users/me`.
+`users-permissions` auth endpoints: `/api/auth/local` and `/api/users/me`. There
+is no `register()` — `/api/auth/local/register` is disabled
+(`allow_register: false`), because issuance is what creates an account and the
+profile that goes with it; see item 42 in
+[known-issues-and-dev-notes.md](./known-issues-and-dev-notes.md).
 
 ## The one server-side route
 

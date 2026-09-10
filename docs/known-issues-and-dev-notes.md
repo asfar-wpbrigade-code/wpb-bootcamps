@@ -657,3 +657,45 @@ nothing failed a test, and three of them looked correct in the source.
     As filesystem sizes: 1.21GB supported, about 0.98GB if you accept the
     unsupported prune, and 700MB not without going inside `@strapi` itself,
     which is 276MB of the total.
+
+## Accounts (Sep 2026)
+
+42. **[Fixed] Self-registration produced an account with no profile.**
+    `allow_register` was `true` and `/register` was a live, indexable page, but
+    the only code that creates a profile is issuance: `credential.ts`'s `issue()`
+    calls `findOrCreateRecipientProfile()` and `findOrCreateUser()` together, in
+    that order. Registering through `/api/auth/local/register` created the
+    users-permissions user and nothing else.
+
+    Such an account logs in successfully — the JWT is real and the role is
+    `authenticated` — and then every page it can reach is empty, because
+    `profile.me` resolves the profile by matching `ctx.state.user.email` against
+    a **published** profile row and returns 404 when there is none.
+    `/dashboard`, `/profile`, the certificate list and `/issue` (which redirects
+    to the dashboard without an `Issuer` profileType) all fail that way. Nothing
+    told the user why, and nothing distinguished it from having no certificates.
+
+    Fixed by removing the path rather than making it create a profile: an
+    account now exists because a certificate was issued to that address.
+    `allow_register: false` is the actual boundary — the endpoint 400s with
+    "Register action is currently disabled" whether or not a frontend calls it.
+    `pages/register.vue` is gone, with its store action, its `AuthClient.register`
+    and its orphaned `auth.signUp*` strings; `/register` is a 301 to `/login`
+    via `routeRules`, since it was linkable for months. `/login` now renders
+    `auth.noAccountYet`, which was already written and had never been mounted
+    anywhere — without it the only route in for a recipient who has a
+    certificate and has never logged in is "Forgot password?", which does not
+    read as the way in.
+
+    Two things this leaves:
+
+    * **Accounts already created this way still exist.** They are not visible as
+      broken from the login side, only from the empty dashboard. Content Manager
+      → User, cross-checked against Profile on email, is where to find them;
+      each needs a profile made for it or the account removed.
+    * **A staff member who is not a recipient now needs both rows made by hand**
+      — the User and the Profile, matching on email, the profile published. See
+      [Making yourself an issuer](../README.md#making-yourself-an-issuer). That
+      is a deliberate trade: hand-made staff accounts are rare, and the
+      alternative was a public endpoint that produced a broken account for
+      everyone who found it.

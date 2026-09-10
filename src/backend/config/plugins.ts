@@ -48,7 +48,16 @@ export default ({ env }) => ({
       },
       advanced: {
         unique_email: true,
-        allow_register: true,
+        // No self-registration. An account is created by issuance
+        // (credential.ts's findOrCreateUser), in the same call that creates the
+        // profile every authenticated page reads - so a self-registered account
+        // had a working login and no profile, and /dashboard, /profile and its
+        // certificate list all came back empty with nothing to explain why.
+        // Recipients reach their account through the password reset, which is
+        // the path they take regardless: issuance never sends them a password.
+        // Turning this back on means creating the profile in the same request,
+        // not just re-enabling the endpoint.
+        allow_register: false,
         email_confirmation: false,
         email_reset_password: {
           from: {

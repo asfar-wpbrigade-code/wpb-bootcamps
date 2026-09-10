@@ -162,58 +162,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function register(username: string, email: string, password: string) {
-    error.value = null
-    isLoading.value = true
-
-    try {
-      const response = await authClient.register({ username, email, password })
-
-      // Save user data
-      user.value = response.user
-      token.value = response.jwt
-
-      // Fetch full user with role using /api/users/me?populate=*
-      try {
-        const fullUser = await apiClient.get<User>('/api/users/me', { populate: '*' })
-        if (fullUser) {
-          user.value = fullUser
-        }
-      }
-      catch (userError) {
-        console.error('Error loading full user:', userError)
-      }
-
-      // Get user profile
-      try {
-        const profileResponse = await apiClient.get<ProfileResponse>('/api/profiles/me')
-        if (profileResponse.data) {
-          profile.value = Array.isArray(profileResponse.data)
-            ? profileResponse.data[0]
-            : profileResponse.data
-        }
-      }
-      catch (profileError) {
-        console.error('Error loading profile:', profileError)
-      }
-
-      // Set token in cookie for server-side auth checks
-      if (import.meta.client) {
-        Cookies.set('token', response.jwt, { expires: 7 })
-      }
-
-      return true
-    }
-    catch (err) {
-      console.error('Registration error:', err)
-      error.value = err instanceof Error ? err.message : 'Registration failed'
-      return false
-    }
-    finally {
-      isLoading.value = false
-    }
-  }
-
   async function loginWithOAuthToken(jwt: string) {
     error.value = null
     isLoading.value = true
@@ -284,7 +232,6 @@ export const useAuthStore = defineStore('auth', () => {
     userRole,
     login,
     loginWithOAuthToken,
-    register,
     logout,
     init
   }

@@ -97,14 +97,19 @@ registration form when no administrator exists yet.
 
 ### Making yourself an issuer
 
-Being an issuer is a property of your **Profile**, not a Strapi role. After
-registering in the app:
+Being an issuer is a property of your **Profile**, not a Strapi role. There is
+no sign-up page, so both rows are made in the Strapi admin:
 
-1. Strapi admin → Content Manager → **Profile**
-2. Find the profile with your email, or create one
+1. Content Manager → **User** → create one with your email, a password and the
+   `authenticated` role. This is the frontend login, and it is separate from the
+   Strapi admin account you are using to create it
+2. Content Manager → **Profile** → find the profile with the same email, or
+   create one
 3. Set **profileType** to `Issuer` or `Both` → Save → Publish
 
-Without a profile carrying that type, `/issue` redirects to the dashboard.
+The email has to match on both rows — that is what links a login to its
+profile. Without a profile carrying that type, `/issue` redirects to the
+dashboard; without a profile at all, the dashboard itself comes back empty.
 
 ## Issuing certificates
 
@@ -304,7 +309,7 @@ Issuing checks that you own the achievement you're issuing from.
 ## Testing
 
 ```bash
-cd src/backend  && npm test            # Jest — 162 tests
+cd src/backend  && npm test            # Jest — 227 tests
 cd src/frontend && npm run test:unit   # Vitest
 cd src/frontend && npm run test:e2e    # Playwright
 ```
@@ -359,9 +364,10 @@ baked at build time — set `NUXT_SITE_URL` too, or rebuild.
 
 Worth knowing before promising any of it to a customer:
 
-- **Self-registration leaves an account without a profile.** People invited by
-  being issued a certificate are fine — their profile is created automatically.
-  Someone who signs up unprompted needs a profile made for them in the admin panel.
+- **There is no sign-up.** An account exists because a certificate was issued to
+  that email address — issuance creates the account and the profile together.
+  Anyone else, including staff, needs one made in the admin panel. Recipients
+  never receive a password, so their way in is "Forgot password?" on `/login`.
 - **Revocation isn't fully standards-compliant.** StatusList2021 is stored as a
   list of indices rather than the spec's compressed bitstring. Our own verify
   page handles it; a third-party verifier may not.

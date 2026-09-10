@@ -57,14 +57,12 @@ describe('authClient', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith('user', expect.any(String))
   })
 
-  it('register sets token and user on success', async () => {
-    mockApiClient.post.mockResolvedValue({ jwt: 'token', user: { id: 2, email: 'reg@test.com' } })
-    mockApiClient.get.mockResolvedValue({ id: 2, email: 'reg@test.com', role: { id: 2, name: 'Recipient' } })
-    const data = { username: 'reg', email: 'reg@test.com', password: 'pw' }
-    await authClient.register(data)
-    expect(mockApiClient.setToken).toHaveBeenCalledWith('token')
-    expect(localStorage.setItem).toHaveBeenCalledWith('token', 'token')
-    expect(localStorage.setItem).toHaveBeenCalledWith('user', expect.any(String))
+  it('offers no way to register', () => {
+    // Registration is disabled on the backend (`allow_register: false`) because
+    // issuance is what creates an account together with its profile. A client
+    // method would only ever get a 400 back - see item 42 in
+    // docs/known-issues-and-dev-notes.md.
+    expect((authClient as Record<string, unknown>).register).toBeUndefined()
   })
 
   it('logout clears token and user', () => {

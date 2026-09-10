@@ -8,7 +8,7 @@ export default defineNuxtRouteMiddleware((to) => {
   }
 
   const authStore = useAuthStore()
-  const isAuthRoute = to.path.startsWith('/login') || to.path.startsWith('/register')
+  const isAuthRoute = to.path.startsWith('/login')
   const isProtectedRoute = to.path.startsWith('/dashboard')
 
   // If user is accessing a protected route without being authenticated, redirect to login

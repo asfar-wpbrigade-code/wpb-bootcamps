@@ -45,7 +45,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   // If user is authenticated and trying to access auth pages
-  if (authStore.isAuthenticated && (to.path === '/login' || to.path === '/register')) {
+  if (authStore.isAuthenticated && to.path === '/login') {
     return navigateTo('/dashboard')
   }
 })

@@ -50,7 +50,6 @@ export default defineNuxtConfig({
         '/issue',
         '/scheduled',
         '/login',
-        '/register',
         '/forgot-password',
         '/reset-password',
         '/auth/**',
@@ -157,6 +156,14 @@ export default defineNuxtConfig({
   site: {
     url: SITE_URL,
     name: 'WPBrigade Certificates',
+  },
+  routeRules: {
+    // There is no sign-up page any more - an account comes from being issued a
+    // certificate (see config/plugins.ts' allow_register). The route is kept as
+    // a redirect rather than left to 404 because it was live, indexable and
+    // linkable for months, and /login is where anyone arriving on it needs to
+    // end up. 301, because it is not coming back.
+    '/register': { redirect: { to: '/login', statusCode: 301 } },
   },
   runtimeConfig: {
     public: {
