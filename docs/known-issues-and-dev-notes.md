@@ -911,3 +911,28 @@ nothing failed a test, and three of them looked correct in the source.
       written down anywhere; the script now sends exactly what
       `api-client.ts`'s `issueBadge()` sends, so a change to that contract
       breaks CI rather than the issue page.
+
+## Backup and restore (Sep 2026)
+
+47. **[Fixed] `npm run restore` could not restore the uploads inside a
+    container, and reported failure after replacing the database.**
+    `restoreUploads()` removed `public/uploads` and copied the backup's copy
+    into its place. That directory is a Docker volume mount point in every
+    containerised install, and removing a mount point fails with `EBUSY:
+    resource busy or locked, rmdir '/app/public/uploads'`.
+
+    The database had already been restored by then, so the script exited
+    non-zero on a restore that had half-succeeded — the worst possible answer
+    from a disaster-recovery tool, and one an operator meets on the single
+    worst day to be guessing. It now empties the directory's contents rather
+    than removing the directory, and if anything does fail it says whether the
+    database was replaced before it did.
+
+    The code reads correctly and works outside a container, which is why this
+    survived. It took actually restoring a backup to find, which is the whole
+    point of the "one restore tested" line on the production checklist.
+
+    Verified by restoring a real backup into an isolated stack with a different
+    database: six credentials, four profiles and two accounts landed, matching
+    the source, along with all ten upload files. Scheduled backups themselves
+    were already running — the artefacts are in `/backups`, several per day.
