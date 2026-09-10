@@ -175,6 +175,10 @@ export default defineNuxtConfig({
       brandLogoUrl: process.env.NUXT_PUBLIC_BRAND_LOGO_URL || '/wpbrigade-logo.png',
       brandPrimaryColor: process.env.NUXT_PUBLIC_BRAND_PRIMARY_COLOR || '#3458eb',
       brandLinkedInOrganizationId: process.env.NUXT_PUBLIC_BRAND_LINKEDIN_ORGANIZATION_ID || '',
+      // Comma-separated Strapi users-permissions provider names. Empty means
+      // pages/login.vue renders no provider buttons at all - see
+      // docs/oauth-setup.md.
+      oauthProviders: process.env.NUXT_PUBLIC_OAUTH_PROVIDERS || '',
     }
   },
   imports: {

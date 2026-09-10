@@ -8,6 +8,12 @@ Items marked **[Fixed]** were corrected after this was first written — kept
 here (rather than deleted) so the history/rationale isn't lost, since
 several of them are the kind of thing that tends to silently regress.
 
+"Phase 1", where items below refer to it, is the enterprise-readiness phase of
+the upstream Certo project's roadmap. That file is not part of this fork, and
+two items used to link to a `roadmap.md` that has never existed here; the phase
+is closed out either way (see items 30 and 31), so the references are left as
+history rather than pointing anywhere.
+
 ## Security-relevant
 
 1. **[Fixed] Credential proof verification is now cryptographic
@@ -48,8 +54,8 @@ several of them are the kind of thing that tends to silently regress.
    `verifyExternalProof()`, which resolves the issuer's verification method
    (local profile URL, remote HTTP(S) key document, or `did:web`/`did:key`),
    fetches the public key, and cryptographically verifies the JWS signature
-   with `jose.jwtVerify`. See [open-badges.md](./open-badges.md#verification)
-   and Phase 1 of [roadmap.md](./roadmap.md).
+   with `jose.jwtVerify`. See
+   [open-badges.md](./open-badges.md#verification).
 
 5. **[Fixed] Controller actions no longer bypass Strapi's permission
    system in code.** `credential.issue` no longer sets
@@ -64,8 +70,7 @@ several of them are the kind of thing that tends to silently regress.
    Audit log coverage was also expanded (Aug 2026) to include
    `credential.import`, `credential.import-open-badge`,
    `credential.batch-issue`, `credential.renew`, `achievement.delete`,
-   and `profile.delete-data` (GDPR erasure) — see Phase 1 of
-   [roadmap.md](./roadmap.md).
+   and `profile.delete-data` (GDPR erasure).
 
 6. **[Fixed] Revocation lists are now wired into issuance,
    revocation, serialization, and verification.** Previously the entire
@@ -570,9 +575,15 @@ nothing failed a test, and three of them looked correct in the source.
     advertise two different canonical URLs depending on who rendered it. It is
     now `runtimeConfig.public.websiteUrl`, read through `useSiteUrl()`.
 
-    `pages/login.vue` still reads `NUXT_PUBLIC_OAUTH_PROVIDERS` the old way.
-    Harmless while OAuth is unused and the list is empty, but it will not work
-    from a container environment when someone turns it on.
+    `pages/login.vue` read `NUXT_PUBLIC_OAUTH_PROVIDERS` and
+    `NUXT_PUBLIC_API_URL` the same way, and now reads both through
+    `useRuntimeConfig()`; `oauthProviders` was added to `runtimeConfig.public`
+    to give it somewhere to come from. The first was harmless while OAuth is
+    unused and the list is empty. The second was not as harmless as it looks:
+    it is the origin the OAuth `connect` redirect is built from, so enabling a
+    provider in a container would have sent people to
+    `http://localhost:1337/api/connect/...`. Both were inert only because
+    nothing turns OAuth on.
 
 ## Image build (Sep 2026)
 
@@ -690,9 +701,20 @@ nothing failed a test, and three of them looked correct in the source.
     Two things this leaves:
 
     * **Accounts already created this way still exist.** They are not visible as
-      broken from the login side, only from the empty dashboard. Content Manager
-      → User, cross-checked against Profile on email, is where to find them;
-      each needs a profile made for it or the account removed.
+      broken from the login side, only from the empty dashboard, so
+      `scripts/find-profileless-accounts.js` reports them:
+
+      ```
+      docker exec certo_backend node scripts/find-profileless-accounts.js
+      ```
+
+      It is read-only, and prints for each account whether it holds any
+      credentials — which is what decides the remedy. One that does is a real
+      recipient whose profile needs fixing; one that holds none is a
+      self-registration leftover and can be removed. It also separates "no
+      profile row" from "a profile row that was never published", because
+      `profile.me` filters on `status: 'published'` and 404s either way, and
+      the second only needs the Publish button.
     * **A staff member who is not a recipient now needs both rows made by hand**
       — the User and the Profile, matching on email, the profile published. See
       [Making yourself an issuer](../README.md#making-yourself-an-issuer). That

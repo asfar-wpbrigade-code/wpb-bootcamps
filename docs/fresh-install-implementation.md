@@ -233,4 +233,4 @@ If you make changes to this implementation:
 3. Update documentation
 4. Submit a pull request to the repository
 
-For more information, see the [main project README](../../README.md) and [scripts documentation](../src/backend/scripts/README.md). 
+For more information, see the [main project README](../README.md) and [scripts documentation](../src/backend/scripts/README.md). 

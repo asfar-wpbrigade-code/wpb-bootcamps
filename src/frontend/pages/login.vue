@@ -9,18 +9,23 @@ const authError = ref(null)
 const isLoading = ref(false)
 const pageDescription = ref('Sign in to your WPBrigade account to access your credentials and dashboard.')
 
-// OAuth / OIDC providers enabled via NUXT_PUBLIC_OAUTH_PROVIDERS env var
-// (comma-separated list of Strapi users-permissions provider names).
+// Both of these come from runtimeConfig rather than import.meta.env /
+// process.env, which are inlined into the client bundle when the image is
+// built. The Dockerfile builds without either variable, so the old reads
+// resolved to '' in the browser no matter what the running container was given
+// - the same failure as NUXT_PUBLIC_WEBSITE_URL in item 39 of
+// docs/known-issues-and-dev-notes.md. Overridable at runtime as
+// NUXT_PUBLIC_OAUTH_PROVIDERS and NUXT_PUBLIC_API_URL.
+const runtimeConfig = useRuntimeConfig()
+
+// OAuth / OIDC providers: a comma-separated list of Strapi users-permissions
+// provider names. Empty means the whole block below is hidden.
 const oauthProviders = computed(() => {
-  const raw = import.meta.env?.NUXT_PUBLIC_OAUTH_PROVIDERS
-    ?? process.env.NUXT_PUBLIC_OAUTH_PROVIDERS
-    ?? ''
+  const raw = String(runtimeConfig.public.oauthProviders ?? '')
   return raw.split(',').map((p: string) => p.trim()).filter(Boolean)
 })
 
-const apiBaseUrl = import.meta.env?.NUXT_PUBLIC_API_URL
-  ?? process.env.NUXT_PUBLIC_API_URL
-  ?? 'http://localhost:1337'
+const apiBaseUrl = String(runtimeConfig.public.apiUrl || 'http://localhost:1337')
 
 function startOAuth(provider: string) {
   // Redirect to Strapi's users-permissions connect endpoint, which

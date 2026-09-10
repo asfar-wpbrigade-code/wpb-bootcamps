@@ -255,7 +255,8 @@ src/
 │   │   │   ├── certificate-template.ts     The certificate design
 │   │   │   └── certificate-assets/         Logo, heading outlines, script font
 │   │   └── middlewares/        Rate limiting, request ids, API versioning
-│   └── scripts/                backup, restore, repair-issuer-links
+│   └── scripts/                backup, restore, repair-issuer-links,
+│                               find-profileless-accounts
 │
 └── frontend/                   Nuxt 3 (Vue 3, Pinia, Una UI)
     ├── pages/                  issue, verify, dashboard, credentials/[id]
