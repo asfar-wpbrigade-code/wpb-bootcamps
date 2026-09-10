@@ -57,6 +57,14 @@ export default ({ env }) => ({
         // the path they take regardless: issuance never sends them a password.
         // Turning this back on means creating the profile in the same request,
         // not just re-enabling the endpoint.
+        //
+        // And this line alone does NOT disable anything on a database that has
+        // already booted. The plugin seeds `advanced` into its own store on
+        // first run and reads the store from then on, so a stored `true` wins
+        // and this is silently ignored - the endpoint carried on creating
+        // accounts with this set to false. bootstrap/registration-lockdown.ts
+        // is what actually enforces it; this is the value a *fresh* database
+        // gets seeded with.
         allow_register: false,
         email_confirmation: false,
         email_reset_password: {

@@ -687,8 +687,27 @@ nothing failed a test, and three of them looked correct in the source.
 
     Fixed by removing the path rather than making it create a profile: an
     account now exists because a certificate was issued to that address.
-    `allow_register: false` is the actual boundary — the endpoint 400s with
-    "Register action is currently disabled" whether or not a frontend calls it.
+
+    **`allow_register: false` in `config/plugins.ts` does not disable
+    anything**, and this note first claimed it was the boundary. The
+    users-permissions plugin seeds its `advanced` settings into the plugin
+    store on a database's first boot and reads the *store* from then on, so the
+    stored `true` won and the config edit was silently ignored — exactly the
+    trap `bootstrap/email-templates-setup.ts` already documents for the email
+    templates. `POST /api/auth/local/register` was still creating accounts with
+    the config set to false, and the unit test asserting the config value
+    passed the whole time. It was caught by curling the endpoint on a running
+    container while verifying an unrelated upgrade, which is the only thing
+    that would have caught it.
+
+    `bootstrap/registration-lockdown.ts` is the enforcement: on every boot it
+    reads the store and writes `allow_register: false` back if anything has
+    turned it on, warning when it does. Every boot rather than once, because
+    the setting has a UI — Settings → Users & Permissions → Advanced settings —
+    and can be flipped by accident. The config line remains as what a fresh
+    database gets seeded with. The endpoint now answers 400 "Register action is
+    currently disabled".
+
     `pages/register.vue` is gone, with its store action, its `AuthClient.register`
     and its orphaned `auth.signUp*` strings; `/register` is a 301 to `/login`
     via `routeRules`, since it was linkable for months. `/login` now renders

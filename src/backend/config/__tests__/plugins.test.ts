@@ -86,10 +86,17 @@ describe('plugins config branding', () => {
       .toBe((reset.message.match(/<\/p>/g) || []).length)
   })
 
-  it('leaves self-registration disabled', () => {
+  it('seeds a fresh database with self-registration disabled', () => {
     // The only way to get an account is to be issued a certificate, because
     // that is the path that also creates the profile. An account without one
     // can log in and then finds every page it can reach empty.
+    //
+    // Note what this does and does not prove. It is the value a *fresh*
+    // database is seeded with; on one that has booted before, the plugin reads
+    // its own store and this is ignored. That is why this assertion passed
+    // while POST /api/auth/local/register carried on creating accounts. The
+    // enforcement, and the test that covers it, are in
+    // bootstrap/registration-lockdown.ts.
     expect(loadPlugins()['users-permissions'].config.advanced.allow_register).toBe(false)
   })
 

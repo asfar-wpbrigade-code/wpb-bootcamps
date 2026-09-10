@@ -3,6 +3,7 @@ import { seedDevelopmentData } from './bootstrap/seed-data';
 import { setupPermissions } from './bootstrap/permissions-setup';
 import { warnIfDefaultAdminCredentials } from './bootstrap/default-credentials-warning';
 import { setupEmailTemplates } from './bootstrap/email-templates-setup';
+import { enforceRegistrationLockdown } from './bootstrap/registration-lockdown';
 import { refreshApiDocumentation, registerCustomRouteDocumentation } from './bootstrap/documentation-refresh';
 import { scheduleBackups } from './bootstrap/scheduled-backup';
 import { warnOnInsecureDefaults } from './bootstrap/insecure-defaults-warning';
@@ -99,6 +100,11 @@ export default {
     // Strapi's factory defaults, which break password resets outright
     // (see bootstrap/email-templates-setup.ts)
     await setupEmailTemplates(strapi);
+
+    // Keep self-registration off in the plugin store, which is what the
+    // register endpoint actually reads - config/plugins.ts only seeds it on a
+    // first boot (see bootstrap/registration-lockdown.ts)
+    await enforceRegistrationLockdown(strapi);
 
     // Warn on every boot if the default admin credentials are still active,
     // regardless of environment (see bootstrap/default-credentials-warning.ts)
