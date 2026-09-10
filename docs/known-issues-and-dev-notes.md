@@ -186,7 +186,13 @@ history rather than pointing anywhere.
     Since both can run against the same database, the "current" admin password
     depends on order of operations.
     Fixed (Aug 2026) by making `fresh-install.js`'s admin password
-    match `seed-data.ts` (`admin@certo.com`/`certo`). The issuer user
+    match `seed-data.ts`. Both are now `admin@certo.com`/`certo-dev`: the
+    password was `certo`, five characters, which the Strapi admin account
+    accepted and users-permissions' own `user.add()` validator rejected with
+    "password must be at least 6 characters". The seeder logged that, carried
+    on booting and left a development instance with no frontend login at all —
+    found in Sep 2026 by standing a fresh stack up rather than by reading it.
+    The issuer user
     (`issuer@certo.com`/`Issuer123!`) remains the distinguishing feature of
     the fresh-install path. The two-mechanism architecture itself is kept —
     one auto on server start, one manual for richer setup — since each serves
@@ -862,3 +868,46 @@ nothing failed a test, and three of them looked correct in the source.
 
     The PNG is unchanged and cannot be fixed the same way — it is a bitmap, and
     there is nowhere in one to put text.
+
+## Testing depth (Sep 2026)
+
+46. **[Fixed] Nothing issued a certificate.** The backend suite covered the
+    pieces and the Playwright suite checked that pages render — with no
+    backend running, so those pages render their empty state. Between the two
+    sat the routes, the permission config, the middleware, the signature, the
+    status list and the PDF, and the only thing that ever exercised them was
+    somebody clicking through by hand.
+
+    `scripts/smoke-flow.js` is that walk, written down: log in as the seeded
+    issuer, issue, verify, fetch the status list as a third party would and
+    check the slot, read the PDF's text layer, revoke, verify the revocation
+    landed in both the credential and the published bitstring, delete what it
+    made. Over HTTP deliberately — a route that is not registered, a
+    permission that was not granted, a payload the controller rejects: none of
+    those show up when the services are called directly, and all of them have
+    broken this app before. No dependencies, so CI runs it with bare `node`
+    against a stack brought up by compose.
+
+    It found three things on its first three runs, which is the argument for
+    it:
+
+    * **The development seeder was failing.** `admin@certo.com`'s password was
+      `certo`, five characters, and users-permissions' `user.add()` requires
+      six. The Strapi admin account accepted it, the seeder logged the error
+      and carried on booting, and a fresh development install had no frontend
+      login at all. Now `certo-dev`, in step with `fresh-install.js` — see
+      item 13.
+    * **`POST /credentials/:id/revoke` rejected every `urn:uuid:`.** It went
+      straight to `entityService.findOne`, which understands only a numeric
+      row id, so revoking by the identifier the credential actually
+      advertises — the one in its own JSON, its issuance email and its QR
+      code — answered a 400 carrying raw SQL. The dual lookup was written out
+      inline in `findOne`, `verify` and both certificate handlers and simply
+      never reached `revoke`; it is now a `resolveCredentialRow()` helper the
+      four of them can share, so the next route cannot be written without it.
+    * **The issuance response is `{ credential, openBadge, notification }`**,
+      not a Strapi `data` envelope, and the request body wants a `data`
+      wrapper with `recipientId: 0` alongside the recipient object. Neither is
+      written down anywhere; the script now sends exactly what
+      `api-client.ts`'s `issueBadge()` sends, so a change to that contract
+      breaks CI rather than the issue page.

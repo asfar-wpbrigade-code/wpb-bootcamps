@@ -17,7 +17,13 @@ interface SeedConfig {
 
 export const DEFAULT_SEED_CONFIG: SeedConfig = {
   adminEmail: 'admin@certo.com',
-  adminPassword: 'certo',
+  // Six characters minimum, or the users-permissions account is never created.
+  // This was 'certo', which the Strapi admin account accepted and the
+  // users-permissions `user.add()` validator rejected - so a fresh development
+  // install logged "password must be at least 6 characters", carried on
+  // booting, and left an instance nobody could log into from the frontend at
+  // all. Kept in step with scripts/fresh-install.js; see item 13.
+  adminPassword: 'certo-dev',
   adminUsername: 'admin',
   adminFirstName: 'Certo',
   adminLastName: 'Admin',

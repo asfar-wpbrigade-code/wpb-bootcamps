@@ -39,6 +39,37 @@ interface Credential {
   proof?: any[]
 }
 
+/**
+ * Finds a credential by any of the three identifiers `:id` can carry: Certo's
+ * own `urn:uuid:` `credentialId`, Strapi's `documentId`, or the numeric row id.
+ *
+ * The dual lookup is written out inline in `findOne`, `verify` and both
+ * certificate handlers, and it is what makes the API usable - the `urn:uuid:`
+ * is the identifier a credential actually advertises, in its own JSON, in the
+ * issuance email and in the QR code. Extracted here so a route cannot be
+ * written without it, which is how `revoke` ended up rejecting every
+ * `urn:uuid:` it was given.
+ *
+ * `credentialId` is tried first and restricted to published rows, matching the
+ * existing handlers. `entityService.findOne` covers the other two, and throws
+ * rather than returning null when handed something that is not a numeric id -
+ * hence the catch.
+ */
+async function resolveCredentialRow(strapi: any, id: string, populate: string[]) {
+  const byCredentialId = await strapi.db.query('api::credential.credential').findOne({
+    where: { credentialId: id, publishedAt: { $notNull: true } },
+    populate,
+  })
+
+  if (byCredentialId) return byCredentialId
+
+  try {
+    return await strapi.entityService.findOne('api::credential.credential', id, { populate })
+  } catch {
+    return null
+  }
+}
+
 export default factories.createCoreController('api::credential.credential', ({ strapi }) => ({
   /**
    * Custom method to issue a new Open Badge credential
@@ -214,12 +245,21 @@ export default factories.createCoreController('api::credential.credential', ({ s
         return ctx.badRequest('Credential ID is required')
       }
 
-      const existing: any = await strapi.entityService.findOne('api::credential.credential', id, {
-        populate: ['statusList'],
-      })
+      // Resolve the same three spellings of ":id" every other credential
+      // route accepts. This one went straight to entityService.findOne, which
+      // only understands a numeric row id - so revoking by the `urn:uuid:`
+      // that appears in emails, QR codes and the API answered a 400 carrying
+      // the raw SQL ("invalid input syntax for type integer"). A caller
+      // holding the only identifier the credential advertises could not
+      // revoke it.
+      const existing: any = await resolveCredentialRow(strapi, id, ['statusList'])
+
+      if (!existing) {
+        return ctx.notFound('Credential not found')
+      }
 
       // Update the credential to revoked status
-      const updatedCredential = await strapi.entityService.update('api::credential.credential', id, {
+      const updatedCredential = await strapi.entityService.update('api::credential.credential', existing.id, {
         data: {
           revoked: true,
           revocationReason: reason || 'No reason provided'
@@ -244,7 +284,7 @@ export default factories.createCoreController('api::credential.credential', ({ s
       await auditLog.record({
         action: 'credential.revoke',
         entityType: 'credential',
-        entityId: id,
+        entityId: existing.id,
         actorId: ctx.state.user?.id,
         metadata: { reason: reason || 'No reason provided' },
       })

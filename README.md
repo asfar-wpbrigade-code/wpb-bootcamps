@@ -256,7 +256,7 @@ src/
 │   │   │   └── certificate-assets/         Logo, heading outlines, script font
 │   │   └── middlewares/        Rate limiting, request ids, API versioning
 │   └── scripts/                backup, restore, repair-issuer-links,
-│                               find-profileless-accounts
+│                               find-profileless-accounts, smoke-flow
 │
 └── frontend/                   Nuxt 3 (Vue 3, Pinia, Una UI)
     ├── pages/                  issue, verify, dashboard, credentials/[id]
@@ -311,10 +311,23 @@ Issuing checks that you own the achievement you're issuing from.
 ## Testing
 
 ```bash
-cd src/backend  && npm test            # Jest — 227 tests
+cd src/backend  && npm test            # Jest — 259 tests
 cd src/frontend && npm run test:unit   # Vitest
 cd src/frontend && npm run test:e2e    # Playwright
 ```
+
+And the one that issues a certificate, against a running development instance:
+
+```bash
+node src/backend/scripts/smoke-flow.js
+```
+
+It logs in as the seeded issuer, issues a credential, verifies it, fetches the
+issuer's status list the way a third party would and checks the slot, confirms
+the PDF's text layer, revokes, verifies that the revocation took in both the
+credential and the published bitstring, and deletes what it made. No
+dependencies — plain `node` against any instance, and it runs in CI. The suites
+above cover the pieces; everything between them is only exercised here.
 
 ## Going to production
 

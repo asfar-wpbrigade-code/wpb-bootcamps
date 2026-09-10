@@ -24,7 +24,7 @@ const CONFIG = {
     // the same admin credentials. The issuer user (issuer@certo.com/
     // Issuer123!) remains the distinguishing feature of the fresh-install
     // path.
-    password: 'certo',
+    password: 'certo-dev',
     firstname: 'Admin',
     lastname: 'User'
   },

@@ -94,3 +94,46 @@ jobs:
           name: playwright-report
           path: src/frontend/playwright-report/
           retention-days: 7
+
+  # The only job that issues a certificate. The unit suites cover the pieces
+  # and the Playwright job checks that pages render; between them sit the
+  # routes, the permission config, the middleware, the signature, the status
+  # list and the PDF, and nothing exercised those until this. Every bug it has
+  # caught so far was invisible to a green suite - see scripts/smoke-flow.js.
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Compose declares this as an env_file, and it is gitignored - the
+      # example carries development values, which is what this stack wants.
+      - name: Create the env file compose expects
+        run: cp src/backend/.env.example src/backend/.env
+
+      # NODE_ENV=development so bootstrap/seed-data.ts creates the
+      # admin@certo.com issuer the script logs in as. The default is
+      # production, which deliberately refuses to seed it.
+      - name: Start postgres and the backend
+        run: docker compose up -d --build postgres backend
+        env:
+          NODE_ENV: development
+
+      - name: Wait for the API
+        run: |
+          for _ in $(seq 1 60); do
+            if curl -fsS http://localhost:1337/api/health > /dev/null; then
+              echo "up"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "the API never came up"
+          exit 1
+
+      # Bare node, no install: the script has no dependencies.
+      - name: Walk the certificate flow
+        run: node src/backend/scripts/smoke-flow.js
+
+      - name: Backend logs
+        if: failure()
+        run: docker compose logs backend
