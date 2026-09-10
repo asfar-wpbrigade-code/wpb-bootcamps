@@ -88,6 +88,16 @@ function escapeXml(value: string): string {
 }
 
 /**
+ * Where the recipient's name sits, and how big it wants to be.
+ *
+ * Exported because the name is drawn as outlines - the script face cannot be
+ * assumed installed anywhere - and outlines carry no text. The PDF's invisible
+ * text layer has to put the name back at the same place, and reads these
+ * rather than repeating the numbers (certificate-render.ts).
+ */
+export const NAME_METRICS = { baselineY: 289.5, maxWidth: 500, idealSize: 80 }
+
+/**
  * Draws the recipient's name centred, shrinking it to fit the width available.
  *
  * The width is measured from the font rather than estimated, so a long name is
@@ -213,7 +223,13 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
     : 378
   const dateY = programmeY + 20.4
 
-  const nameOutline = renderNameOutline(recipientName, CENTRE, 289.5, 500, 80)
+  const nameOutline = renderNameOutline(
+    recipientName,
+    CENTRE,
+    NAME_METRICS.baselineY,
+    NAME_METRICS.maxWidth,
+    NAME_METRICS.idealSize
+  )
   const achievementSize = fitFontSize(achievementName.toUpperCase(), 470, 18, 0.62)
 
   const sealDiameter = 124

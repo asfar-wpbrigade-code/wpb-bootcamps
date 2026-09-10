@@ -1,11 +1,57 @@
+import zlib from 'zlib'
 import { PDFDocument } from 'pdf-lib'
 import {
   CERTIFICATE_HEIGHT,
   CERTIFICATE_WIDTH,
+  extractSvgTextItems,
   renderCertificatePdf,
   renderCertificatePng,
 } from '../certificate-render'
-import { generateCertificateSvg } from '../certificate-template'
+import { NAME_METRICS, generateCertificateSvg } from '../certificate-template'
+
+/**
+ * The text a PDF reader would find, with where it was placed.
+ *
+ * pdf-lib writes strings as hex inside a Flate-compressed content stream, so
+ * neither the plain bytes nor a search for the words finds anything - which is
+ * exactly the mistake to make when checking whether a text layer exists at
+ * all. This inflates the streams and decodes the `Tm` / `Tj` pairs.
+ */
+function extractPdfTextPlacements(pdf: Buffer): Array<{ text: string, x: number, y: number }> {
+  const placements: Array<{ text: string, x: number, y: number }> = []
+  const marker = Buffer.from('stream')
+  const endMarker = Buffer.from('endstream')
+
+  for (let index = pdf.indexOf(marker); index !== -1; index = pdf.indexOf(marker, index + 1)) {
+    let start = index + marker.length
+    while (pdf[start] === 0x0d || pdf[start] === 0x0a) start++
+
+    const end = pdf.indexOf(endMarker, start)
+    if (end === -1) continue
+
+    let content: string
+    try {
+      content = zlib.inflateSync(pdf.subarray(start, end)).toString('latin1')
+    } catch {
+      continue
+    }
+
+    const pattern = /1 0 0 1 ([-\d.]+) ([-\d.]+) Tm\s*<([0-9A-Fa-f]+)>\s*Tj/g
+    for (const match of content.matchAll(pattern)) {
+      placements.push({
+        x: Number(match[1]),
+        y: Number(match[2]),
+        text: Buffer.from(match[3], 'hex').toString('latin1'),
+      })
+    }
+  }
+
+  return placements
+}
+
+function extractPdfText(pdf: Buffer): string {
+  return extractPdfTextPlacements(pdf).map(placement => placement.text).join('\n')
+}
 
 const SAMPLE = {
   recipientName: 'Ada Lovelace',
@@ -54,6 +100,76 @@ describe('certificate rendering', () => {
     expect(parsed.getTitle()).toBe('Certificate')
     expect(parsed.getAuthor()).toBe('WPBrigade')
     expect(parsed.getProducer()).toBe('WPBrigade Credentials')
+  })
+
+  it('carries a searchable text layer over the raster image', async () => {
+    // The visible certificate is a rasterised SVG, so without this layer the
+    // whole page is one picture: nothing to select, nothing for Ctrl-F,
+    // nothing for a screen reader.
+    const pdf = await renderCertificatePdf(svg, { recipientName: SAMPLE.recipientName })
+    const text = extractPdfText(pdf)
+
+    // The two drawn as vector outlines - the heading's face is licensed and
+    // the name's script face cannot be assumed installed - so neither can be
+    // recovered from the SVG, and both are what a reader searches for.
+    expect(text).toContain(SAMPLE.recipientName)
+    expect(text).toContain('Certificate of Completion')
+
+    // And the ordinary <text> elements, including the two positioned by their
+    // group transform rather than their own x.
+    expect(text).toContain('ADVANCED WORDPRESS ENGINEERING')
+    expect(text).toContain('GRACE HOPPER')
+    expect(text).toContain('Programme Director')
+    expect(text).toContain(SAMPLE.credentialId)
+  })
+
+  it('places the text layer where the glyphs are', async () => {
+    const pdf = await renderCertificatePdf(svg, { recipientName: SAMPLE.recipientName })
+    const placements = extractPdfTextPlacements(pdf)
+
+    const heading = placements.find(p => p.text === 'Certificate of Completion')
+    const name = placements.find(p => p.text === SAMPLE.recipientName)
+
+    // PDF y counts up from the bottom, SVG counts down from the top, and both
+    // put the baseline there: 612 - 183.618 and 612 - 289.5. Getting this
+    // wrong would mirror the layer vertically and nothing would look amiss,
+    // since it is invisible.
+    expect(heading!.y).toBeCloseTo(CERTIFICATE_HEIGHT - 183.618014, 1)
+    expect(name!.y).toBeCloseTo(CERTIFICATE_HEIGHT - 289.5, 1)
+
+    // Both are centred, so each starts left of the centre line it is drawn on.
+    expect(name!.x).toBeLessThan(CERTIFICATE_WIDTH / 2)
+    expect(name!.x).toBeGreaterThan(CERTIFICATE_WIDTH / 2 - NAME_METRICS.maxWidth / 2 - 1)
+  })
+
+  it('keeps a name a standard PDF font cannot encode out of the layer only', async () => {
+    // The layer is drawn in Times/Helvetica, which are WinAnsi. drawText
+    // throws on anything outside it, which would have taken the whole PDF
+    // with it - so those characters are dropped from the search layer. The
+    // visible certificate still renders them: resvg draws real glyphs.
+    const unicodeSvg = await generateCertificateSvg({ ...SAMPLE, recipientName: '李明 Ming' })
+    const pdf = await renderCertificatePdf(unicodeSvg, { recipientName: '李明 Ming' })
+
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-')
+    expect(extractPdfText(pdf)).toContain('Ming')
+  })
+
+  it('reads the text elements out of the SVG, transforms included', () => {
+    const items = extractSvgTextItems(svg)
+    const byText = (needle: string) => items.find(item => item.text.includes(needle))
+
+    // x="0" inside <g transform="translate(524, 0)">: read without applying
+    // the group's offset, this lands at the left edge of the page.
+    expect(byText('GRACE HOPPER')!.x).toBeCloseTo(524, 0)
+    expect(byText('GRACE HOPPER')!.y).toBeCloseTo(529.5, 1)
+
+    // The seal's legends run along a <textPath> and have no x/y to use.
+    expect(items.every(item => item.text.trim().length > 0)).toBe(true)
+
+    // "'Segoe UI', Roboto, Helvetica, Arial, sans-serif" is not a serif stack,
+    // however much of the word "serif" it contains.
+    expect(byText('Issued:')!.serif).toBe(false)
+    expect(byText('This Certificate is Proudly')!.serif).toBe(true)
   })
 
   it('renders without system fonts, so output does not depend on the host', () => {

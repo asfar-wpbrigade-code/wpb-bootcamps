@@ -789,3 +789,57 @@ nothing failed a test, and three of them looked correct in the source.
     endpoint while `/verify` correctly reported it as revoked. It now consults
     the credential's own slot through `checkStatusInList`, and fails closed on
     a list it cannot read.
+
+## Certificate PDF (Sep 2026)
+
+45. **[Fixed] The PDF was one flat picture, with no text in it at all.**
+    `renderCertificatePdf` rasterised the SVG at 4x and drew the PNG onto a
+    Letter page. That prints beautifully — about 288 DPI — and contains no
+    text: nothing to select, nothing for Ctrl-F, nothing for a screen reader.
+    A recipient forwarding a certificate to an employer was sending an image
+    of their own name.
+
+    Fixed the way a scanned document is made searchable: the visible page is
+    still the same raster, so the design is identical to the PNG and the web
+    view, with an invisible text layer (`opacity: 0`) placed over it.
+
+    The interesting part is what the SVG does *not* contain. Two of the strings
+    are drawn as vector outlines, and outlines carry no text:
+
+    * the heading, whose face (Engravers Old English BT) is licensed and can
+      neither be embedded nor assumed installed;
+    * **the recipient's name**, whose script face has the same problem.
+
+    Those are the two a reader is most likely to search for, and neither can be
+    recovered from the SVG at any price. They are placed from their known
+    metrics instead — `HEADING_METRICS` with a new `HEADING_TEXT` beside it,
+    and a new `NAME_METRICS` exported from the template so the position is
+    stated once rather than repeated as a literal in two files. The name itself
+    is passed in by the caller, which already has it.
+
+    Three things that would have shipped silently, since the layer is invisible
+    and every one of them still produces a valid PDF:
+
+    * **`sans-serif` contains "serif".** Testing the whole font stack for
+      /serif/ matched `"'Segoe UI', Roboto, Helvetica, Arial, sans-serif"`, so
+      the date, the signatory and the credential id were measured in Times.
+      The only symptom is a selection rectangle slightly the wrong width.
+      Judged by the first family in the stack now, which is the one a renderer
+      uses.
+    * **SVG y counts down from the top, PDF y counts up from the bottom.**
+      Both put the baseline at y, so the conversion is one subtraction — and
+      getting it wrong mirrors the layer vertically with nothing to see.
+    * **A name outside WinAnsi throws.** The layer is drawn in the standard
+      Times/Helvetica, so `drawText` on 李明 would have failed the whole PDF.
+      Unencodable characters are dropped from the search layer only; the
+      visible certificate renders them correctly, because resvg draws real
+      glyphs from the loaded fonts. Embedding a Unicode subset is the proper
+      fix, at the cost of a font in every PDF.
+
+    The text is not findable in the PDF's bytes: pdf-lib writes strings as hex
+    inside a Flate-compressed content stream. The test inflates the streams and
+    decodes the `Tm`/`Tj` pairs, which is also how this was confirmed against
+    a certificate served by the running app rather than only in the suite.
+
+    The PNG is unchanged and cannot be fixed the same way — it is a bitmap, and
+    there is nowhere in one to put text.

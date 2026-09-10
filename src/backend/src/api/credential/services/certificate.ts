@@ -137,6 +137,11 @@ export default ({ strapi }) => ({
     const pdf = await renderCertificatePdf(svg, {
       title: [credential.recipientName || credential.recipient?.name, credential.achievement?.name].filter(Boolean).join(' - '),
       author: credential.issuer?.name || 'WPBrigade',
+      // Passed separately from `title`: the name is drawn on the certificate as
+      // vector outlines, so it cannot be recovered from the SVG for the PDF's
+      // searchable text layer. Same precedence as the title and the artwork -
+      // the name as awarded, falling back to the profile's current one.
+      recipientName: credential.recipientName || credential.recipient?.name,
     })
 
     return { body: pdf, contentType: CONTENT_TYPES.pdf, filename }

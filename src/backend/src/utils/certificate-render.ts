@@ -14,7 +14,9 @@
  * stack, so loading exactly these reproduces the intended design everywhere.
  */
 import { Resvg } from '@resvg/resvg-js'
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, PDFFont, StandardFonts } from 'pdf-lib'
+import { HEADING_METRICS, HEADING_TEXT } from './certificate-assets/heading'
+import { NAME_METRICS } from './certificate-template'
 
 /** Certificate artboard, in points. Exactly US Letter landscape. */
 export const CERTIFICATE_WIDTH = 792
@@ -73,18 +75,179 @@ export function renderCertificatePng(svg: string, scale: number = PNG_SCALE): Bu
   return Buffer.from(resvg.render().asPng())
 }
 
+/** One string to place in the PDF's invisible text layer. */
+interface TextItem {
+  text: string
+  /** SVG user units, measured from the top-left of the artboard. */
+  x: number
+  y: number
+  size: number
+  anchor: 'start' | 'middle' | 'end'
+  serif: boolean
+  bold: boolean
+  italic: boolean
+  /** Cap on the drawn width, for a string the template itself fits. */
+  maxWidth?: number
+}
+
+/**
+ * The `<text>` elements of a certificate SVG, with their positions.
+ *
+ * A regex over XML is usually a mistake; here the input is our own generated
+ * output from certificate-template.ts, one element per line, no namespaces and
+ * no nesting inside `<text>`. What it does have to handle is `<g
+ * transform="translate(...)">`, because the signature block and the seal are
+ * positioned by their group and their text carries `x="0"`.
+ *
+ * Text on a `<textPath>` is skipped: the seal's legends run around a circle
+ * and have no x/y of their own, so there is nowhere flat to put them. They are
+ * decorative - "VERIFIED CREDENTIAL" and the like - and the credential id they
+ * sit beside is captured separately.
+ */
+export function extractSvgTextItems(svg: string): TextItem[] {
+  const items: TextItem[] = []
+  const offsets: Array<{ x: number, y: number }> = []
+  let cursor = 0
+
+  const attr = (tag: string, name: string): string | null => {
+    const match = tag.match(new RegExp(`${name}="([^"]*)"`))
+    return match ? match[1] : null
+  }
+
+  while (cursor < svg.length) {
+    const next = svg.indexOf('<', cursor)
+    if (next === -1) break
+
+    if (svg.startsWith('</g', next)) {
+      offsets.pop()
+      cursor = next + 3
+      continue
+    }
+
+    if (svg.startsWith('<g', next) && /^<g[\s>]/.test(svg.slice(next, next + 3))) {
+      const end = svg.indexOf('>', next)
+      const tag = svg.slice(next, end + 1)
+      const translate = tag.match(/translate\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)/)
+      const parent = offsets[offsets.length - 1] ?? { x: 0, y: 0 }
+
+      offsets.push(translate
+        ? { x: parent.x + Number(translate[1]), y: parent.y + Number(translate[2]) }
+        : { x: parent.x, y: parent.y })
+
+      cursor = end + 1
+      continue
+    }
+
+    if (svg.startsWith('<text', next)) {
+      const openEnd = svg.indexOf('>', next)
+      const closeStart = svg.indexOf('</text>', openEnd)
+
+      if (openEnd === -1 || closeStart === -1) break
+
+      const tag = svg.slice(next, openEnd + 1)
+      const content = svg.slice(openEnd + 1, closeStart)
+      const offset = offsets[offsets.length - 1] ?? { x: 0, y: 0 }
+
+      // No markup inside means a plain string; anything else is a textPath.
+      if (!content.includes('<')) {
+        const family = attr(tag, 'font-family') || ''
+        const anchor = attr(tag, 'text-anchor')
+
+        items.push({
+          text: unescapeXml(content),
+          x: Number(attr(tag, 'x') || 0) + offset.x,
+          y: Number(attr(tag, 'y') || 0) + offset.y,
+          size: Number(attr(tag, 'font-size') || 10),
+          anchor: anchor === 'middle' || anchor === 'end' ? anchor : 'start',
+          serif: isSerifStack(family),
+          bold: attr(tag, 'font-weight') === 'bold',
+          italic: attr(tag, 'font-style') === 'italic',
+        })
+      }
+
+      cursor = closeStart + 7
+      continue
+    }
+
+    cursor = next + 1
+  }
+
+  return items
+}
+
+/**
+ * Whether a CSS font stack is a serif one, judged by its first family.
+ *
+ * The template sets stacks, not faces: `"Georgia, Gelasio, 'Times New Roman',
+ * serif"` and `"'Segoe UI', Roboto, Helvetica, Arial, sans-serif"`. Searching
+ * the whole stack for "serif" matches `sans-serif` too, which put the date,
+ * the signatory and the credential id in Times - invisibly, so the only
+ * symptom was a selection rectangle slightly the wrong width. The first family
+ * is the one a renderer actually uses, and the one to judge by.
+ */
+function isSerifStack(family: string): boolean {
+  const first = family.split(',')[0].trim().replace(/^['"]|['"]$/g, '')
+  return /^(georgia|gelasio|times|serif)/i.test(first)
+}
+
+function unescapeXml(value: string): string {
+  return value
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+}
+
+/**
+ * Drops what a standard PDF font cannot encode.
+ *
+ * The invisible layer is drawn in Times/Helvetica, which are WinAnsi and so
+ * cover Latin-1 and no more. A name in Arabic or Chinese would make
+ * `drawText` throw and take the whole PDF with it, so those characters are
+ * dropped from the *search* layer only - the visible certificate renders them
+ * correctly, because resvg draws real glyphs from the loaded fonts.
+ *
+ * Embedding a Unicode subset would fix it properly, at the cost of a font in
+ * every PDF and a dependency on a face that covers the scripts in question.
+ * Worth revisiting when a recipient actually needs it.
+ */
+function toWinAnsi(text: string): string {
+  return [...text]
+    .filter((character) => {
+      const code = character.codePointAt(0) ?? 0
+      return code === 0x20 || (code >= 0x21 && code <= 0x7e) || (code >= 0xa0 && code <= 0xff)
+    })
+    .join('')
+    .trim()
+}
+
 /**
  * A single Letter-landscape page holding the rendered certificate.
  *
  * The page is sized in points to match the artboard exactly, so the image
  * lands edge to edge with no scaling and prints at its intended size.
  *
+ * Over that image goes an invisible text layer, the way a scanned document is
+ * made searchable. The visible certificate is unchanged - it is still the
+ * rasterised SVG, which is what keeps the design identical to the PNG and the
+ * web view - but the text is now selectable, copyable, findable with Ctrl-F
+ * and legible to a screen reader, where before the whole page was one picture.
+ *
+ * Two of the strings on the certificate are drawn as vector outlines rather
+ * than text and cannot be recovered from the SVG at all: the heading, whose
+ * face is licensed and cannot be embedded, and the recipient's name, whose
+ * script face cannot be assumed installed anywhere. They are the two a reader
+ * is most likely to search for, so they are placed from their known metrics -
+ * `HEADING_METRICS`/`HEADING_TEXT` and `NAME_METRICS` - with the name passed
+ * in by the caller.
+ *
  * @param {string} svg - A complete certificate SVG document
- * @param {object} [meta] - Title and author for the PDF's document properties
+ * @param {object} [meta] - Document properties, plus the outlined name
  */
 export async function renderCertificatePdf(
   svg: string,
-  meta: { title?: string, author?: string } = {},
+  meta: { title?: string, author?: string, recipientName?: string } = {},
 ): Promise<Buffer> {
   const png = renderCertificatePng(svg, PDF_SCALE)
 
@@ -98,6 +261,87 @@ export async function renderCertificatePdf(
     width: CERTIFICATE_WIDTH,
     height: CERTIFICATE_HEIGHT,
   })
+
+  const fonts = {
+    serif: await pdf.embedFont(StandardFonts.TimesRoman),
+    serifBold: await pdf.embedFont(StandardFonts.TimesRomanBold),
+    serifItalic: await pdf.embedFont(StandardFonts.TimesRomanItalic),
+    sans: await pdf.embedFont(StandardFonts.Helvetica),
+    sansBold: await pdf.embedFont(StandardFonts.HelveticaBold),
+  }
+
+  const pick = (item: TextItem): PDFFont => {
+    if (item.serif) {
+      if (item.bold) return fonts.serifBold
+      if (item.italic) return fonts.serifItalic
+      return fonts.serif
+    }
+    return item.bold ? fonts.sansBold : fonts.sans
+  }
+
+  const items: TextItem[] = [
+    {
+      text: HEADING_TEXT,
+      // Centred on the span the outlines actually occupy, not on the page.
+      x: (HEADING_METRICS.xMin + HEADING_METRICS.xMax) / 2,
+      y: HEADING_METRICS.baselineY,
+      size: 30,
+      anchor: 'middle',
+      serif: true,
+      bold: false,
+      italic: false,
+      maxWidth: HEADING_METRICS.xMax - HEADING_METRICS.xMin,
+    },
+    ...extractSvgTextItems(svg),
+  ]
+
+  if (meta.recipientName) {
+    items.push({
+      text: meta.recipientName,
+      x: CERTIFICATE_WIDTH / 2,
+      y: NAME_METRICS.baselineY,
+      size: NAME_METRICS.idealSize,
+      anchor: 'middle',
+      serif: true,
+      bold: false,
+      italic: true,
+      // The template shrinks a long name to fit; so does this, so a selection
+      // over the name lines up with the glyphs beneath it.
+      maxWidth: NAME_METRICS.maxWidth,
+    })
+  }
+
+  for (const item of items) {
+    const text = toWinAnsi(item.text)
+    if (!text) continue
+
+    const font = pick(item)
+
+    // Fit first, then measure: a size reduced to fit changes the width the
+    // anchor is resolved against.
+    let size = item.size
+    if (item.maxWidth) {
+      const measured = font.widthOfTextAtSize(text, size)
+      if (measured > item.maxWidth) size = size * (item.maxWidth / measured)
+    }
+
+    const width = font.widthOfTextAtSize(text, size)
+    const x = item.anchor === 'middle'
+      ? item.x - width / 2
+      : item.anchor === 'end' ? item.x - width : item.x
+
+    page.drawText(text, {
+      x,
+      // SVG measures y down from the top and puts the baseline there; PDF
+      // measures up from the bottom, and drawText's y is also the baseline.
+      y: CERTIFICATE_HEIGHT - item.y,
+      size,
+      font,
+      // Invisible, not absent. The glyphs beneath come from the raster image;
+      // these exist to be selected, searched and read aloud.
+      opacity: 0,
+    })
+  }
 
   if (meta.title) pdf.setTitle(meta.title)
   if (meta.author) pdf.setAuthor(meta.author)

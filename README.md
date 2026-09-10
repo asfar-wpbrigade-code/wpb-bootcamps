@@ -384,9 +384,14 @@ Worth knowing before promising any of it to a customer:
   `src/frontend/composables/useTermsContent.ts` once counsel settles it.
 - Backend test coverage is focused on signing, verification and issuance. The
   Playwright suite runs in CI but only checks that pages render.
-- **PDF and PNG are rasterised**, so their text is not selectable or
-  searchable. They print at roughly 288 DPI, which is past what the eye picks
-  up on paper, but a PDF reader will not find words in one.
+- **The certificate artwork is rasterised.** It prints at roughly 288 DPI,
+  which is past what the eye picks up on paper, but it is an image rather than
+  vector art, so it does not scale indefinitely. The PDF carries an invisible
+  text layer over that image — the way a scanned document is made searchable —
+  so its text can be selected, copied, found with Ctrl-F and read aloud. The
+  PNG cannot: it is a bitmap, and there is nowhere to put text in one. A name
+  in a script a standard PDF font cannot encode is dropped from the PDF's
+  search layer, though it still appears correctly on the certificate itself.
 
 ## Built on Certo
 
