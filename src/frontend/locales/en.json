@@ -90,7 +90,20 @@
     "copyLink": "Copy link",
     "credentialId": "Certificate ID",
     "noCredentials": "No certificates yet",
-    "verificationResult": "Verification result"
+    "verificationResult": "Verification result",
+    "verificationSuccess": "This certificate is genuine",
+    "verificationFailed": "This certificate could not be verified",
+    "verificationSuccessDetail": "All verification checks passed.",
+    "checks": {
+      "not_revoked": "Not revoked",
+      "not_expired": "Still valid",
+      "proof": "Valid signature",
+      "not_revokedDetail": "The issuer has not withdrawn this certificate",
+      "not_expiredDetail": "This certificate is within its validity period",
+      "proofDetail": "The cryptographic signature checks out",
+      "failed": "This check did not pass",
+      "passed": "This check passed"
+    }
   },
   "achievement": {
     "title": "Programme",

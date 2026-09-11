@@ -8,6 +8,35 @@ import QRCode from 'qrcode'
 import { apiClient } from '~/api/api-client'
 
 const { t } = useI18n()
+
+/**
+ * The name and description shown for one verification check.
+ *
+ * vue-i18n returns the key itself when there is no translation for it, which
+ * is how "credential.checks.not_revoked" came to be printed on the page: the
+ * keys were referenced by the template and had never been added to en.json.
+ * Comparing the result against the key is how we tell. `te()` is the direct
+ * way to ask, but `useI18n()` does not expose it here.
+ *
+ * The fallback keeps an unrecognised check readable - a new check added to the
+ * API shows as "Some New Check" rather than as its key - so this page cannot
+ * print a raw key again whatever the backend starts returning.
+ */
+function translated(key: string, fallback: string): string {
+  const value = t(key)
+  return value === key ? fallback : value
+}
+
+function checkLabel(check: string): string {
+  return translated(
+    `credential.checks.${check}`,
+    check.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+  )
+}
+
+function checkDetail(check: string): string {
+  return translated(`credential.checks.${check}Detail`, t('credential.checks.passed'))
+}
 const route = useRoute()
 const config = useRuntimeConfig()
 
@@ -723,7 +752,7 @@ async function submitRenewal() {
                 {{ verificationResult?.verified ? t('credential.verificationSuccess') : t('credential.verificationFailed') }}
               </h3>
               <p class="text-gray-600">
-                {{ verificationResult?.error || 'All verification checks passed successfully.' }}
+                {{ verificationResult?.error || t('credential.verificationSuccessDetail') }}
               </p>
             </div>
           </div>
@@ -800,25 +829,23 @@ async function submitRenewal() {
                     </span>
                   </div>
 
-                  <!-- Check name with friendly label -->
+                  <!-- Check name with friendly label.
+                       All three go through i18n, including the signature: it
+                       used to be the one hardcoded in English, which is why it
+                       was also the only one that rendered while the other two
+                       showed their raw keys. -->
                   <div class="font-semibold text-gray-800">
-                    {{
-                      check.check === 'not_revoked' ? t('credential.checks.not_revoked')
-                      : check.check === 'not_expired' ? t('credential.checks.not_expired')
-                        : check.check === 'proof' ? 'Valid Signature'
-                          : check.check.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-                    }}
+                    {{ checkLabel(check.check) }}
                   </div>
 
-                  <!-- Description based on check type and result -->
+                  <!-- Description based on check type and result. A failed
+                       check carries its own message from the API, which says
+                       what actually went wrong and beats any generic line. -->
                   <p class="mt-1 text-xs text-gray-500">
                     {{
                       check.result === 'error' || check.result === 'warning'
-                        ? (check.message || 'Verification check failed')
-                        : check.check === 'not_revoked' ? 'This credential has not been revoked by the issuer'
-                          : check.check === 'not_expired' ? 'This credential is within its validity period'
-                            : check.check === 'proof' ? 'Cryptographic signature verified successfully'
-                              : 'Verification check completed'
+                        ? (check.message || t('credential.checks.failed'))
+                        : checkDetail(check.check)
                     }}
                   </p>
                 </div>
