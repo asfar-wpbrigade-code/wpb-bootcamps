@@ -1,5 +1,5 @@
 import zlib from 'zlib'
-import { PDFDocument } from 'pdf-lib'
+import { PDFArray, PDFDict, PDFDocument, PDFName, PDFString } from 'pdf-lib'
 import {
   CERTIFICATE_HEIGHT,
   CERTIFICATE_WIDTH,
@@ -7,7 +7,7 @@ import {
   renderCertificatePdf,
   renderCertificatePng,
 } from '../certificate-render'
-import { NAME_METRICS, generateCertificateSvg } from '../certificate-template'
+import { NAME_METRICS, SEAL_METRICS, generateCertificateSvg } from '../certificate-template'
 
 /**
  * The text a PDF reader would find, with where it was placed.
@@ -173,6 +173,52 @@ describe('certificate rendering', () => {
     expect(byText('Issued:')!.serif).toBe(true)
     expect(byText('This Certificate is Proudly')!.serif).toBe(true)
     expect(items.every(item => item.serif)).toBe(true)
+  })
+
+  it('makes the seal a clickable link to the credential', async () => {
+    // The seal's legend says "CLICK OR SCAN TO VERIFY". Until this, only the
+    // scanning half was true in any format.
+    const url = 'https://bootcamp.labspk.com/credentials/urn%3Auuid%3A2f8a1c3e'
+    const pdf = await renderCertificatePdf(svg, { verifyUrl: url })
+    const parsed = await PDFDocument.load(pdf, { updateMetadata: false })
+
+    const annots = parsed.getPage(0).node.Annots()
+    expect(annots?.size()).toBe(1)
+
+    const link = annots!.lookup(0, PDFDict)
+    expect(link.lookup(PDFName.of('Subtype'), PDFName)).toBe(PDFName.of('Link'))
+
+    const action = link.lookup(PDFName.of('A'), PDFDict)
+    expect(action.lookup(PDFName.of('URI'), PDFString).asString()).toBe(url)
+  })
+
+  it('puts that link exactly on the seal', async () => {
+    // A link that misses the seal is worse than none: it either does nothing
+    // where the artwork invites a click, or catches the text beside it.
+    // PDF y counts up from the bottom, SVG down from the top, so the seal's
+    // SVG box of 93..217 x 404..528 is 93..217 x 84..208 here.
+    const pdf = await renderCertificatePdf(svg, { verifyUrl: 'https://example.test/c' })
+    const parsed = await PDFDocument.load(pdf, { updateMetadata: false })
+
+    const link = parsed.getPage(0).node.Annots()!.lookup(0, PDFDict)
+    const rect = link.lookup(PDFName.of('Rect'), PDFArray)
+    const [left, bottom, right, top] = [0, 1, 2, 3].map(i => (rect.lookup(i) as any).asNumber())
+
+    const radius = SEAL_METRICS.diameter / 2
+    expect(left).toBeCloseTo(SEAL_METRICS.centreX - radius, 1)
+    expect(right).toBeCloseTo(SEAL_METRICS.centreX + radius, 1)
+    expect(bottom).toBeCloseTo(CERTIFICATE_HEIGHT - (SEAL_METRICS.centreY + radius), 1)
+    expect(top).toBeCloseTo(CERTIFICATE_HEIGHT - (SEAL_METRICS.centreY - radius), 1)
+  })
+
+  it('leaves the link out when no address is given', async () => {
+    // Nothing to point at is not the same as pointing at nothing. pdf-lib
+    // carries an empty Annots array on every page regardless, so the check is
+    // that it holds no annotation rather than that the key is absent.
+    const pdf = await renderCertificatePdf(svg, {})
+    const parsed = await PDFDocument.load(pdf, { updateMetadata: false })
+
+    expect(parsed.getPage(0).node.Annots()?.size() ?? 0).toBe(0)
   })
 
   it('renders without system fonts, so output does not depend on the host', () => {

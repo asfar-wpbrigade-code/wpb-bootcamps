@@ -4,7 +4,7 @@
 
 import { renderCertificatePdf, renderCertificatePng } from '../../../utils/certificate-render'
 import { generateCertificateSvg } from '../../../utils/certificate-template'
-import { qrPayloadUrl } from '../../../utils/verify-url'
+import { credentialPageUrl, qrPayloadUrl } from '../../../utils/verify-url'
 
 /** Formats the certificate endpoint can return. */
 export type CertificateFormat = 'svg' | 'png' | 'pdf'
@@ -142,6 +142,18 @@ export default ({ strapi }) => ({
       // searchable text layer. Same precedence as the title and the artwork -
       // the name as awarded, falling back to the profile's current one.
       recipientName: credential.recipientName || credential.recipient?.name,
+      // The address the seal links to when the PDF is opened on a screen.
+      //
+      // The canonical page URL, not the short uppercase form the QR carries.
+      // That form exists only to keep the QR's module count low enough to
+      // scan off paper (see verify-url.ts); a link has no such constraint, and
+      // sending a click straight to the page beats sending it through the
+      // redirect - it is also what someone sees if their reader shows them the
+      // address before following it.
+      verifyUrl: credentialPageUrl(
+        strapi.config.get('frontend.url', 'http://localhost:3000'),
+        credential.credentialId,
+      ),
     })
 
     return { body: pdf, contentType: CONTENT_TYPES.pdf, filename }

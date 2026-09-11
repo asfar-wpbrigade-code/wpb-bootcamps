@@ -50,7 +50,9 @@ The flow:
 2. They issue it from `/issue` — one recipient at a time, or a CSV for a whole cohort
 3. Each recipient gets an email with a link to their certificate, and an account
    to view every certificate they hold
-4. **Anyone** can verify a certificate at `/verify` or by scanning its QR code
+4. **Anyone** can verify a certificate at `/verify`, by scanning its QR code, or
+   — in the PDF — by clicking the seal, which is a live link to that
+   credential's page
 5. Recipients can add it to their LinkedIn profile in two clicks
 
 ### Standards

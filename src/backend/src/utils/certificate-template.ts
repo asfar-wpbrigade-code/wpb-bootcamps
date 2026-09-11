@@ -71,9 +71,19 @@ const PANEL_RIGHT = WIDTH - PANEL_LEFT
  * The seal's diameter is not ours to shrink: the QR inside it has to survive
  * being scanned off paper, which is what it is sized for.
  */
-const SEAL_CENTRE_X = 155
-const SEAL_CENTRE_Y = 466
-const SEAL_DIAMETER = 124
+/**
+ * Where the seal is drawn.
+ *
+ * Exported because the PDF puts a clickable link over it, and a link that does
+ * not sit exactly on the seal is worse than none - it either misses the target
+ * or catches text beside it. Stated once here rather than copied into
+ * certificate-render.ts, which reads these the way it reads NAME_METRICS.
+ */
+export const SEAL_METRICS = { centreX: 155, centreY: 466, diameter: 124 }
+
+const SEAL_CENTRE_X = SEAL_METRICS.centreX
+const SEAL_CENTRE_Y = SEAL_METRICS.centreY
+const SEAL_DIAMETER = SEAL_METRICS.diameter
 
 /** Half-width of the rule under the recipient's name, cut to the citation. */
 const NAME_RULE_REACH = 210

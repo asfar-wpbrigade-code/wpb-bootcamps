@@ -14,9 +14,9 @@
  * stack, so loading exactly these reproduces the intended design everywhere.
  */
 import { Resvg } from '@resvg/resvg-js'
-import { PDFDocument, PDFFont, StandardFonts } from 'pdf-lib'
+import { PDFDocument, PDFFont, PDFName, PDFString, StandardFonts } from 'pdf-lib'
 import { HEADING_METRICS, HEADING_TEXT } from './certificate-assets/heading'
-import { NAME_METRICS } from './certificate-template'
+import { NAME_METRICS, SEAL_METRICS } from './certificate-template'
 
 /** Certificate artboard, in points. Exactly US Letter landscape. */
 export const CERTIFICATE_WIDTH = 792
@@ -243,11 +243,12 @@ function toWinAnsi(text: string): string {
  * in by the caller.
  *
  * @param {string} svg - A complete certificate SVG document
- * @param {object} [meta] - Document properties, plus the outlined name
+ * @param {object} [meta] - Document properties, the outlined name, and the
+ *   address the seal links to
  */
 export async function renderCertificatePdf(
   svg: string,
-  meta: { title?: string, author?: string, recipientName?: string } = {},
+  meta: { title?: string, author?: string, recipientName?: string, verifyUrl?: string } = {},
 ): Promise<Buffer> {
   const png = renderCertificatePng(svg, PDF_SCALE)
 
@@ -341,6 +342,44 @@ export async function renderCertificatePdf(
       // these exist to be selected, searched and read aloud.
       opacity: 0,
     })
+  }
+
+  if (meta.verifyUrl) {
+    // The seal's own legend reads "CLICK OR SCAN TO VERIFY", and until now
+    // only the second half of that was true: the QR scanned, and nothing
+    // anywhere was clickable. A PDF link annotation over the seal makes the
+    // legend honest for anyone reading the certificate on a screen, which is
+    // most of them.
+    //
+    // The rect is the seal's bounding box, flipped into PDF coordinates - SVG
+    // measures y down from the top, PDF up from the bottom - and read from
+    // SEAL_METRICS so it cannot drift away from where the seal is drawn.
+    //
+    // It is a box over a circle, so the corners are live a few points outside
+    // the rim. That is the shape PDF link annotations are: a QuadPoints
+    // outline would not be honoured by most readers, and a cursor in the
+    // corner of the seal is a fair guess at meaning to click it.
+    const radius = SEAL_METRICS.diameter / 2
+    const left = SEAL_METRICS.centreX - radius
+    const right = SEAL_METRICS.centreX + radius
+    const top = CERTIFICATE_HEIGHT - (SEAL_METRICS.centreY - radius)
+    const bottom = CERTIFICATE_HEIGHT - (SEAL_METRICS.centreY + radius)
+
+    const link = pdf.context.obj({
+      Type: 'Annot',
+      Subtype: 'Link',
+      Rect: [left, bottom, right, top],
+      // No visible border: the seal is the affordance, and a reader-drawn
+      // rectangle around it would sit on the artwork.
+      Border: [0, 0, 0],
+      A: {
+        Type: 'Action',
+        S: 'URI',
+        URI: PDFString.of(meta.verifyUrl),
+      },
+    })
+
+    page.node.set(PDFName.of('Annots'), pdf.context.obj([link]))
   }
 
   if (meta.title) pdf.setTitle(meta.title)
