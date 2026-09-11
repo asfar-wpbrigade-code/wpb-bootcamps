@@ -71,12 +71,28 @@ const PANEL_RIGHT = WIDTH - PANEL_LEFT
  * The seal's diameter is not ours to shrink: the QR inside it has to survive
  * being scanned off paper, which is what it is sized for.
  */
-const SEAL_CENTRE_X = 190
-const SEAL_CENTRE_Y = 476
+const SEAL_CENTRE_X = 175
+const SEAL_CENTRE_Y = 466
 const SEAL_DIAMETER = 124
 
 /** Half-width of the rule under the recipient's name, cut to the citation. */
 const NAME_RULE_REACH = 210
+
+/**
+ * Distance from the citation's last baseline to the programme's.
+ *
+ * It was 42.5, putting the programme on y=414 — exactly where the seal's top
+ * point used to be, tangent and clear by nothing. Moving the seal up 10pt put
+ * its rim through the first two letters of a programme name long enough to
+ * reach that far left ("WORDPRESS DEVELOPMENT FUNDAMENTALS" runs to x=148; the
+ * seal now reaches x=209 at that height). A short name never noticed.
+ *
+ * Lifting the programme and its date by 14pt clears the seal's new top with
+ * 4pt to spare, and keeps the programme at its full 18pt — the alternative was
+ * shrinking long programme names to fit beside the seal, which costs the
+ * second most important line on the certificate to save a decoration.
+ */
+const PROGRAMME_DROP = 28.5
 
 /**
  * Where the signature block ends.
@@ -292,7 +308,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   const citationTop = 335.5
   const CITATION_LEADING = 18
   const programmeY = citation.length > 0
-    ? citationTop + (citation.length - 1) * CITATION_LEADING + 42.5
+    ? citationTop + (citation.length - 1) * CITATION_LEADING + PROGRAMME_DROP
     : 378
   const dateY = programmeY + 20.4
 

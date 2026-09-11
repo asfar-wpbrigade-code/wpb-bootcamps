@@ -79,19 +79,42 @@ describe('certificate template, against the printed reference', () => {
     expect(svg).toMatch(/y="371\.5"[^>]*font-size="10"/)
   })
 
-  it('sets the programme in bold serif at 18pt on baseline 414', () => {
+  it('sets the programme in bold serif at 18pt, clear of the seal', () => {
     // Georgia Bold in the reference, not the sans the signature block uses.
     // The size is emitted through toFixed(1), so 18 arrives as "18.0".
-    expect(svg).toMatch(/y="414"[^>]*font-family="Georgia[^"]*"[^>]*font-size="18(\.0)?"[^>]*font-weight="bold"/)
+    //
+    // Baseline 400, not the reference's 414: the seal's top is at 404 now, and
+    // a programme name long enough to reach x=148 met its rim there.
+    expect(svg).toMatch(/y="400"[^>]*font-family="Georgia[^"]*"[^>]*font-size="18(\.0)?"[^>]*font-weight="bold"/)
     expect(svg).toContain('SEO FUNDAMENTALS')
   })
 
-  it('sets the programme dates in bold serif at 10pt on baseline 434.4', () => {
+  it('sets the programme dates in bold serif at 10pt under it', () => {
     // Georgia, not the Roboto the reference used - the line directly above it
     // is Georgia Bold, and two families on adjacent lines of the same rank is
     // the inconsistency this design had.
-    expect(svg).toMatch(/y="434\.4"[^>]*font-family="Georgia[^"]*"[^>]*font-size="10"[^>]*font-weight="bold"/)
+    expect(svg).toMatch(/y="420\.4"[^>]*font-family="Georgia[^"]*"[^>]*font-size="10"[^>]*font-weight="bold"/)
     expect(svg).toContain('From: July 2026')
+  })
+
+  it('keeps the programme clear of the seal', () => {
+    // Read out of the rendered SVG rather than restated from the constants,
+    // so moving either one is what fails this rather than editing it.
+    //
+    // A long programme name reaches within about 150pt of the left edge, and
+    // the seal sits under that. Its glyphs sit above its baseline, so the
+    // whole line clears the seal as long as the baseline is above the seal's
+    // topmost point - which is what the rim cut through when the seal moved up.
+    // Anchored on the comment the template writes above it, so this cannot
+    // pick up the heading's outline groups, which are also translated.
+    const seal = svg.match(/only where it sits is decided here\.\s*-->\s*<g transform="translate\((\d+(?:\.\d+)?), (\d+(?:\.\d+)?)\)"/)
+    expect(seal).not.toBeNull()
+
+    const sealTop = Number(seal![2]) - 62
+    const programme = svg.match(/y="(\d+(?:\.\d+)?)"[^>]*font-size="18(?:\.0)?"/)
+    expect(programme).not.toBeNull()
+
+    expect(Number(programme![1])).toBeLessThanOrEqual(sealTop)
   })
 
   it('sets the signature block in the serif, with the title unbolded', () => {
@@ -124,7 +147,7 @@ describe('certificate template, against the printed reference', () => {
     // Deliberate, and the only one: a single considered break reads as
     // composition, where two half-balanced elements read as neither symmetric
     // nor intentionally offset.
-    expect(svg).toContain('translate(190, 476)')
+    expect(svg).toContain('translate(175, 466)')
   })
 
   it('cuts the name’s rule to the citation’s measure', () => {
