@@ -159,6 +159,14 @@ than set in a font. A certificate gets shown in an `<img>` tag, converted to
 PNG, and opened offline after downloading — a missing font in any of those
 places would silently fall back to a plain serif.
 
+Everything else on the panel is set in **Georgia**, with metrically identical
+Gelasio behind it for machines that lack it. One face, deliberately: the
+printed reference set the programme in Georgia and the date directly beneath it
+in Roboto, and adjacent lines of the same rank in two families is what made the
+certificate read as assembled rather than designed. A sans survives only inside
+artwork that carries its own typography — the logo lockup and the seal's
+legends.
+
 ### What each Achievement contributes
 
 Set these in Strapi admin → Content Manager → Achievement:

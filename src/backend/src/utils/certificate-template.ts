@@ -50,13 +50,64 @@ const WIDTH = 792
 const HEIGHT = 612
 const CENTRE = WIDTH / 2
 
+/** The hairline-ruled panel everything sits inside. */
+const PANEL_LEFT = 38
+const PANEL_RIGHT = WIDTH - PANEL_LEFT
+
+/**
+ * The bottom band: the verification seal on the left, the signature block on
+ * the right.
+ *
+ * The two sit on a shared bottom edge — the seal's lowest point and the last
+ * line of the signature block are the same y. The reference was 2.7pt off
+ * that (seal bottom 538, title baseline 540.7), which is near enough to have
+ * been intended and far enough to read as slightly loose; it is exact now, and
+ * stays exact when there is no signatory title and the block is a line
+ * shorter.
+ *
+ * A shared *bottom* rather than a shared centre, because the bottom edge is
+ * where both actually end: a circle's centre is invisible, so aligning the
+ * rule to it aligns nothing the eye can see.
+ *
+ * Horizontally they are mirrored about the page centre at equal insets from
+ * the panel edges. The reference had them 114pt and 230pt from their
+ * respective edges, which is the kind of asymmetry that reads as an accident
+ * rather than a decision.
+ *
+ * The seal's diameter is not ours to shrink — the QR inside it has to survive
+ * being scanned off paper, which is what `sealDiameter` is sized for.
+ */
+const SEAL_CENTRE_Y = 476
+const SEAL_DIAMETER = 124
+const BAND_BOTTOM = SEAL_CENTRE_Y + SEAL_DIAMETER / 2
+const BAND_INSET = 152
+const SEAL_CENTRE_X = PANEL_LEFT + BAND_INSET
+const SIGNATURE_CENTRE_X = PANEL_RIGHT - BAND_INSET
+
+/** Signature block leading: rule, then the name, then the title under it. */
+const SIGNATURE_NAME_DROP = 16
+const SIGNATURE_TITLE_DROP = 11.2
+
 const NAVY = '#152a63'
 const BRAND_BLUE = '#3458ea'
 const INK = '#2f3542'
 const MUTED = '#6b7280'
 
+/**
+ * Every word set on the panel is in the serif.
+ *
+ * The reference mixed the two: the programme in Georgia Bold and the date
+ * directly beneath it in Roboto Bold, then the signatory in Roboto Bold again.
+ * Adjacent lines of the same rank in two different families is the kind of
+ * thing that reads as "assembled" rather than designed, and it is the single
+ * most visible inconsistency on the certificate.
+ *
+ * The sans survives only inside artwork that carries its own typography — the
+ * logo lockup, whose wordmark is outlines, and the verification seal's
+ * legends, which belong to the medal. Neither is body text and neither is set
+ * here.
+ */
 const SERIF = "Georgia, Gelasio, 'Times New Roman', serif"
-const SANS = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 /**
  * Alex Brush, parsed once and reused across requests.
@@ -232,8 +283,12 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   )
   const achievementSize = fitFontSize(achievementName.toUpperCase(), 470, 18, 0.62)
 
-  const sealDiameter = 124
-  const verificationSeal = generateVerificationSealSvg(verifyUrl, sealDiameter)
+  const verificationSeal = generateVerificationSealSvg(verifyUrl, SEAL_DIAMETER)
+
+  // The block hangs upward from the shared bottom edge, so losing the title
+  // moves the rule and the name down rather than leaving the band lopsided.
+  const signatureNameY = signatoryTitle ? BAND_BOTTOM - SIGNATURE_TITLE_DROP : BAND_BOTTOM
+  const signatureRuleY = signatureNameY - SIGNATURE_NAME_DROP
 
   const watermarkTile = 132
   const watermarkScale = 0.42
@@ -246,10 +301,10 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   <defs>
     <!-- The emblem, tiled faintly across the panel -->
     <pattern id="watermark" x="0" y="0" width="${watermarkTile}" height="${watermarkTile}" patternUnits="userSpaceOnUse">
-      <g transform="scale(${watermarkScale})" opacity="0.05" fill="${BRAND_BLUE}">
+      <g transform="scale(${watermarkScale})" opacity="0.035" fill="${BRAND_BLUE}">
         ${EMBLEM_PATHS.join('\n        ')}
       </g>
-      <g transform="translate(${watermarkTile / 2}, ${watermarkTile / 2}) scale(${watermarkScale})" opacity="0.05" fill="${BRAND_BLUE}">
+      <g transform="translate(${watermarkTile / 2}, ${watermarkTile / 2}) scale(${watermarkScale})" opacity="0.035" fill="${BRAND_BLUE}">
         ${EMBLEM_PATHS.join('\n        ')}
       </g>
     </pattern>
@@ -289,25 +344,25 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
 
   <!-- Programme -->
   <text x="${CENTRE}" y="${programmeY}" font-family="${SERIF}" font-size="${achievementSize.toFixed(1)}" font-weight="bold" letter-spacing="1.2" text-anchor="middle" fill="${NAVY}">${escapeXml(achievementName.toUpperCase())}</text>
-  <text x="${CENTRE}" y="${dateY}" font-family="${SANS}" font-size="10" font-weight="bold" text-anchor="middle" fill="${INK}">${escapeXml(dateLine)}</text>
+  <text x="${CENTRE}" y="${dateY}" font-family="${SERIF}" font-size="10" font-weight="bold" text-anchor="middle" fill="${INK}">${escapeXml(dateLine)}</text>
 
   <!-- Verification seal. Its frame, legends and QR all come from
        verification-seal.ts; only where it sits is decided here. -->
-  <g transform="translate(152, 476)">${verificationSeal}</g>
+  <g transform="translate(${SEAL_CENTRE_X}, ${SEAL_CENTRE_Y})">${verificationSeal}</g>
 
-  <!-- Signature block -->
-  <g transform="translate(${CENTRE + 128}, 0)">
+  <!-- Signature block, sharing the seal's bottom edge -->
+  <g transform="translate(${SIGNATURE_CENTRE_X}, 0)">
     ${signatureImageDataUri
-      ? `<image href="${signatureImageDataUri}" x="-85" y="452" width="170" height="46" preserveAspectRatio="xMidYMax meet" />`
+      ? `<image href="${signatureImageDataUri}" x="-85" y="${signatureRuleY - 61.5}" width="170" height="46" preserveAspectRatio="xMidYMax meet" />`
       : ''}
-    <line x1="-95" y1="513.5" x2="95" y2="513.5" stroke="${INK}" stroke-width="0.8" />
-    <text x="0" y="529.5" font-family="${SANS}" font-size="10" font-weight="bold" letter-spacing="0.6" text-anchor="middle" fill="${INK}">${escapeXml((signatoryName || issuerName || '').toUpperCase())}</text>
+    <line x1="-95" y1="${signatureRuleY}" x2="95" y2="${signatureRuleY}" stroke="${INK}" stroke-width="0.8" />
+    <text x="0" y="${signatureNameY}" font-family="${SERIF}" font-size="10" font-weight="bold" letter-spacing="0.6" text-anchor="middle" fill="${INK}">${escapeXml((signatoryName || issuerName || '').toUpperCase())}</text>
     ${signatoryTitle
-      ? `<text x="0" y="540.7" font-family="${SANS}" font-size="8" font-weight="bold" text-anchor="middle" fill="${MUTED}">${escapeXml(signatoryTitle)}</text>`
+      ? `<text x="0" y="${BAND_BOTTOM}" font-family="${SERIF}" font-size="8" text-anchor="middle" fill="${MUTED}">${escapeXml(signatoryTitle)}</text>`
       : ''}
   </g>
 
   <!-- Credential id, small, for anyone checking by hand -->
-  <text x="${WIDTH - 52}" y="${HEIGHT - 46}" font-family="${SANS}" font-size="6" text-anchor="end" fill="#a8aeb9">${escapeXml(credentialId)}</text>
+  <text x="${WIDTH - 52}" y="${HEIGHT - 46}" font-family="${SERIF}" font-size="6" text-anchor="end" fill="#a8aeb9">${escapeXml(credentialId)}</text>
 </svg>`
 }

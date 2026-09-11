@@ -158,18 +158,21 @@ describe('certificate rendering', () => {
     const items = extractSvgTextItems(svg)
     const byText = (needle: string) => items.find(item => item.text.includes(needle))
 
-    // x="0" inside <g transform="translate(524, 0)">: read without applying
+    // x="0" inside <g transform="translate(602, 0)">: read without applying
     // the group's offset, this lands at the left edge of the page.
-    expect(byText('GRACE HOPPER')!.x).toBeCloseTo(524, 0)
-    expect(byText('GRACE HOPPER')!.y).toBeCloseTo(529.5, 1)
+    expect(byText('GRACE HOPPER')!.x).toBeCloseTo(602, 0)
+    expect(byText('GRACE HOPPER')!.y).toBeCloseTo(526.8, 1)
 
     // The seal's legends run along a <textPath> and have no x/y to use.
     expect(items.every(item => item.text.trim().length > 0)).toBe(true)
 
-    // "'Segoe UI', Roboto, Helvetica, Arial, sans-serif" is not a serif stack,
-    // however much of the word "serif" it contains.
-    expect(byText('Issued:')!.serif).toBe(false)
+    // Every positioned line on the panel is Georgia now. The serif test still
+    // has to be right about the sans, because "sans-serif" contains "serif"
+    // and the seal's legends still use it - it is just no longer reachable
+    // from anything this template positions.
+    expect(byText('Issued:')!.serif).toBe(true)
     expect(byText('This Certificate is Proudly')!.serif).toBe(true)
+    expect(items.every(item => item.serif)).toBe(true)
   })
 
   it('renders without system fonts, so output does not depend on the host', () => {
