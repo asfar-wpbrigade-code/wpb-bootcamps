@@ -17,10 +17,11 @@ import { generateCertificateSvg } from '../certificate-template'
  *   <signatory>                 y 529.5   10pt   Roboto Bold
  *   <title>                     y 540.7    8pt   Roboto Bold
  *
- * Three deliberate departures from it, all in the name of internal
- * consistency. The reference is a print artefact, not a system, and it is not
- * self-consistent - the heading is already corrected here for spelling, so
- * there is precedent for fixing what it got wrong.
+ * The departures from it are deliberate, and listed here because this file
+ * exists to pin the design to that reference. The reference is a print
+ * artefact rather than a system, and it is not self-consistent - the heading
+ * is already corrected here for spelling, so there is precedent for fixing
+ * what it got wrong.
  *
  *   1. **Everything on the panel is Georgia.** The reference sets the
  *      programme in Georgia Bold and the date directly beneath it in Roboto
@@ -29,13 +30,19 @@ import { generateCertificateSvg } from '../certificate-template'
  *      that carries its own typography - the logo lockup and the seal.
  *   2. **The signatory title is no longer bold.** A bold title under a bold
  *      name states no hierarchy at all.
- *   3. **The bottom band shares an exact bottom edge**, and the seal and
- *      signature sit at equal insets from the panel edges. The reference had
- *      the seal's bottom at 538 and the title baseline at 540.7, and the two
- *      at 114pt and 230pt from their respective edges.
+ *   3. **One centre axis.** Everything set centres on it; the seal is the one
+ *      element deliberately outside, low and left. The signature moved from
+ *      the right to the axis and down to the foot of the panel.
+ *   4. **The name's rule is cut to the citation's measure**, 420pt rather than
+ *      500, and the name is held 18pt inside it either side.
+ *   5. **One masthead rule below the lockup**, replacing the two segments that
+ *      flanked its tagline.
+ *   6. **The programme and its date sit 14pt higher**, on 400 and 420.4. That
+ *      is what keeps a long programme name clear of the seal, which the seal's
+ *      position no longer leaves room for at the reference's 414.
  *
- * Everything above the band - the canvas, the heading, the introduction, the
- * name, the citation and the programme - is untouched.
+ * The canvas, the heading, the introduction, the name's baseline and the
+ * citation keep their reference positions.
  */
 const SAMPLE = {
   recipientName: 'Tiger Tiago',
@@ -147,7 +154,7 @@ describe('certificate template, against the printed reference', () => {
     // Deliberate, and the only one: a single considered break reads as
     // composition, where two half-balanced elements read as neither symmetric
     // nor intentionally offset.
-    expect(svg).toContain('translate(175, 466)')
+    expect(svg).toContain('translate(155, 466)')
   })
 
   it('cuts the name’s rule to the citation’s measure', () => {

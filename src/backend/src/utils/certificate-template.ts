@@ -71,7 +71,7 @@ const PANEL_RIGHT = WIDTH - PANEL_LEFT
  * The seal's diameter is not ours to shrink: the QR inside it has to survive
  * being scanned off paper, which is what it is sized for.
  */
-const SEAL_CENTRE_X = 175
+const SEAL_CENTRE_X = 155
 const SEAL_CENTRE_Y = 466
 const SEAL_DIAMETER = 124
 
