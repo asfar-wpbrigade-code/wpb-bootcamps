@@ -158,10 +158,10 @@ describe('certificate rendering', () => {
     const items = extractSvgTextItems(svg)
     const byText = (needle: string) => items.find(item => item.text.includes(needle))
 
-    // x="0" inside <g transform="translate(602, 0)">: read without applying
+    // x="0" inside <g transform="translate(396, 0)">: read without applying
     // the group's offset, this lands at the left edge of the page.
-    expect(byText('GRACE HOPPER')!.x).toBeCloseTo(602, 0)
-    expect(byText('GRACE HOPPER')!.y).toBeCloseTo(526.8, 1)
+    expect(byText('GRACE HOPPER')!.x).toBeCloseTo(396, 0)
+    expect(byText('GRACE HOPPER')!.y).toBeCloseTo(542.8, 1)
 
     // The seal's legends run along a <textPath> and have no x/y to use.
     expect(items.every(item => item.text.trim().length > 0)).toBe(true)

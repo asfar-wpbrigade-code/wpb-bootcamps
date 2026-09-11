@@ -95,36 +95,66 @@ describe('certificate template, against the printed reference', () => {
   })
 
   it('sets the signature block in the serif, with the title unbolded', () => {
-    expect(svg).toMatch(/y="526\.8"[^>]*font-family="Georgia[^"]*"[^>]*font-size="10"[^>]*font-weight="bold"/)
+    expect(svg).toMatch(/y="542\.8"[^>]*font-family="Georgia[^"]*"[^>]*font-size="10"[^>]*font-weight="bold"/)
     expect(svg).toContain('TOM CRUISE')
-    expect(svg).toMatch(/y="538"[^>]*font-family="Georgia[^"]*"[^>]*font-size="8"/)
+    expect(svg).toMatch(/y="554"[^>]*font-family="Georgia[^"]*"[^>]*font-size="8"/)
     expect(svg).toContain('Manager')
     // A bold title under a bold name is not a hierarchy.
-    expect(svg).not.toMatch(/y="538"[^>]*font-weight="bold"/)
+    expect(svg).not.toMatch(/y="554"[^>]*font-weight="bold"/)
   })
 
-  it('lands the signature block on the seal’s bottom edge', () => {
-    // The seal is centred at y=476 with a diameter of 124, so it ends at 538,
-    // and the last line of the signature block sits on exactly that. The
-    // reference was 2.7pt out, which reads as loose rather than intended.
-    expect(svg).toContain('translate(190, 476)')
-    expect(svg).toMatch(/y="538"[^>]*font-size="8"/)
+  it('centres the signature block and sets it low on the panel', () => {
+    // On the page axis, like everything else the template sets, and below the
+    // seal's band rather than beside it - level and centred, the two crowded
+    // each other across a 49pt gap.
+    expect(svg).toContain('translate(396, 0)')
+    expect(svg).toMatch(/y="554"[^>]*font-size="8"/)
   })
 
-  it('keeps that bottom edge when there is no signatory title', () => {
-    // The block hangs upward from the shared edge, so a missing title moves
-    // the name and rule down rather than leaving the band lopsided.
+  it('keeps the block on that line when there is no signatory title', () => {
+    // It hangs upward from the bottom line, so a missing title moves the name
+    // and the rule down rather than leaving a gap where the title would be.
     return generateCertificateSvg({ ...SAMPLE, signatoryTitle: undefined }).then((untitled) => {
-      expect(untitled).toMatch(/y="538"[^>]*font-size="10"[^>]*font-weight="bold"/)
+      expect(untitled).toMatch(/y="554"[^>]*font-size="10"[^>]*font-weight="bold"/)
       expect(untitled).toContain('TOM CRUISE')
     })
   })
 
-  it('places the seal and the signature at equal insets from the panel', () => {
-    // Panel edges are x=38 and x=754. The reference had them 114pt and 230pt
-    // in, which reads as an accident.
+  it('leaves the seal as the one element off the centre axis', () => {
+    // Deliberate, and the only one: a single considered break reads as
+    // composition, where two half-balanced elements read as neither symmetric
+    // nor intentionally offset.
     expect(svg).toContain('translate(190, 476)')
-    expect(svg).toContain('translate(602, 0)')
+  })
+
+  it('cuts the name’s rule to the citation’s measure', () => {
+    // It ran 500pt wide over a citation about 420 - a line noticeably wider
+    // than the block inside it.
+    expect(svg).toContain('<line x1="186" y1="308" x2="606" y2="308"')
+  })
+
+  it('closes the masthead with one rule below the lockup', () => {
+    // Two segments used to flank the lockup's own tagline, level with it,
+    // decorating the middle of the masthead rather than closing it.
+    expect(svg).toContain('<line x1="296" y1="116" x2="496" y2="116"')
+    expect(svg).not.toMatch(/y1="107"/)
+  })
+
+  it('keeps a long name inside the rule rather than flush to it', () => {
+    // Alex Brush at 80pt is far wider than the measure for a name this long,
+    // so it scales down - to 384, not to the rule's own 420, which would put
+    // the glyphs against both ends.
+    return generateCertificateSvg({ ...SAMPLE, recipientName: 'Bartholomew Fitzgerald' }).then((long) => {
+      const path = long.match(/<path d="([^"]+)" fill="#152a63"/)
+      expect(path).not.toBeNull()
+
+      // Every command in the outline starts with an x, so the extremes of
+      // those are the extremes of the drawn name.
+      const xs = [...path![1].matchAll(/[MLCQ]\s*(-?\d+(?:\.\d+)?)/g)].map(m => Number(m[1]))
+      expect(xs.length).toBeGreaterThan(20)
+      expect(Math.min(...xs)).toBeGreaterThanOrEqual(186)
+      expect(Math.max(...xs)).toBeLessThanOrEqual(606)
+    })
   })
 
   it('sets every word on the panel in the serif', () => {
@@ -143,9 +173,8 @@ describe('certificate template, against the printed reference', () => {
   it('keeps the rule clear of the script descenders', () => {
     // Alex Brush at 80pt drops 16.4pt below its baseline of 289.5, so anything
     // above y=306 would strike through a name like "Gregory Page".
-    // x1="146" is CENTRE-250: the rule under the name, not the shorter
-    // decorative pair either side of the logo.
-    const rule = svg.match(/<line x1="146" y1="(\d+(?:\.\d+)?)"/)
+    // x1="186" is CENTRE-210: the rule under the name, not the masthead's.
+    const rule = svg.match(/<line x1="186" y1="(\d+(?:\.\d+)?)"/)
     expect(rule).not.toBeNull()
     expect(Number(rule![1])).toBeGreaterThanOrEqual(306)
   })

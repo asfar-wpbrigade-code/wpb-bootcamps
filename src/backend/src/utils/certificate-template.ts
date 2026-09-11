@@ -55,38 +55,53 @@ const PANEL_LEFT = 38
 const PANEL_RIGHT = WIDTH - PANEL_LEFT
 
 /**
- * The bottom band: the verification seal on the left, the signature block on
- * the right.
+ * The composition is symmetric about the page's vertical axis, and the
+ * verification seal is the one thing deliberately outside it.
  *
- * The two sit on a shared bottom edge — the seal's lowest point and the last
- * line of the signature block are the same y. The reference was 2.7pt off
- * that (seal bottom 538, title baseline 540.7), which is near enough to have
- * been intended and far enough to read as slightly loose; it is exact now, and
- * stays exact when there is no signatory title and the block is a line
- * shorter.
+ * Every set element — the masthead, the heading, the introduction, the name
+ * and its rule, the citation, the programme, the date and the signature —
+ * centres on `CENTRE`. The seal sits low and left of that column on purpose:
+ * a single considered break reads as composition, where two half-balanced
+ * elements read as neither symmetric nor intentionally offset.
  *
- * A shared *bottom* rather than a shared centre, because the bottom edge is
- * where both actually end: a circle's centre is invisible, so aligning the
- * rule to it aligns nothing the eye can see.
+ * The widths taper accordingly — the masthead rule is the narrowest, the
+ * name's rule the widest, and the rule is cut to the citation's measure so the
+ * block beneath it does not sit inside a line noticeably wider than itself.
  *
- * Horizontally they are mirrored about the page centre at equal insets from
- * the panel edges. The reference had them 114pt and 230pt from their
- * respective edges, which is the kind of asymmetry that reads as an accident
- * rather than a decision.
- *
- * The seal's diameter is not ours to shrink — the QR inside it has to survive
- * being scanned off paper, which is what `sealDiameter` is sized for.
+ * The seal's diameter is not ours to shrink: the QR inside it has to survive
+ * being scanned off paper, which is what it is sized for.
  */
+const SEAL_CENTRE_X = 190
 const SEAL_CENTRE_Y = 476
 const SEAL_DIAMETER = 124
-const BAND_BOTTOM = SEAL_CENTRE_Y + SEAL_DIAMETER / 2
-const BAND_INSET = 152
-const SEAL_CENTRE_X = PANEL_LEFT + BAND_INSET
-const SIGNATURE_CENTRE_X = PANEL_RIGHT - BAND_INSET
 
-/** Signature block leading: rule, then the name, then the title under it. */
+/** Half-width of the rule under the recipient's name, cut to the citation. */
+const NAME_RULE_REACH = 210
+
+/**
+ * Where the signature block ends.
+ *
+ * The block hangs upward from this line, so an achievement with no signatory
+ * title moves the rule and the name down rather than leaving a gap where the
+ * title would have been. It sits below the seal's own band, low on the panel,
+ * rather than beside it — centred and level, the two would have crowded each
+ * other across a 49pt gap.
+ */
+const SIGNATURE_BOTTOM_Y = 554
 const SIGNATURE_NAME_DROP = 16
 const SIGNATURE_TITLE_DROP = 11.2
+
+/**
+ * The masthead: the logo lockup, then a single rule beneath it.
+ *
+ * The rule used to be two segments flanking the lockup's own tagline, level
+ * with it. One continuous line below the whole lockup separates the masthead
+ * from the heading instead of decorating the middle of it.
+ */
+const LOGO_TOP_Y = 44
+const LOGO_SCALE = 0.46
+const MASTHEAD_RULE_Y = 116
+const MASTHEAD_RULE_REACH = 100
 
 const NAVY = '#152a63'
 const BRAND_BLUE = '#3458ea'
@@ -146,7 +161,14 @@ function escapeXml(value: string): string {
  * text layer has to put the name back at the same place, and reads these
  * rather than repeating the numbers (certificate-render.ts).
  */
-export const NAME_METRICS = { baselineY: 289.5, maxWidth: 500, idealSize: 80 }
+export const NAME_METRICS = {
+  baselineY: 289.5,
+  // Inside the rule rather than exactly as wide as it: a long name scaled to
+  // the full measure touches both ends, which reads as cramped rather than
+  // fitted. 18pt of air either side.
+  maxWidth: NAME_RULE_REACH * 2 - 36,
+  idealSize: 80,
+}
 
 /**
  * Draws the recipient's name centred, shrinking it to fit the width available.
@@ -287,12 +309,11 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
 
   // The block hangs upward from the shared bottom edge, so losing the title
   // moves the rule and the name down rather than leaving the band lopsided.
-  const signatureNameY = signatoryTitle ? BAND_BOTTOM - SIGNATURE_TITLE_DROP : BAND_BOTTOM
+  const signatureNameY = signatoryTitle ? SIGNATURE_BOTTOM_Y - SIGNATURE_TITLE_DROP : SIGNATURE_BOTTOM_Y
   const signatureRuleY = signatureNameY - SIGNATURE_NAME_DROP
 
   const watermarkTile = 132
   const watermarkScale = 0.42
-  const logoScale = 0.46
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -319,8 +340,8 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   <rect x="38" y="34" width="${WIDTH - 76}" height="${HEIGHT - 68}" fill="url(#watermark)" />
   <rect x="38" y="34" width="${WIDTH - 76}" height="${HEIGHT - 68}" fill="none" stroke="${INK}" stroke-width="0.8" />
 
-  <!-- Logo lockup. The tagline is part of the artwork; the rules flank it -->
-  <g transform="translate(${CENTRE - (LOGO_VIEWBOX.width * logoScale) / 2}, 50) scale(${logoScale})">
+  <!-- Logo lockup, with one rule closing the masthead beneath it -->
+  <g transform="translate(${CENTRE - (LOGO_VIEWBOX.width * LOGO_SCALE) / 2}, ${LOGO_TOP_Y}) scale(${LOGO_SCALE})">
     <g fill="${BRAND_BLUE}">
       ${EMBLEM_PATHS.join('\n      ')}
     </g>
@@ -328,8 +349,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
       ${WORDMARK_PATHS.join('\n      ')}
     </g>
   </g>
-  <line x1="${CENTRE - 118}" y1="107" x2="${CENTRE - 52}" y2="107" stroke="${MUTED}" stroke-width="0.7" />
-  <line x1="${CENTRE + 52}" y1="107" x2="${CENTRE + 118}" y2="107" stroke="${MUTED}" stroke-width="0.7" />
+  <line x1="${CENTRE - MASTHEAD_RULE_REACH}" y1="${MASTHEAD_RULE_Y}" x2="${CENTRE + MASTHEAD_RULE_REACH}" y2="${MASTHEAD_RULE_Y}" stroke="${MUTED}" stroke-width="0.7" />
 
   <!-- Heading, as outlines lifted from the source artwork -->
   <g fill="${INK}">${HEADING_PATHS}</g>
@@ -337,7 +357,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
 
   <!-- Recipient, drawn as outlines so the script survives any renderer -->
   <path d="${nameOutline}" fill="${NAVY}" />
-  <line x1="${CENTRE - 250}" y1="308" x2="${CENTRE + 250}" y2="308" stroke="${MUTED}" stroke-width="0.7" />
+  <line x1="${CENTRE - NAME_RULE_REACH}" y1="308" x2="${CENTRE + NAME_RULE_REACH}" y2="308" stroke="${MUTED}" stroke-width="0.7" />
 
   <!-- Citation -->
   ${citation.map((line, index) => `<text x="${CENTRE}" y="${citationTop + index * CITATION_LEADING}" font-family="${SERIF}" font-size="10" font-style="italic" text-anchor="middle" fill="${MUTED}">${escapeXml(line)}</text>`).join('\n  ')}
@@ -350,15 +370,15 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
        verification-seal.ts; only where it sits is decided here. -->
   <g transform="translate(${SEAL_CENTRE_X}, ${SEAL_CENTRE_Y})">${verificationSeal}</g>
 
-  <!-- Signature block, sharing the seal's bottom edge -->
-  <g transform="translate(${SIGNATURE_CENTRE_X}, 0)">
+  <!-- Signature block, on the centre axis at the foot of the panel -->
+  <g transform="translate(${CENTRE}, 0)">
     ${signatureImageDataUri
       ? `<image href="${signatureImageDataUri}" x="-85" y="${signatureRuleY - 61.5}" width="170" height="46" preserveAspectRatio="xMidYMax meet" />`
       : ''}
     <line x1="-95" y1="${signatureRuleY}" x2="95" y2="${signatureRuleY}" stroke="${INK}" stroke-width="0.8" />
     <text x="0" y="${signatureNameY}" font-family="${SERIF}" font-size="10" font-weight="bold" letter-spacing="0.6" text-anchor="middle" fill="${INK}">${escapeXml((signatoryName || issuerName || '').toUpperCase())}</text>
     ${signatoryTitle
-      ? `<text x="0" y="${BAND_BOTTOM}" font-family="${SERIF}" font-size="8" text-anchor="middle" fill="${MUTED}">${escapeXml(signatoryTitle)}</text>`
+      ? `<text x="0" y="${SIGNATURE_BOTTOM_Y}" font-family="${SERIF}" font-size="8" text-anchor="middle" fill="${MUTED}">${escapeXml(signatoryTitle)}</text>`
       : ''}
   </g>
 
