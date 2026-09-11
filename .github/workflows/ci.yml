@@ -110,13 +110,15 @@ jobs:
       - name: Create the env file compose expects
         run: cp src/backend/.env.example src/backend/.env
 
-      # NODE_ENV=development so bootstrap/seed-data.ts creates the
-      # admin@certo.com issuer the script logs in as. The default is
-      # production, which deliberately refuses to seed it.
-      - name: Start postgres and the backend
-        run: docker compose up -d --build postgres backend
-        env:
-          NODE_ENV: development
+      # docker-compose.ci.yml supplies what a real deployment would and this
+      # repository deliberately does not: somewhere for mail to go, a sender
+      # address, and NODE_ENV=development so the seeder creates the
+      # admin@certo.com issuer the script logs in as. Without a mail server the
+      # flow fails at the issuance email, which is the right failure - the
+      # recipient never hearing about a certificate is half of issuance not
+      # working.
+      - name: Start postgres, mailhog and the backend
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build postgres mailhog backend
 
       - name: Wait for the API
         run: |
@@ -136,4 +138,4 @@ jobs:
 
       - name: Backend logs
         if: failure()
-        run: docker compose logs backend
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend

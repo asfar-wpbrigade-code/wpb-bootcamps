@@ -1,0 +1,42 @@
+# Stands the stack up for the smoke job in .github/workflows/ci.yml.
+#
+# It adds the two things a real deployment supplies and this repository
+# deliberately does not: somewhere for mail to go, and a sender address.
+#
+# Mailhog lives here rather than in docker-compose.yml because the production
+# checklist requires it gone from the deployed stack, and a commented-out
+# service is easy to uncomment by accident. Keeping it in a file only CI names
+# keeps both true at once.
+#
+# It is worth having rather than teaching the smoke flow to tolerate a missing
+# mail server: "the certificate exists" and "the recipient heard about it" are
+# different outcomes, the app reports them separately for that reason, and an
+# issuance nobody is told about is a failed issuance in the only sense that
+# matters to the person who earned it.
+services:
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: certo_ci_mailhog
+    networks:
+      - certo-network
+
+  backend:
+    depends_on:
+      mailhog:
+        condition: service_started
+    environment:
+      # The seeder refuses to create admin@certo.com in production, and the
+      # smoke flow logs in as it.
+      NODE_ENV: development
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      # Mailhog accepts any credentials; nodemailer attempts PLAIN whenever
+      # these are set at all, and .env.example sets them to empty strings,
+      # which fails as "Missing credentials for PLAIN" rather than skipping
+      # authentication.
+      SMTP_USERNAME: ci
+      SMTP_PASSWORD: ci
+      SMTP_FROM: certificates@example.test
+      SMTP_FROM_NAME: WPBrigade
+      SMTP_SECURE: "false"
+      SMTP_REQUIRE_TLS: "false"

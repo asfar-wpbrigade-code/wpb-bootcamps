@@ -216,9 +216,15 @@ async function main() {
   const slot = Number(status.statusListIndex);
   pass(`carries slot ${slot} in ${status.statusListCredential}`);
 
-  // Fetched as a third party would: no token, no account, just the URL out of
-  // the credential.
-  const listPath = status.statusListCredential.replace(BASE_URL, '');
+  // Fetched as a third party would: no token, no account, just the address out
+  // of the credential.
+  //
+  // The path, taken against the instance under test, rather than the whole URL.
+  // The credential advertises whatever `server.url` is configured as, which is
+  // the public API host and need not be the address this script was pointed
+  // at - a smoke run against a staging port, or through a tunnel, would
+  // otherwise read the list from a different instance, or from nothing at all.
+  const listPath = new URL(status.statusListCredential).pathname;
   const list = await request('GET', listPath);
   if (list.status !== 200) fail('the status list is not publicly fetchable', list.text);
   const encodedList = list.json?.credentialSubject?.encodedList;
