@@ -34,7 +34,16 @@ interface CertificateData {
   issueDate: string
   credentialId: string
   badgeImageUrl?: string
+  /** What the QR encodes: the short form, sized for scanning off paper. */
   verifyUrl: string
+  /**
+   * Where the seal links to when the SVG is opened as a document.
+   *
+   * The canonical page URL rather than `verifyUrl`'s compressed form - a link
+   * has none of the density constraints a QR symbol does. Optional: with no
+   * address the seal is drawn exactly as before, unwrapped.
+   */
+  credentialUrl?: string
   /** Achievement description, printed as the citation paragraph. */
   description?: string
   /** Signature image for the achievement's signatory, as a data URI. */
@@ -300,6 +309,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
     issueDate,
     credentialId,
     verifyUrl,
+    credentialUrl,
     description,
     signatureImageDataUri,
     signatoryName,
@@ -332,6 +342,16 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   const achievementSize = fitFontSize(achievementName.toUpperCase(), 470, 18, 0.62)
 
   const verificationSeal = generateVerificationSealSvg(verifyUrl, SEAL_DIAMETER)
+
+  // `target` opens the page rather than replacing the certificate someone is
+  // looking at. Emitted as a pair so the element is absent entirely without an
+  // address, rather than an <a> pointing nowhere.
+  const sealLink = credentialUrl
+    ? {
+        open: `<a href="${escapeXml(credentialUrl)}" xlink:href="${escapeXml(credentialUrl)}" target="_blank">`,
+        close: '</a>',
+      }
+    : { open: '', close: '' }
 
   // The block hangs upward from the shared bottom edge, so losing the title
   // moves the rule and the name down rather than leaving the band lopsided.
@@ -393,8 +413,14 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   <text x="${CENTRE}" y="${dateY}" font-family="${SERIF}" font-size="10" font-weight="bold" text-anchor="middle" fill="${INK}">${escapeXml(dateLine)}</text>
 
   <!-- Verification seal. Its frame, legends and QR all come from
-       verification-seal.ts; only where it sits is decided here. -->
-  <g transform="translate(${SEAL_CENTRE_X}, ${SEAL_CENTRE_Y})">${verificationSeal}</g>
+       verification-seal.ts; only where it sits is decided here.
+
+       Wrapped in a link when there is an address for it, so the legend's
+       "CLICK OR SCAN TO VERIFY" is true of an SVG opened as a document too -
+       the PDF carries its own annotation, and a PNG can carry nothing.
+       Both href and xlink:href are written: SVG 2 reads the first, and
+       renderers still on SVG 1.1 read only the second. -->
+  ${sealLink.open}<g transform="translate(${SEAL_CENTRE_X}, ${SEAL_CENTRE_Y})">${verificationSeal}</g>${sealLink.close}
 
   <!-- Signature block, on the centre axis at the foot of the panel -->
   <g transform="translate(${CENTRE}, 0)">

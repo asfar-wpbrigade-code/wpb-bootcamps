@@ -198,6 +198,12 @@ export default ({ strapi }) => ({
       const frontendUrl = strapi.config.get('frontend.url', 'http://localhost:3000')
       const verifyUrl = qrPayloadUrl(frontendUrl, credential.credentialId)
 
+      // What the seal links to when the SVG is opened as a document. The
+      // canonical page rather than the QR's compressed payload: the reasons
+      // for the short form are all about module count, and a link has none of
+      // them. The PDF's own annotation points at the same address.
+      const credentialUrl = credentialPageUrl(frontendUrl, credential.credentialId)
+
       // The signature is read off disk and inlined rather than linked. An SVG
       // shown through an <img> tag cannot fetch anything external, and a
       // certificate someone has downloaded has no server to fetch from - a
@@ -215,6 +221,7 @@ export default ({ strapi }) => ({
         credentialId: credential.credentialId,
         badgeImageUrl,
         verifyUrl,
+        credentialUrl,
         description: credential.achievement?.description || credential.description,
         signatureImageDataUri,
         signatoryName: credential.achievement?.signatoryName,

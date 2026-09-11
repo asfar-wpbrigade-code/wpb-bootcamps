@@ -113,8 +113,9 @@ describe('certificate template, against the printed reference', () => {
     // whole line clears the seal as long as the baseline is above the seal's
     // topmost point - which is what the rim cut through when the seal moved up.
     // Anchored on the comment the template writes above it, so this cannot
-    // pick up the heading's outline groups, which are also translated.
-    const seal = svg.match(/only where it sits is decided here\.\s*-->\s*<g transform="translate\((\d+(?:\.\d+)?), (\d+(?:\.\d+)?)\)"/)
+    // pick up the heading's outline groups, which are also translated. The
+    // optional <a> is the link wrapper, present when the seal has an address.
+    const seal = svg.match(/Verification seal[\s\S]*?-->\s*(?:<a [^>]*>)?<g transform="translate\((\d+(?:\.\d+)?), (\d+(?:\.\d+)?)\)"/)
     expect(seal).not.toBeNull()
 
     const sealTop = Number(seal![2]) - 62
@@ -148,6 +149,23 @@ describe('certificate template, against the printed reference', () => {
       expect(untitled).toMatch(/y="554"[^>]*font-size="10"[^>]*font-weight="bold"/)
       expect(untitled).toContain('TOM CRUISE')
     })
+  })
+
+  it('wraps the seal in a link when there is an address for it', () => {
+    return generateCertificateSvg({ ...SAMPLE, credentialUrl: 'https://example.test/credentials/urn%3Auuid%3Aabc' }).then((linked) => {
+      // Both spellings: SVG 2 readers take href, SVG 1.1 readers only
+      // xlink:href, and a certificate gets opened in whatever someone has.
+      expect(linked).toContain('<a href="https://example.test/credentials/urn%3Auuid%3Aabc"')
+      expect(linked).toContain('xlink:href="https://example.test/credentials/urn%3Auuid%3Aabc"')
+      // Wrapping the seal, not something near it.
+      expect(linked).toMatch(/<a [^>]*><g transform="translate\(155, 466\)">/)
+    })
+  })
+
+  it('draws the seal unwrapped when there is no address', () => {
+    // An <a> pointing nowhere is worse than no <a>.
+    expect(svg).not.toContain('<a ')
+    expect(svg).toContain('<g transform="translate(155, 466)">')
   })
 
   it('leaves the seal as the one element off the centre axis', () => {

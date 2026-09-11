@@ -221,6 +221,18 @@ describe('certificate rendering', () => {
     expect(parsed.getPage(0).node.Annots()?.size() ?? 0).toBe(0)
   })
 
+  it('rasterises the seal identically whether or not it is inside a link', async () => {
+    // The risk the SVG link carries: resvg draws the PNG and the PDF's page
+    // image, and a renderer that skipped <a> subtrees would drop the seal out
+    // of both while the SVG kept looking right. It does not - the two rasters
+    // are byte-for-byte the same - and this is what would catch a resvg
+    // upgrade that changed its mind.
+    const linked = await generateCertificateSvg({ ...SAMPLE, credentialUrl: 'https://example.test/c' })
+    const plain = await generateCertificateSvg(SAMPLE)
+
+    expect(Buffer.compare(renderCertificatePng(linked, 1), renderCertificatePng(plain, 1))).toBe(0)
+  })
+
   it('renders without system fonts, so output does not depend on the host', () => {
     // The template sets text in "Georgia, Gelasio, ..." and "'Segoe UI',
     // Roboto, ...". Alpine has none of those; if the bundled fonts were not
