@@ -104,6 +104,24 @@ describe('certificate template, against the printed reference', () => {
     expect(svg).toContain('From: July 2026')
   })
 
+  it('keeps the logo clear of the masthead rule', () => {
+    // The lockup is anchored at its top and grows downward, so enlarging it
+    // walks it into the rule below - at 0.54 with the rule where 0.46 left it,
+    // the lockup would have ended 0.4pt past the line and struck through it.
+    // Read from the rendered SVG so the scale, the top and the rule cannot be
+    // changed independently without this noticing.
+    const lockup = svg.match(/translate\([\d.]+, ([\d.]+)\) scale\(([\d.]+)\)/)
+    expect(lockup).not.toBeNull()
+
+    const LOCKUP_UNITS_TALL = 134
+    const bottom = Number(lockup![1]) + LOCKUP_UNITS_TALL * Number(lockup![2])
+
+    const rule = svg.match(/<line x1="320\.945" y1="([\d.]+)"/)
+    expect(rule).not.toBeNull()
+
+    expect(bottom).toBeLessThan(Number(rule![1]))
+  })
+
   it('keeps the programme clear of the seal', () => {
     // Read out of the rendered SVG rather than restated from the constants,
     // so moving either one is what fails this rather than editing it.
@@ -184,7 +202,7 @@ describe('certificate template, against the printed reference', () => {
   it('closes the masthead with one rule below the lockup', () => {
     // Two segments used to flank the lockup's own tagline, level with it,
     // decorating the middle of the masthead rather than closing it.
-    expect(svg).toContain('<line x1="320.945" y1="116" x2="520.945" y2="116"')
+    expect(svg).toContain('<line x1="320.945" y1="124" x2="520.945" y2="124"')
     expect(svg).not.toMatch(/y1="107"/)
   })
 

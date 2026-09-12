@@ -165,10 +165,17 @@ const SIGNATURE_TITLE_DROP = 11.2
  * The rule used to be two segments flanking the lockup's own tagline, level
  * with it. One continuous line below the whole lockup separates the masthead
  * from the heading instead of decorating the middle of it.
+ *
+ * The lockup is 200 x 134 in its own units, so 0.54 draws it 108 x 72.4pt -
+ * about a sixth larger than the 0.46 it was, which came off a printed copy
+ * where the wordmark read small. Growing it is not just the scale: at 0.46 the
+ * lockup ended 10.4pt above the rule, and the same three numbers have to move
+ * together to keep that gap. At 0.54 without moving anything, the lockup would
+ * have ended 0.4pt *below* the rule and struck through it.
  */
-const LOGO_TOP_Y = 44
-const LOGO_SCALE = 0.46
-const MASTHEAD_RULE_Y = 116
+const LOGO_TOP_Y = 41
+const LOGO_SCALE = 0.54
+const MASTHEAD_RULE_Y = 124
 const MASTHEAD_RULE_REACH = 100
 
 /**
