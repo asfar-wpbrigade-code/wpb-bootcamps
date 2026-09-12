@@ -76,14 +76,14 @@ describe('certificate template, against the printed reference', () => {
   })
 
   it('sets the introduction at 10pt above the name', () => {
-    expect(svg).toMatch(/y="188.28"[^>]*font-size="10"[^>]*font-style="italic"/)
+    expect(svg).toMatch(/y="201.28"[^>]*font-size="10"[^>]*font-style="italic"/)
     expect(svg).toContain('This Certificate is Proudly Presented to')
   })
 
   it('sets the citation at 10pt on 18pt leading', () => {
-    expect(svg).toMatch(/y="318\.78"[^>]*font-size="10"[^>]*font-style="italic"/)
-    expect(svg).toMatch(/y="336\.78"[^>]*font-size="10"/)
-    expect(svg).toMatch(/y="354\.78"[^>]*font-size="10"/)
+    expect(svg).toMatch(/y="328\.78"[^>]*font-size="10"[^>]*font-style="italic"/)
+    expect(svg).toMatch(/y="346\.78"[^>]*font-size="10"/)
+    expect(svg).toMatch(/y="364\.78"[^>]*font-size="10"/)
   })
 
   it('sets the programme in bold serif at 18pt, clear of the seal', () => {
@@ -92,7 +92,7 @@ describe('certificate template, against the printed reference', () => {
     //
     // Baseline 400, not the reference's 414: the seal's top is at 404 now, and
     // a programme name long enough to reach x=148 met its rim there.
-    expect(svg).toMatch(/y="383.28"[^>]*font-family="Georgia[^"]*"[^>]*font-size="18(\.0)?"[^>]*font-weight="bold"/)
+    expect(svg).toMatch(/y="393.28"[^>]*font-family="Georgia[^"]*"[^>]*font-size="18(\.0)?"[^>]*font-weight="bold"/)
     expect(svg).toContain('SEO FUNDAMENTALS')
   })
 
@@ -100,7 +100,7 @@ describe('certificate template, against the printed reference', () => {
     // Georgia, not the Roboto the reference used - the line directly above it
     // is Georgia Bold, and two families on adjacent lines of the same rank is
     // the inconsistency this design had.
-    expect(svg).toMatch(/y="403\.68"[^>]*font-family="Georgia[^"]*"[^>]*font-size="10"[^>]*font-weight="bold"/)
+    expect(svg).toMatch(/y="413\.68"[^>]*font-family="Georgia[^"]*"[^>]*font-size="10"[^>]*font-weight="bold"/)
     expect(svg).toContain('From: July 2026')
   })
 
@@ -176,27 +176,27 @@ describe('certificate template, against the printed reference', () => {
       expect(linked).toContain('<a href="https://example.test/credentials/urn%3Auuid%3Aabc"')
       expect(linked).toContain('xlink:href="https://example.test/credentials/urn%3Auuid%3Aabc"')
       // Wrapping the seal, not something near it.
-      expect(linked).toMatch(/<a [^>]*><g transform="translate\(155, 449\.28\)">/)
+      expect(linked).toMatch(/<a [^>]*><g transform="translate\(155, 459\.28\)">/)
     })
   })
 
   it('draws the seal unwrapped when there is no address', () => {
     // An <a> pointing nowhere is worse than no <a>.
     expect(svg).not.toContain('<a ')
-    expect(svg).toContain('<g transform="translate(155, 449.28)">')
+    expect(svg).toContain('<g transform="translate(155, 459.28)">')
   })
 
   it('leaves the seal as the one element off the centre axis', () => {
     // Deliberate, and the only one: a single considered break reads as
     // composition, where two half-balanced elements read as neither symmetric
     // nor intentionally offset.
-    expect(svg).toContain('translate(155, 449.28)')
+    expect(svg).toContain('translate(155, 459.28)')
   })
 
   it('cuts the name’s rule to the citation’s measure', () => {
     // It ran 500pt wide over a citation about 420 - a line noticeably wider
     // than the block inside it.
-    expect(svg).toContain('<line x1="210.945" y1="291.28" x2="630.945" y2="291.28"')
+    expect(svg).toContain('<line x1="210.945" y1="301.28" x2="630.945" y2="301.28"')
   })
 
   it('closes the masthead with one rule below the lockup', () => {

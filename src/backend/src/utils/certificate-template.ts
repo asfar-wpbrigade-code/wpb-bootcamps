@@ -96,6 +96,23 @@ const PANEL_LEFT = 38
 const PANEL_RIGHT = WIDTH - PANEL_LEFT
 
 /**
+ * Two blocks sit lower than the reference put them, from a review on paper.
+ *
+ * The heading and its introduction drop 13pt; the name, its rule, the citation,
+ * the programme and the date drop 10 together. The 3pt difference closes the
+ * gap between the two blocks by that much, which is what the markup asked for.
+ *
+ * The seal drops 10 with the name block rather than staying put. It is not in
+ * either box, but the programme line is, and at 10pt lower the programme's
+ * baseline passes below the seal's topmost point: a name long enough to reach
+ * x=172 - "WORDPRESS DEVELOPMENT FUNDAMENTALS" does - would have run its first
+ * letters into the rim, while a short one showed nothing wrong. Moving the seal
+ * with the block keeps the 4pt clearance the layout was tuned to.
+ */
+const HEADING_DROP = 13
+const NAME_BLOCK_DROP = 10
+
+/**
  * The composition is symmetric about the page's vertical axis, and the
  * verification seal is the one thing deliberately outside it.
  *
@@ -117,7 +134,7 @@ const PANEL_RIGHT = WIDTH - PANEL_LEFT
  * either misses the target or catches the text beside it. Stated once here
  * rather than copied into certificate-render.ts.
  */
-export const SEAL_METRICS = { centreX: 155, centreY: 466 - VERTICAL_LIFT, diameter: 124 }
+export const SEAL_METRICS = { centreX: 155, centreY: 466 - VERTICAL_LIFT + NAME_BLOCK_DROP, diameter: 124 }
 
 const SEAL_CENTRE_X = SEAL_METRICS.centreX
 const SEAL_CENTRE_Y = SEAL_METRICS.centreY
@@ -127,8 +144,8 @@ const SEAL_DIAMETER = SEAL_METRICS.diameter
 const NAME_RULE_REACH = 210
 
 /** The line introducing the recipient, and the rule under their name. */
-const INTRO_BASELINE_Y = 205 - VERTICAL_LIFT
-const NAME_RULE_Y = 308 - VERTICAL_LIFT
+const INTRO_BASELINE_Y = 205 - VERTICAL_LIFT + HEADING_DROP
+const NAME_RULE_Y = 308 - VERTICAL_LIFT + NAME_BLOCK_DROP
 
 /**
  * Distance from the citation's last baseline to the programme's.
@@ -196,7 +213,7 @@ const HEADING_SHIFT_X = CENTRE - (HEADING_METRICS.xMin + HEADING_METRICS.xMax) /
 
 export const HEADING_PLACEMENT = {
   centreX: CENTRE,
-  baselineY: HEADING_METRICS.baselineY - VERTICAL_LIFT,
+  baselineY: HEADING_METRICS.baselineY - VERTICAL_LIFT + HEADING_DROP,
   width: HEADING_WIDTH,
 }
 
@@ -269,7 +286,7 @@ function escapeXml(value: string): string {
  * rather than repeating the numbers (certificate-render.ts).
  */
 export const NAME_METRICS = {
-  baselineY: 289.5 - VERTICAL_LIFT,
+  baselineY: 289.5 - VERTICAL_LIFT + NAME_BLOCK_DROP,
   // Inside the rule rather than exactly as wide as it: a long name scaled to
   // the full measure touches both ends, which reads as cramped rather than
   // fitted. 18pt of air either side.
@@ -397,7 +414,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   const dateLine = period ? `From: ${period}` : `Issued: ${formatDate(issueDate)}`
 
   const citation = description ? wrapText(description, 92, 3) : []
-  const citationTop = 335.5 - VERTICAL_LIFT
+  const citationTop = 335.5 - VERTICAL_LIFT + NAME_BLOCK_DROP
   const CITATION_LEADING = 18
   const programmeY = citation.length > 0
     ? citationTop + (citation.length - 1) * CITATION_LEADING + PROGRAMME_DROP
@@ -470,7 +487,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   <line x1="${n(CENTRE - MASTHEAD_RULE_REACH)}" y1="${MASTHEAD_RULE_Y}" x2="${n(CENTRE + MASTHEAD_RULE_REACH)}" y2="${MASTHEAD_RULE_Y}" stroke="${MUTED}" stroke-width="0.7" />
 
   <!-- Heading, as outlines lifted from the source artwork -->
-  <g transform="translate(${n(HEADING_SHIFT_X)}, ${n(-VERTICAL_LIFT)})" fill="${INK}">${HEADING_PATHS}</g>
+  <g transform="translate(${n(HEADING_SHIFT_X)}, ${n(HEADING_DROP - VERTICAL_LIFT)})" fill="${INK}">${HEADING_PATHS}</g>
   <text x="${n(CENTRE)}" y="${n(INTRO_BASELINE_Y)}" font-family="${SERIF}" font-size="10" font-style="italic" text-anchor="middle" fill="${MUTED}">This Certificate is Proudly Presented to</text>
 
   <!-- Recipient, drawn as outlines so the script survives any renderer -->
