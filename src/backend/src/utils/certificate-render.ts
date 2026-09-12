@@ -15,15 +15,22 @@
  */
 import { Resvg } from '@resvg/resvg-js'
 import { PDFDocument, PDFFont, PDFName, PDFString, StandardFonts } from 'pdf-lib'
-import { HEADING_METRICS, HEADING_TEXT } from './certificate-assets/heading'
-import { NAME_METRICS, SEAL_METRICS } from './certificate-template'
-
-/** Certificate artboard, in points. Exactly US Letter landscape. */
-export const CERTIFICATE_WIDTH = 792
-export const CERTIFICATE_HEIGHT = 612
+import { HEADING_TEXT } from './certificate-assets/heading'
+import { CANVAS, HEADING_PLACEMENT, NAME_METRICS, SEAL_METRICS } from './certificate-template'
 
 /**
- * 4x gives roughly 288 DPI at Letter size, which prints without visible
+ * Read from the template rather than restated here.
+ *
+ * These were a second copy of 792 x 612, which was harmless only for as long
+ * as the canvas never changed. It is A4 now, and a stale copy would have put
+ * the PDF page and the SVG at different sizes - the artwork scaled to fit a
+ * page it no longer matches.
+ */
+export const CERTIFICATE_WIDTH = CANVAS.width
+export const CERTIFICATE_HEIGHT = CANVAS.height
+
+/**
+ * 4x gives roughly 288 DPI at A4 size, which prints without visible
  * softness. Higher scales grow the file faster than they improve the print.
  */
 const PDF_SCALE = 4
@@ -56,7 +63,7 @@ function getFontFiles(): string[] {
 
 /**
  * @param {string} svg - A complete certificate SVG document
- * @param {number} [scale] - Multiplier over the 792x612 artboard
+ * @param {number} [scale] - Multiplier over the A4 artboard
  */
 export function renderCertificatePng(svg: string, scale: number = PNG_SCALE): Buffer {
   const resvg = new Resvg(svg, {
@@ -239,7 +246,7 @@ function toWinAnsi(text: string): string {
  * face is licensed and cannot be embedded, and the recipient's name, whose
  * script face cannot be assumed installed anywhere. They are the two a reader
  * is most likely to search for, so they are placed from their known metrics -
- * `HEADING_METRICS`/`HEADING_TEXT` and `NAME_METRICS` - with the name passed
+ * `HEADING_PLACEMENT`/`HEADING_TEXT` and `NAME_METRICS` - with the name passed
  * in by the caller.
  *
  * @param {string} svg - A complete certificate SVG document
@@ -283,15 +290,16 @@ export async function renderCertificatePdf(
   const items: TextItem[] = [
     {
       text: HEADING_TEXT,
-      // Centred on the span the outlines actually occupy, not on the page.
-      x: (HEADING_METRICS.xMin + HEADING_METRICS.xMax) / 2,
-      y: HEADING_METRICS.baselineY,
+      // The template translates the outlines to centre them on the page, so
+      // this reads where they end up rather than where they were drawn.
+      x: HEADING_PLACEMENT.centreX,
+      y: HEADING_PLACEMENT.baselineY,
       size: 30,
       anchor: 'middle',
       serif: true,
       bold: false,
       italic: false,
-      maxWidth: HEADING_METRICS.xMax - HEADING_METRICS.xMin,
+      maxWidth: HEADING_PLACEMENT.width,
     },
     ...extractSvgTextItems(svg),
   ]

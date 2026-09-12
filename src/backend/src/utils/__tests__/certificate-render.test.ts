@@ -7,7 +7,7 @@ import {
   renderCertificatePdf,
   renderCertificatePng,
 } from '../certificate-render'
-import { NAME_METRICS, SEAL_METRICS, generateCertificateSvg } from '../certificate-template'
+import { HEADING_PLACEMENT, NAME_METRICS, SEAL_METRICS, generateCertificateSvg } from '../certificate-template'
 
 /**
  * The text a PDF reader would find, with where it was placed.
@@ -80,11 +80,13 @@ describe('certificate rendering', () => {
 
     // PNG signature, then width/height as big-endian uint32 in the IHDR chunk.
     expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
-    expect(png.readUInt32BE(16)).toBe(CERTIFICATE_WIDTH * 2)
-    expect(png.readUInt32BE(20)).toBe(CERTIFICATE_HEIGHT * 2)
+    // Rounded, because A4's dimensions are not whole points: 841.89 x 2 is
+    // 1683.78, and a raster is whole pixels.
+    expect(png.readUInt32BE(16)).toBe(Math.round(CERTIFICATE_WIDTH * 2))
+    expect(png.readUInt32BE(20)).toBe(Math.round(CERTIFICATE_HEIGHT * 2))
   })
 
-  it('produces a single Letter-landscape PDF page', async () => {
+  it('produces a single A4-landscape PDF page', async () => {
     const pdf = await renderCertificatePdf(svg, { title: 'Certificate', author: 'WPBrigade' })
 
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-')
@@ -95,8 +97,13 @@ describe('certificate rendering', () => {
     expect(parsed.getPageCount()).toBe(1)
 
     const { width, height } = parsed.getPage(0).getSize()
-    expect(Math.round(width)).toBe(CERTIFICATE_WIDTH)
-    expect(Math.round(height)).toBe(CERTIFICATE_HEIGHT)
+    // Exactly A4: 841.89 x 595.28pt is 297 x 210mm. A rounded comparison would
+    // have accepted a page 0.11pt out, and this is the assertion that says the
+    // PDF will print on the paper it is meant for.
+    expect(width).toBeCloseTo(CERTIFICATE_WIDTH, 2)
+    expect(height).toBeCloseTo(CERTIFICATE_HEIGHT, 2)
+    expect(width / 72 * 25.4).toBeCloseTo(297, 1)
+    expect(height / 72 * 25.4).toBeCloseTo(210, 1)
     expect(parsed.getTitle()).toBe('Certificate')
     expect(parsed.getAuthor()).toBe('WPBrigade')
     expect(parsed.getProducer()).toBe('WPBrigade Credentials')
@@ -131,11 +138,15 @@ describe('certificate rendering', () => {
     const name = placements.find(p => p.text === SAMPLE.recipientName)
 
     // PDF y counts up from the bottom, SVG counts down from the top, and both
-    // put the baseline there: 612 - 183.618 and 612 - 289.5. Getting this
-    // wrong would mirror the layer vertically and nothing would look amiss,
-    // since it is invisible.
-    expect(heading!.y).toBeCloseTo(CERTIFICATE_HEIGHT - 183.618014, 1)
-    expect(name!.y).toBeCloseTo(CERTIFICATE_HEIGHT - 289.5, 1)
+    // put the baseline there. Getting this wrong would mirror the layer
+    // vertically and nothing would look amiss, since it is invisible.
+    //
+    // Both read from the template's own exported placements rather than from
+    // literals: the heading's outlines are translated up and across to centre
+    // them on the A4 canvas, and the name sits 16.72pt higher than the Letter
+    // reference put it. The text layer has to land where they ended up.
+    expect(heading!.y).toBeCloseTo(CERTIFICATE_HEIGHT - HEADING_PLACEMENT.baselineY, 1)
+    expect(name!.y).toBeCloseTo(CERTIFICATE_HEIGHT - NAME_METRICS.baselineY, 1)
 
     // Both are centred, so each starts left of the centre line it is drawn on.
     expect(name!.x).toBeLessThan(CERTIFICATE_WIDTH / 2)
@@ -158,10 +169,10 @@ describe('certificate rendering', () => {
     const items = extractSvgTextItems(svg)
     const byText = (needle: string) => items.find(item => item.text.includes(needle))
 
-    // x="0" inside <g transform="translate(396, 0)">: read without applying
+    // x="0" inside <g transform="translate(420.945, 0)">: read without applying
     // the group's offset, this lands at the left edge of the page.
-    expect(byText('GRACE HOPPER')!.x).toBeCloseTo(396, 0)
-    expect(byText('GRACE HOPPER')!.y).toBeCloseTo(542.8, 1)
+    expect(byText('GRACE HOPPER')!.x).toBeCloseTo(CERTIFICATE_WIDTH / 2, 1)
+    expect(byText('GRACE HOPPER')!.y).toBeCloseTo(526.08, 1)
 
     // The seal's legends run along a <textPath> and have no x/y to use.
     expect(items.every(item => item.text.trim().length > 0)).toBe(true)

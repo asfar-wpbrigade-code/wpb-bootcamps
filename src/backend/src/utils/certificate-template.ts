@@ -5,8 +5,10 @@
  * as a dynamic SVG: navy frame, tiled emblem watermark, the logo lockup, the
  * recipient's name in script, and a seal carrying a live QR code.
  *
- * The canvas is 792 x 612 - US Letter landscape at 72dpi, matching the source
- * artwork, so coordinates measured from it transfer directly.
+ * The canvas is A4 landscape - 841.89 x 595.28pt, 297 x 210mm at 72dpi. The
+ * source artwork was drawn on US Letter (792 x 612), so coordinates measured
+ * from it carry across horizontally but sit 16.72pt too low; see
+ * `VERTICAL_LIFT`.
  *
  * Two pieces of the design are drawn as outlines rather than set in a font:
  * the heading (see certificate-assets/heading.ts) and the recipient's name.
@@ -25,7 +27,7 @@ import opentype from 'opentype.js'
 import { generateVerificationSealSvg } from './verification-seal'
 import { EMBLEM_PATHS, LOGO_VIEWBOX, WORDMARK_PATHS } from './certificate-assets/logo'
 import { ALEX_BRUSH_BASE64 } from './certificate-assets/alex-brush'
-import { HEADING_PATHS } from './certificate-assets/heading'
+import { HEADING_METRICS, HEADING_PATHS } from './certificate-assets/heading'
 
 interface CertificateData {
   recipientName: string
@@ -55,9 +57,39 @@ interface CertificateData {
   programmeEndDate?: string
 }
 
-const WIDTH = 792
-const HEIGHT = 612
+/**
+ * A4 landscape, in points: 297 x 210mm.
+ *
+ * The design was measured off a US Letter reference (792 x 612), and A4 is not
+ * the same shape - 49.9pt wider and 16.72pt shorter, 1.414 against 1.294. That
+ * difference is why the artwork could not simply be scaled onto an A4 page:
+ * fitting it leaves white bands down both sides, outside a navy border drawn to
+ * bleed off the edge, and filling it crops that border away. The layout is on
+ * the A4 canvas instead.
+ *
+ * Horizontally everything follows `CENTRE`, so the extra width costs nothing -
+ * the panel simply grows. The heading is the exception: it is fixed outlines
+ * with their own coordinates, and is re-centred by `HEADING_SHIFT_X`.
+ */
+export const CANVAS = { width: 841.89, height: 595.28 }
+
+const WIDTH = CANVAS.width
+const HEIGHT = CANVAS.height
 const CENTRE = WIDTH / 2
+
+/**
+ * How far everything below the masthead moves up, against the Letter
+ * reference: the whole of A4's missing height.
+ *
+ * Taken out of one place rather than spread thin. The gap between the masthead
+ * rule and the heading was 67.6pt, the loosest in the design by some way, and
+ * it absorbs all 16.72 without anything else changing. Every relationship
+ * below it - the name to its rule, the citation to the programme, the
+ * programme's clearance over the seal, the signature to the panel's foot -
+ * keeps the spacing it was tuned to.
+ */
+const LETTER_HEIGHT = 612
+const VERTICAL_LIFT = LETTER_HEIGHT - HEIGHT
 
 /** The hairline-ruled panel everything sits inside. */
 const PANEL_LEFT = 38
@@ -79,16 +111,13 @@ const PANEL_RIGHT = WIDTH - PANEL_LEFT
  *
  * The seal's diameter is not ours to shrink: the QR inside it has to survive
  * being scanned off paper, which is what it is sized for.
- */
-/**
- * Where the seal is drawn.
  *
- * Exported because the PDF puts a clickable link over it, and a link that does
- * not sit exactly on the seal is worse than none - it either misses the target
- * or catches text beside it. Stated once here rather than copied into
- * certificate-render.ts, which reads these the way it reads NAME_METRICS.
+ * `SEAL_METRICS` is exported because the PDF puts a clickable link over the
+ * seal, and a link that does not sit exactly on it is worse than none - it
+ * either misses the target or catches the text beside it. Stated once here
+ * rather than copied into certificate-render.ts.
  */
-export const SEAL_METRICS = { centreX: 155, centreY: 466, diameter: 124 }
+export const SEAL_METRICS = { centreX: 155, centreY: 466 - VERTICAL_LIFT, diameter: 124 }
 
 const SEAL_CENTRE_X = SEAL_METRICS.centreX
 const SEAL_CENTRE_Y = SEAL_METRICS.centreY
@@ -96,6 +125,10 @@ const SEAL_DIAMETER = SEAL_METRICS.diameter
 
 /** Half-width of the rule under the recipient's name, cut to the citation. */
 const NAME_RULE_REACH = 210
+
+/** The line introducing the recipient, and the rule under their name. */
+const INTRO_BASELINE_Y = 205 - VERTICAL_LIFT
+const NAME_RULE_Y = 308 - VERTICAL_LIFT
 
 /**
  * Distance from the citation's last baseline to the programme's.
@@ -122,7 +155,7 @@ const PROGRAMME_DROP = 28.5
  * rather than beside it — centred and level, the two would have crowded each
  * other across a 49pt gap.
  */
-const SIGNATURE_BOTTOM_Y = 554
+const SIGNATURE_BOTTOM_Y = 554 - VERTICAL_LIFT
 const SIGNATURE_NAME_DROP = 16
 const SIGNATURE_TITLE_DROP = 11.2
 
@@ -137,6 +170,28 @@ const LOGO_TOP_Y = 44
 const LOGO_SCALE = 0.46
 const MASTHEAD_RULE_Y = 116
 const MASTHEAD_RULE_REACH = 100
+
+/**
+ * The heading, which cannot centre itself.
+ *
+ * It is outlines lifted from the printed reference at that page's absolute
+ * coordinates, so unlike every other centred element it does not follow
+ * `CENTRE` - on the wider A4 canvas it would sit 23.9pt left of everything
+ * above and below it. The group is translated instead: across to centre it,
+ * and up by the same lift as the rest of the design.
+ *
+ * `HEADING_PLACEMENT` is where it ends up, exported because the PDF's
+ * invisible text layer has to put the words back over outlines that carry
+ * none - see certificate-render.ts, which reads it rather than recomputing it.
+ */
+const HEADING_WIDTH = HEADING_METRICS.xMax - HEADING_METRICS.xMin
+const HEADING_SHIFT_X = CENTRE - (HEADING_METRICS.xMin + HEADING_METRICS.xMax) / 2
+
+export const HEADING_PLACEMENT = {
+  centreX: CENTRE,
+  baselineY: HEADING_METRICS.baselineY - VERTICAL_LIFT,
+  width: HEADING_WIDTH,
+}
 
 const NAVY = '#152a63'
 const BRAND_BLUE = '#3458ea'
@@ -178,6 +233,16 @@ function getScriptFont() {
   return scriptFont
 }
 
+/**
+ * Rounds a computed coordinate before it is written out.
+ *
+ * A4's dimensions are not binary fractions, so arithmetic on them leaks noise:
+ * the masthead rule's far end came out as 520.9449999999999. Three decimal
+ * places is finer than any printer resolves and keeps the file readable. Same
+ * helper, same reason, as verification-seal.ts.
+ */
+const n = (value: number): number => Number(value.toFixed(3))
+
 /** XML-escapes text destined for an SVG text node. */
 function escapeXml(value: string): string {
   return String(value ?? '')
@@ -197,7 +262,7 @@ function escapeXml(value: string): string {
  * rather than repeating the numbers (certificate-render.ts).
  */
 export const NAME_METRICS = {
-  baselineY: 289.5,
+  baselineY: 289.5 - VERTICAL_LIFT,
   // Inside the rule rather than exactly as wide as it: a long name scaled to
   // the full measure touches both ends, which reads as cramped rather than
   // fitted. 18pt of air either side.
@@ -325,7 +390,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   const dateLine = period ? `From: ${period}` : `Issued: ${formatDate(issueDate)}`
 
   const citation = description ? wrapText(description, 92, 3) : []
-  const citationTop = 335.5
+  const citationTop = 335.5 - VERTICAL_LIFT
   const CITATION_LEADING = 18
   const programmeY = citation.length > 0
     ? citationTop + (citation.length - 1) * CITATION_LEADING + PROGRAMME_DROP
@@ -363,7 +428,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img"
+     width="${n(WIDTH)}" height="${n(HEIGHT)}" viewBox="0 0 ${n(WIDTH)} ${n(HEIGHT)}" role="img"
      aria-label="Certificate of completion awarded to ${escapeXml(recipientName)} for ${escapeXml(achievementName)}">
   <defs>
     <!-- The emblem, tiled faintly across the panel -->
@@ -378,16 +443,16 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   </defs>
 
   <!-- Navy border -->
-  <rect x="0" y="0" width="${WIDTH}" height="${HEIGHT}" fill="${NAVY}" />
-  <rect x="26" y="22" width="${WIDTH - 52}" height="${HEIGHT - 44}" fill="#ffffff" />
+  <rect x="0" y="0" width="${n(WIDTH)}" height="${n(HEIGHT)}" fill="${NAVY}" />
+  <rect x="26" y="22" width="${n(WIDTH - 52)}" height="${n(HEIGHT - 44)}" fill="#ffffff" />
 
   <!-- Panel, watermarked, inside a hairline rule -->
-  <rect x="38" y="34" width="${WIDTH - 76}" height="${HEIGHT - 68}" fill="#fbfbfd" />
-  <rect x="38" y="34" width="${WIDTH - 76}" height="${HEIGHT - 68}" fill="url(#watermark)" />
-  <rect x="38" y="34" width="${WIDTH - 76}" height="${HEIGHT - 68}" fill="none" stroke="${INK}" stroke-width="0.8" />
+  <rect x="38" y="34" width="${n(WIDTH - 76)}" height="${n(HEIGHT - 68)}" fill="#fbfbfd" />
+  <rect x="38" y="34" width="${n(WIDTH - 76)}" height="${n(HEIGHT - 68)}" fill="url(#watermark)" />
+  <rect x="38" y="34" width="${n(WIDTH - 76)}" height="${n(HEIGHT - 68)}" fill="none" stroke="${INK}" stroke-width="0.8" />
 
   <!-- Logo lockup, with one rule closing the masthead beneath it -->
-  <g transform="translate(${CENTRE - (LOGO_VIEWBOX.width * LOGO_SCALE) / 2}, ${LOGO_TOP_Y}) scale(${LOGO_SCALE})">
+  <g transform="translate(${n(CENTRE - (LOGO_VIEWBOX.width * LOGO_SCALE) / 2)}, ${LOGO_TOP_Y}) scale(${LOGO_SCALE})">
     <g fill="${BRAND_BLUE}">
       ${EMBLEM_PATHS.join('\n      ')}
     </g>
@@ -395,22 +460,22 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
       ${WORDMARK_PATHS.join('\n      ')}
     </g>
   </g>
-  <line x1="${CENTRE - MASTHEAD_RULE_REACH}" y1="${MASTHEAD_RULE_Y}" x2="${CENTRE + MASTHEAD_RULE_REACH}" y2="${MASTHEAD_RULE_Y}" stroke="${MUTED}" stroke-width="0.7" />
+  <line x1="${n(CENTRE - MASTHEAD_RULE_REACH)}" y1="${MASTHEAD_RULE_Y}" x2="${n(CENTRE + MASTHEAD_RULE_REACH)}" y2="${MASTHEAD_RULE_Y}" stroke="${MUTED}" stroke-width="0.7" />
 
   <!-- Heading, as outlines lifted from the source artwork -->
-  <g fill="${INK}">${HEADING_PATHS}</g>
-  <text x="${CENTRE}" y="205" font-family="${SERIF}" font-size="10" font-style="italic" text-anchor="middle" fill="${MUTED}">This Certificate is Proudly Presented to</text>
+  <g transform="translate(${n(HEADING_SHIFT_X)}, ${n(-VERTICAL_LIFT)})" fill="${INK}">${HEADING_PATHS}</g>
+  <text x="${n(CENTRE)}" y="${n(INTRO_BASELINE_Y)}" font-family="${SERIF}" font-size="10" font-style="italic" text-anchor="middle" fill="${MUTED}">This Certificate is Proudly Presented to</text>
 
   <!-- Recipient, drawn as outlines so the script survives any renderer -->
   <path d="${nameOutline}" fill="${NAVY}" />
-  <line x1="${CENTRE - NAME_RULE_REACH}" y1="308" x2="${CENTRE + NAME_RULE_REACH}" y2="308" stroke="${MUTED}" stroke-width="0.7" />
+  <line x1="${n(CENTRE - NAME_RULE_REACH)}" y1="${n(NAME_RULE_Y)}" x2="${n(CENTRE + NAME_RULE_REACH)}" y2="${n(NAME_RULE_Y)}" stroke="${MUTED}" stroke-width="0.7" />
 
   <!-- Citation -->
-  ${citation.map((line, index) => `<text x="${CENTRE}" y="${citationTop + index * CITATION_LEADING}" font-family="${SERIF}" font-size="10" font-style="italic" text-anchor="middle" fill="${MUTED}">${escapeXml(line)}</text>`).join('\n  ')}
+  ${citation.map((line, index) => `<text x="${n(CENTRE)}" y="${n(citationTop + index * CITATION_LEADING)}" font-family="${SERIF}" font-size="10" font-style="italic" text-anchor="middle" fill="${MUTED}">${escapeXml(line)}</text>`).join('\n  ')}
 
   <!-- Programme -->
-  <text x="${CENTRE}" y="${programmeY}" font-family="${SERIF}" font-size="${achievementSize.toFixed(1)}" font-weight="bold" letter-spacing="1.2" text-anchor="middle" fill="${NAVY}">${escapeXml(achievementName.toUpperCase())}</text>
-  <text x="${CENTRE}" y="${dateY}" font-family="${SERIF}" font-size="10" font-weight="bold" text-anchor="middle" fill="${INK}">${escapeXml(dateLine)}</text>
+  <text x="${n(CENTRE)}" y="${n(programmeY)}" font-family="${SERIF}" font-size="${achievementSize.toFixed(1)}" font-weight="bold" letter-spacing="1.2" text-anchor="middle" fill="${NAVY}">${escapeXml(achievementName.toUpperCase())}</text>
+  <text x="${n(CENTRE)}" y="${n(dateY)}" font-family="${SERIF}" font-size="10" font-weight="bold" text-anchor="middle" fill="${INK}">${escapeXml(dateLine)}</text>
 
   <!-- Verification seal. Its frame, legends and QR all come from
        verification-seal.ts; only where it sits is decided here.
@@ -420,21 +485,21 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
        the PDF carries its own annotation, and a PNG can carry nothing.
        Both href and xlink:href are written: SVG 2 reads the first, and
        renderers still on SVG 1.1 read only the second. -->
-  ${sealLink.open}<g transform="translate(${SEAL_CENTRE_X}, ${SEAL_CENTRE_Y})">${verificationSeal}</g>${sealLink.close}
+  ${sealLink.open}<g transform="translate(${n(SEAL_CENTRE_X)}, ${n(SEAL_CENTRE_Y)})">${verificationSeal}</g>${sealLink.close}
 
   <!-- Signature block, on the centre axis at the foot of the panel -->
-  <g transform="translate(${CENTRE}, 0)">
+  <g transform="translate(${n(CENTRE)}, 0)">
     ${signatureImageDataUri
-      ? `<image href="${signatureImageDataUri}" x="-85" y="${signatureRuleY - 61.5}" width="170" height="46" preserveAspectRatio="xMidYMax meet" />`
+      ? `<image href="${signatureImageDataUri}" x="-85" y="${n(signatureRuleY - 61.5)}" width="170" height="46" preserveAspectRatio="xMidYMax meet" />`
       : ''}
-    <line x1="-95" y1="${signatureRuleY}" x2="95" y2="${signatureRuleY}" stroke="${INK}" stroke-width="0.8" />
-    <text x="0" y="${signatureNameY}" font-family="${SERIF}" font-size="10" font-weight="bold" letter-spacing="0.6" text-anchor="middle" fill="${INK}">${escapeXml((signatoryName || issuerName || '').toUpperCase())}</text>
+    <line x1="-95" y1="${n(signatureRuleY)}" x2="95" y2="${n(signatureRuleY)}" stroke="${INK}" stroke-width="0.8" />
+    <text x="0" y="${n(signatureNameY)}" font-family="${SERIF}" font-size="10" font-weight="bold" letter-spacing="0.6" text-anchor="middle" fill="${INK}">${escapeXml((signatoryName || issuerName || '').toUpperCase())}</text>
     ${signatoryTitle
-      ? `<text x="0" y="${SIGNATURE_BOTTOM_Y}" font-family="${SERIF}" font-size="8" text-anchor="middle" fill="${MUTED}">${escapeXml(signatoryTitle)}</text>`
+      ? `<text x="0" y="${n(SIGNATURE_BOTTOM_Y)}" font-family="${SERIF}" font-size="8" text-anchor="middle" fill="${MUTED}">${escapeXml(signatoryTitle)}</text>`
       : ''}
   </g>
 
   <!-- Credential id, small, for anyone checking by hand -->
-  <text x="${WIDTH - 52}" y="${HEIGHT - 46}" font-family="${SERIF}" font-size="6" text-anchor="end" fill="#a8aeb9">${escapeXml(credentialId)}</text>
+  <text x="${n(WIDTH - 52)}" y="${n(HEIGHT - 46)}" font-family="${SERIF}" font-size="6" text-anchor="end" fill="#a8aeb9">${escapeXml(credentialId)}</text>
 </svg>`
 }
