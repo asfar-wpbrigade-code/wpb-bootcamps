@@ -405,6 +405,25 @@ export default ({ strapi }) => ({
       if (!credential) {
         throw new Error('Credential not found')
       }
+      // The achievement is checked before its creator, which it was not: an
+      // achievement link that has gone answered
+      // "Cannot read properties of null (reading 'creator')" - a TypeError
+      // from this line, reaching the caller as a 400 that names no cause and
+      // sends whoever reads it looking through the verification code rather
+      // than at the relation that is actually missing.
+      //
+      // It goes missing for a reason worth knowing: editing an achievement in
+      // the admin panel republishes it, and a Strapi 5 republish deletes the
+      // published row and inserts a new one, so every link row pointing at the
+      // old row goes with it. The same thing happens to a profile - see
+      // scripts/repair-issuer-links.js, which exists for that case.
+      if (!credential.achievement) {
+        throw new Error(
+          'Credential is missing an associated achievement. Its link was most '
+          + 'likely dropped when the achievement was last republished; the '
+          + 'credential itself is intact and correctly signed.'
+        )
+      }
       if (!credential.achievement.creator) {
         throw new Error('Credential is missing an associated achievement creator')
       }
