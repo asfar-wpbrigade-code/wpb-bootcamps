@@ -22,8 +22,12 @@
  * lost.
  */
 
-/** What a serialized credential needs from its achievement. */
-const ACHIEVEMENT_POPULATE = ['creator', 'image', 'criteria', 'alignment', 'skills']
+/**
+ * What a serialized credential and a rendered certificate need from an
+ * achievement. `signatureImage` is the certificate's alone, and it is the part
+ * that visibly goes: see the note in api/credential/services/certificate.ts.
+ */
+const ACHIEVEMENT_POPULATE = ['creator', 'image', 'criteria', 'alignment', 'skills', 'signatureImage']
 
 /** What it needs from a profile. */
 const PROFILE_POPULATE = ['image']

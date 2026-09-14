@@ -4,6 +4,7 @@
 
 import { renderCertificatePdf, renderCertificatePng } from '../../../utils/certificate-render'
 import { generateCertificateSvg } from '../../../utils/certificate-template'
+import { resolveAchievement, resolveIssuer } from '../../../utils/credential-relations'
 import { credentialPageUrl, qrPayloadUrl } from '../../../utils/verify-url'
 
 /** Formats the certificate endpoint can return. */
@@ -64,24 +65,53 @@ export default ({ strapi }) => ({
       where: { credentialId: asString, publishedAt: { $notNull: true } },
       populate: CERTIFICATE_POPULATE,
     })
-    if (byCredentialId) return byCredentialId
+    if (byCredentialId) return this.withResolvedRelations(byCredentialId)
 
     const byDocumentId = await query.findOne({
       where: { documentId: asString, publishedAt: { $notNull: true } },
       populate: CERTIFICATE_POPULATE,
     })
-    if (byDocumentId) return byDocumentId
+    if (byDocumentId) return this.withResolvedRelations(byDocumentId)
 
     // Only try the numeric column when the value is actually numeric -
     // handing Postgres a urn is what produced the SQL error above.
     if (/^\d+$/.test(asString)) {
-      return query.findOne({
+      const byId = await query.findOne({
         where: { id: Number(asString), publishedAt: { $notNull: true } },
         populate: CERTIFICATE_POPULATE,
       })
+
+      return byId ? this.withResolvedRelations(byId) : null
     }
 
     return null
+  },
+
+  /**
+   * Fill in the achievement and the issuer when the link row has been orphaned.
+   *
+   * One save on an achievement in the admin panel republishes it, and a Strapi
+   * 5 republish deletes the published row and inserts a new one, taking every
+   * link row that pointed at the old row with it - see
+   * utils/credential-relations.ts, which resolves through the documentIds the
+   * credential records alongside the relations.
+   *
+   * The certificate is where that shows first, and it shows as a certificate
+   * with no signature on it. Everything else printed has a scalar fallback
+   * recorded on the credential itself - the recipient's name, the achievement's
+   * name and description - but the signature block has none: the signature
+   * image, the signatory's name and their title live only on the achievement.
+   * The image and the title simply vanish, and the name silently becomes the
+   * issuer's, because that is what the template falls back to. The programme
+   * dates go the same way.
+   *
+   * @param {object} credential - A credential loaded with CERTIFICATE_POPULATE
+   */
+  async withResolvedRelations(credential: any) {
+    credential.achievement = await resolveAchievement(strapi, credential)
+    credential.issuer = await resolveIssuer(strapi, credential)
+
+    return credential
   },
 
   /**
