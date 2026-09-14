@@ -97,6 +97,10 @@ export default factories.createCoreService('api::credential.credential', ({ stra
       const statusList = await revocationListService.getOrCreateActiveListForIssuer(credentialPayload.issuer)
       const statusListIndex = await revocationListService.assignNextIndex(statusList.id)
 
+      // The issuer's stable identifier. `issuerId` above is a row id, resolved
+      // twice precisely because it goes stale; this is the thing that does not.
+      const issuerDocumentId = achievement.creator?.documentId
+
       // Create the credential
       const credential = await this.createCredentialOrRollback({
         profileExisted,
@@ -111,6 +115,18 @@ export default factories.createCoreService('api::credential.credential', ({ stra
           achievement: achievement.id,
           issuer: issuerId,
           recipient: recipientEntity.id,
+          // The documentIds beside the relations, for the same reason
+          // recipientName sits beside the recipient relation below.
+          //
+          // A relation is a link row holding a numeric row id, and Strapi 5
+          // replaces a published row on every republish - so one save on this
+          // achievement or this issuer's profile in the admin panel orphans
+          // the link and every certificate issued from it stops verifying,
+          // silently. documentId survives a republish; the row id does not.
+          // See utils/credential-relations.ts, which reads these when the
+          // relation comes back empty.
+          achievementDocumentId: achievement.documentId,
+          issuerDocumentId: issuerDocumentId,
           // The name as awarded, kept on the credential itself. The relation
           // alone was not enough: it points at a profile whose name changes
           // when the same person is issued another certificate under a

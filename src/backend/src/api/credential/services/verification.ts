@@ -3,6 +3,7 @@
  */
 
 import { errors } from '@strapi/utils';
+import { resolveIssuer } from '../../../utils/credential-relations';
 import { credentialsVerifiedTotal } from '../../../monitoring/metrics';
 const { ApplicationError } = errors;
 
@@ -18,6 +19,12 @@ interface CredentialWithRelations {
   revocationReason?: string;
   achievement?: any;
   issuer?: any;
+  /**
+   * The stable identifiers recorded at issuance, read when a republish has
+   * orphaned the relation above - see utils/credential-relations.ts.
+   */
+  achievementDocumentId?: string;
+  issuerDocumentId?: string;
   recipient?: any;
   evidence?: any[];
   proof?: any[];
@@ -259,14 +266,21 @@ export default {
         return { valid: false, message: 'Proof has no JWS to verify (proofValue-only proofs are not cryptographically verifiable)' };
       }
 
-      if (!credential.issuer?.id) {
+      // Resolved rather than read off the relation. Renaming the issuer's
+      // profile in the admin panel republishes it, which orphans the link row
+      // and left this unable to find the key the proof was signed with - the
+      // signature was fine, there was simply nothing to check it against.
+      // `issuerDocumentId`, recorded at issuance, survives that.
+      const issuer = await resolveIssuer(strapi, credential);
+
+      if (!issuer?.id) {
         return { valid: false, message: 'Credential has no issuer to verify the proof against' };
       }
 
       const { jwtVerify, importJWK, importSPKI } = await import('jose');
 
       const issuerKeys = strapi.service('api::profile.issuer-keys');
-      const publicKey = await issuerKeys.getPublicKey(credential.issuer.id);
+      const publicKey = await issuerKeys.getPublicKey(issuer.id);
       if (publicKey) {
         try {
           await jwtVerify(proof.jws, publicKey);
@@ -315,7 +329,7 @@ export default {
         return candidates;
       };
 
-      const profileKeys = (credential.issuer.publicKey || []).filter(
+      const profileKeys = (issuer.publicKey || []).filter(
         (key) => !key.revoked && (key.publicKeyJwk || key.publicKeyMultibase)
       );
 
