@@ -151,8 +151,16 @@ const ERROR_CORRECTION = 'H'
  * came and went with rasterisation rather than with size.
  *
  * At 0.45 a dot inks 64% of its module and neighbours touch. Measured against
- * jsQR, the whole certificate then decodes down to a 1200px render instead of
- * only at 1584px, and to 900px once the payload is the short URL below.
+ * jsQR, the whole certificate then decodes well below the 1584px the PNG
+ * endpoint serves, instead of only at it.
+ *
+ * How far below is not a single number, and earlier revisions of this note gave
+ * one (900px) that was measured from one credential id. It depends on the
+ * symbol's own bit pattern: the mask the encoder chooses varies with the
+ * payload, and how that mask falls under the mark punched through the centre
+ * varies with it. Measured across six ids on bootcamp.wpbrigade.com, 1300px is
+ * the width where all of them decode; individual ids manage 1000px. See
+ * __tests__/verification-seal-scan.test.ts.
  */
 export const DOT_RADIUS = 0.45
 /**

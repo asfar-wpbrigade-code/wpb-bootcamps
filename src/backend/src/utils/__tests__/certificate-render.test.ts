@@ -59,7 +59,7 @@ const SAMPLE = {
   issuerName: 'WPBrigade',
   issueDate: '2026-08-01T00:00:00.000Z',
   credentialId: 'urn:uuid:2f8a1c3e-0000-4000-8000-abcdefabcdef',
-  verifyUrl: 'https://bootcamp.labspk.com/credentials/urn:uuid:2f8a1c3e',
+  verifyUrl: 'https://bootcamp.wpbrigade.com/credentials/urn:uuid:2f8a1c3e',
   description: 'Completed the advanced engineering track, covering performance, security and release process.',
   signatoryName: 'Grace Hopper',
   signatoryTitle: 'Programme Director',
@@ -189,7 +189,7 @@ describe('certificate rendering', () => {
   it('makes the seal a clickable link to the credential', async () => {
     // The seal's legend says "CLICK OR SCAN TO VERIFY". Until this, only the
     // scanning half was true in any format.
-    const url = 'https://bootcamp.labspk.com/credentials/urn%3Auuid%3A2f8a1c3e'
+    const url = 'https://bootcamp.wpbrigade.com/credentials/urn%3Auuid%3A2f8a1c3e'
     const pdf = await renderCertificatePdf(svg, { verifyUrl: url })
     const parsed = await PDFDocument.load(pdf, { updateMetadata: false })
 

@@ -341,7 +341,7 @@ above cover the pieces; everything between them is only exercised here.
 
 ## Going to production
 
-- [ ] DNS for both hosts resolving to the Docker host **before** the first deploy — `bootcamp.labspk.com` and `bootcamp-api.labspk.com` in `docker-compose.dokploy.yml`. Traefik asks Let's Encrypt for a certificate on startup, and that fails until the name resolves
+- [ ] DNS for both hosts resolving to the Docker host **before** the first deploy — `bootcamp.wpbrigade.com` and `bootcamp-api.wpbrigade.com` in `docker-compose.dokploy.yml`. Traefik asks Let's Encrypt for a certificate on startup, and that fails until the name resolves
 - [ ] `NUXT_PUBLIC_WEBSITE_URL` and `NUXT_PUBLIC_API_URL` set to those same hosts. The first is what canonical links, the sitemap, OG tags and certificate QR codes are built from; the second is the address the *browser* uses to reach the API
 - [ ] `NODE_ENV=production` — the compose file defaults to it. Keeps internal errors out of API responses and stops the development seeder creating a default admin account
 - [ ] Fresh `APP_KEYS`, `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT` — never reuse development values
@@ -356,11 +356,11 @@ above cover the pieces; everything between them is only exercised here.
 
 ### Changing the domain
 
-The site currently runs on `bootcamp.labspk.com`, with the API on
-`bootcamp-api.labspk.com`, and is expected to move to `wpbrigade.com`
-subdomains later. Both hosts are named in five places, and a move needs all of
-them — the failure mode when one is missed is silent, because each piece is
-internally consistent and only disagrees with the outside world.
+The site runs on `bootcamp.wpbrigade.com`, with the API on
+`bootcamp-api.wpbrigade.com`. It moved there from the `labspk.com` pair on
+2026-09-15. Both hosts are named in six places, and a move needs all of them —
+the failure mode when one is missed is silent, because each piece is internally
+consistent and only disagrees with the outside world.
 
 1. **DNS**, before anything else. Create the records and leave them
    **DNS-only** (grey cloud) in Cloudflare for the first deploy: Traefik's
@@ -377,8 +377,12 @@ internally consistent and only disagrees with the outside world.
 4. **`src/frontend/public/robots.txt`** and **`llms.txt`** — static files, so
    they cannot read the environment. The `Sitemap:` line and the API URLs are
    written out in full.
-5. **`config/middlewares.ts`** — already lists both domains, so no change is
-   needed. Removing the old pair is worth doing once the move has settled.
+5. **`config/middlewares.ts`** — the CORS whitelist. Both pairs are listed, so
+   a move needs no change here; drop the retired pair once its DNS is gone.
+6. **`src/frontend/nuxt.config.ts`** — the `SITE_URL` fallback, used when
+   `NUXT_PUBLIC_WEBSITE_URL` is unset. It should name the current site, or an
+   environment that forgets step 3 silently builds every canonical link, OG tag
+   and QR code against the old domain rather than failing.
 
 Canonical links, the sitemap, OG tags and certificate QR codes all derive from
 `NUXT_PUBLIC_WEBSITE_URL` (via `SITE_URL` in `nuxt.config.ts`), so they follow

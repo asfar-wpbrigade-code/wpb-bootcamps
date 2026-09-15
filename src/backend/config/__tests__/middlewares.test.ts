@@ -17,6 +17,14 @@ function ctxWithOrigin(origin?: string) {
 describe('CORS origin function', () => {
   it('allows a default whitelisted origin', () => {
     const origin = buildOriginFn()
+    expect(origin(ctxWithOrigin('https://bootcamp.wpbrigade.com'))).toBe('https://bootcamp.wpbrigade.com')
+  })
+
+  it('still allows the labspk.com pair the site moved off', () => {
+    // Kept until those names stop resolving: while they do, a browser can
+    // still arrive on one, and this is what makes a rollback a DNS change
+    // rather than another backend deploy.
+    const origin = buildOriginFn()
     expect(origin(ctxWithOrigin('https://bootcamp.labspk.com'))).toBe('https://bootcamp.labspk.com')
   })
 
