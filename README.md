@@ -206,7 +206,7 @@ Outbound emails and the certificate follow these:
 ```bash
 BRAND_NAME=WPBrigade
 BRAND_PRIMARY_COLOR=#3458eb
-BRAND_CONTACT_EMAIL=bootcamp@wpbrigade.com
+BRAND_CONTACT_EMAIL=hr@wpbrigade.com
 SMTP_FROM_NAME=WPBrigade
 LINKEDIN_ORGANIZATION_ID=          # numeric company page id; blank matches by name
 ```

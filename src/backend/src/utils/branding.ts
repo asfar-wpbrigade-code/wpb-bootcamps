@@ -31,7 +31,7 @@ const DEFAULT_BRANDING = {
   // is printed in issuance and expiry emails as where to write with
   // questions, so it has to be an inbox WPBrigade reads - it used to be
   // info@autops.online, which belongs to someone else entirely.
-  contactEmail: 'bootcamp@wpbrigade.com',
+  contactEmail: 'hr@wpbrigade.com',
 } as const
 
 /** Guards against a malformed value reaching an inline `style` attribute. */

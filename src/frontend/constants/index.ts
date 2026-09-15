@@ -27,5 +27,5 @@ export const HEADER_NAV_LINKS = [
  * Where the footer and the legal pages send questions - including privacy
  * and erasure requests, so it has to be an inbox WPBrigade actually reads.
  */
-export const CONTACT_EMAIL = 'bootcamp@wpbrigade.com'
+export const CONTACT_EMAIL = 'hr@wpbrigade.com'
 export const CONTACT_MAIL = `mailto:${CONTACT_EMAIL}`
