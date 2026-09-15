@@ -72,3 +72,37 @@ export async function resolveIssuer(strapi: any, credential: any): Promise<any> 
     populate: PROFILE_POPULATE,
   })
 }
+
+/**
+ * The same, for the lists the dashboard endpoints return.
+ *
+ * Those populate through the relation, so an orphaned link row reaches the
+ * recipient as a card with no badge artwork and no issuer name - the frontend's
+ * CertificateCard.vue falls back to `/placeholder-badge.png` and the literal
+ * string "Unknown Issuer", which means somebody's certificate is shown to them
+ * carrying the upstream project's Certo logo.
+ *
+ * Mutates and returns the list, so a caller can hand it straight back.
+ *
+ * @param {object} strapi - The Strapi instance
+ * @param {object[]} credentials - The credentials about to be returned
+ * @param {boolean} [options.withIssuer] - Resolve the issuer as well. Received
+ *   lists display it; an issued list belongs to the issuer already and does not
+ *   populate it, so resolving it there would only add a query per row.
+ * @returns {Promise<object[]>} The same list, relations filled in
+ */
+export async function resolveCredentialListRelations(
+  strapi: any,
+  credentials: any[],
+  { withIssuer = false }: { withIssuer?: boolean } = {},
+): Promise<any[]> {
+  for (const credential of credentials) {
+    credential.achievement = await resolveAchievement(strapi, credential)
+
+    if (withIssuer) {
+      credential.issuer = await resolveIssuer(strapi, credential)
+    }
+  }
+
+  return credentials
+}

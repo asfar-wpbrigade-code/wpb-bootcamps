@@ -4,6 +4,7 @@
 
 import { factories } from '@strapi/strapi'
 import { errors } from '@strapi/utils'
+import { resolveCredentialListRelations } from '../../../utils/credential-relations'
 const { ApplicationError } = errors
 
 // Define interface for profile
@@ -331,8 +332,8 @@ export default factories.createCoreController('api::profile.profile', ({ strapi 
       if (!profile) {
         return ctx.notFound('Profile not found')
       }
-      
-      return { data: profile.issuedCredentials || [] }
+
+      return { data: await resolveCredentialListRelations(strapi, profile.issuedCredentials || []) }
     } catch (err) {
       ctx.badRequest('Error fetching issued credentials', { error: err })
     }
@@ -362,7 +363,9 @@ export default factories.createCoreController('api::profile.profile', ({ strapi 
       
       strapi.log.debug(`[profile.findReceivedCredentials] Found ${profile.receivedCredentials?.length || 0} credentials for profile ${id}`)
 
-      return { data: profile.receivedCredentials || [] }
+      return {
+        data: await resolveCredentialListRelations(strapi, profile.receivedCredentials || [], { withIssuer: true }),
+      }
     } catch (err) {
       ctx.badRequest('Error fetching received credentials', { error: err })
     }

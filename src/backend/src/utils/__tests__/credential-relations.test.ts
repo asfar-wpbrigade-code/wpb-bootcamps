@@ -1,4 +1,4 @@
-import { resolveAchievement, resolveIssuer } from '../credential-relations'
+import { resolveAchievement, resolveCredentialListRelations, resolveIssuer } from '../credential-relations'
 
 /**
  * A fake holding one published achievement and one published profile, findable
@@ -114,5 +114,86 @@ describe('resolving a credential’s issuer', () => {
 
     expect(await resolveIssuer(strapi, { issuer: null })).toBeNull()
     expect(await resolveIssuer(strapi, null)).toBeNull()
+  })
+})
+
+/**
+ * The dashboard lists.
+ *
+ * This is where an orphaned relation is most visible to the person least able
+ * to explain it: the recipient opens their dashboard and sees a card with no
+ * badge artwork and no issuer name. CertificateCard.vue falls back to
+ * `/placeholder-badge.png` - the upstream project's Certo logo - and to the
+ * literal string "Unknown Issuer".
+ */
+describe('resolveCredentialListRelations', () => {
+  const ACHIEVEMENT = { id: 1, documentId: 'ach_doc', name: 'SEO Fundamentals', image: { url: '/uploads/badge.png' } }
+  const ISSUER = { id: 2, documentId: 'iss_doc', name: 'WPBrigade' }
+
+  function strapiWith(rows: { achievement?: any, issuer?: any } = {}) {
+    return {
+      db: {
+        query: (uid: string) => ({
+          findOne: async ({ where }: any) => {
+            if (uid === 'api::achievement.achievement') {
+              const row = rows.achievement ?? ACHIEVEMENT
+              return where.documentId === row.documentId ? row : null
+            }
+            if (uid === 'api::profile.profile') {
+              const row = rows.issuer ?? ISSUER
+              return where.documentId === row.documentId ? row : null
+            }
+            return null
+          },
+        }),
+      },
+    }
+  }
+
+  it('fills in the badge artwork a republish orphaned', async () => {
+    const list = [{ id: 10, achievement: null, achievementDocumentId: 'ach_doc' }]
+
+    const [credential] = await resolveCredentialListRelations(strapiWith(), list)
+
+    expect(credential.achievement?.image?.url).toBe('/uploads/badge.png')
+  })
+
+  it('fills in the issuer for a received list, so it is not "Unknown Issuer"', async () => {
+    const list = [{ id: 10, issuer: null, issuerDocumentId: 'iss_doc' }]
+
+    const [credential] = await resolveCredentialListRelations(strapiWith(), list, { withIssuer: true })
+
+    expect(credential.issuer?.name).toBe('WPBrigade')
+  })
+
+  it('leaves the issuer alone for an issued list, which does not populate it', async () => {
+    // The list belongs to the issuer already; resolving it would be a query per
+    // row for something the card never shows.
+    const list = [{ id: 10, issuer: undefined, issuerDocumentId: 'iss_doc' }]
+
+    const [credential] = await resolveCredentialListRelations(strapiWith(), list)
+
+    expect(credential.issuer).toBeUndefined()
+  })
+
+  it('keeps an intact relation rather than looking it up again', async () => {
+    const intact = { id: 3, name: 'A different achievement' }
+    const list = [{ id: 10, achievement: intact, achievementDocumentId: 'ach_doc' }]
+
+    const [credential] = await resolveCredentialListRelations(strapiWith(), list)
+
+    expect(credential.achievement).toBe(intact)
+  })
+
+  it('leaves a credential whose achievement cannot be found with null, not a crash', async () => {
+    const list = [{ id: 10, achievement: null, achievementDocumentId: null }]
+
+    const [credential] = await resolveCredentialListRelations(strapiWith(), list)
+
+    expect(credential.achievement).toBeNull()
+  })
+
+  it('handles an empty list', async () => {
+    await expect(resolveCredentialListRelations(strapiWith(), [])).resolves.toEqual([])
   })
 })
