@@ -56,7 +56,11 @@ const SAMPLE = {
   description: 'Awarded for successfully completing WPBrigade’s WordPress Development '
     + 'Fundamentals programme, covering theme and plugin development, the WordPress APIs, '
     + 'and secure, standards-compliant PHP.',
-  signatoryName: 'Tom Cruise',
+  // Deliberately not the issuer's name. The template draws
+  // `signatoryName || issuerName`, so a fixture where the two match cannot
+  // tell a rendered signatory from a silent fall back to the issuer - and
+  // nothing else in this suite covers that fallback.
+  signatoryName: 'Muhammad Adnan',
   signatoryTitle: 'Manager',
   programmeStartDate: '2026-07-01T00:00:00.000Z',
   programmeEndDate: '2026-08-01T00:00:00.000Z',
@@ -145,7 +149,11 @@ describe('certificate template, against the printed reference', () => {
 
   it('sets the signature block in the serif, with the title unbolded', () => {
     expect(svg).toMatch(/y="526\.08"[^>]*font-family="Georgia[^"]*"[^>]*font-size="10"[^>]*font-weight="bold"/)
-    expect(svg).toContain('TOM CRUISE')
+    // Anchored to the signature block's own text element, and uppercase,
+    // because that is what the template draws. A bare toContain of the name as
+    // written in the fixture passes off the citation paragraph instead - which
+    // mentions the issuer - and so holds even when no signatory is drawn.
+    expect(svg).toMatch(/y="526\.08"[^>]*>MUHAMMAD ADNAN</)
     expect(svg).toMatch(/y="537.28"[^>]*font-family="Georgia[^"]*"[^>]*font-size="8"/)
     expect(svg).toContain('Manager')
     // A bold title under a bold name is not a hierarchy.
@@ -165,7 +173,7 @@ describe('certificate template, against the printed reference', () => {
     // and the rule down rather than leaving a gap where the title would be.
     return generateCertificateSvg({ ...SAMPLE, signatoryTitle: undefined }).then((untitled) => {
       expect(untitled).toMatch(/y="537.28"[^>]*font-size="10"[^>]*font-weight="bold"/)
-      expect(untitled).toContain('TOM CRUISE')
+      expect(untitled).toMatch(/y="537\.28"[^>]*>MUHAMMAD ADNAN</)
     })
   })
 
