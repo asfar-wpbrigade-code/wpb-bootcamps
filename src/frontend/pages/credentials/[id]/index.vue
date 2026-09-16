@@ -943,12 +943,20 @@ async function submitRenewal() {
                 </div>
               </div>
               <!-- Recipient Name -->
-              <div v-if="verificationResult?.rawCredential?.recipient?.name">
+              <!--
+                getRecipientName(), not recipient.name: the name as awarded is
+                what the certificate prints, and this field read the profile's
+                current name instead. A recipient renamed after issuance saw one
+                name here and a different one on their own certificate - which,
+                on the page whose entire job is confirming a certificate is
+                genuine, reads as evidence that it is not.
+              -->
+              <div v-if="getRecipientName()">
                 <div class="text-sm font-medium text-gray-500">
                   Recipient
                 </div>
                 <div class="mt-1">
-                  {{ verificationResult?.rawCredential?.recipient?.name }}
+                  {{ getRecipientName() }}
                 </div>
               </div>
             </div>

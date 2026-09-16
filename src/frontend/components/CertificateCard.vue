@@ -38,6 +38,10 @@ const {
 const achievementName = achievement?.name || props.certificate.name || 'Unknown Achievement'
 const achievementDescription = description || achievement?.description || props.certificate.description || 'No description available'
 const issuerName = issuer?.name || props.certificate.issuerName || 'Unknown Issuer'
+// The name as awarded, held on the credential, before the profile's current
+// one - the order the certificate itself prints, so a card and the certificate
+// it stands for cannot name two different people.
+const recipientName = props.certificate.recipientName || recipient?.name || 'Unknown Recipient'
 const formattedIssuanceDate = formatDate(issuanceDate || issuedOn)
 
 // Helper function to format dates
@@ -247,7 +251,7 @@ function getLinkedInAddToProfileUrl() {
           </div>
           <div v-if="showRecipient" class="flex items-center text-sm text-text-secondary">
             <div class="w-4 h-4 i-heroicons-building-office mr-2" />
-            {{ recipient?.name || 'Unknown Recipient' }}
+            {{ recipientName }}
           </div>
         </div>
       </div>
