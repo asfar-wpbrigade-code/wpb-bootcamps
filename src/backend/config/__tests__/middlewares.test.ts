@@ -20,12 +20,13 @@ describe('CORS origin function', () => {
     expect(origin(ctxWithOrigin('https://bootcamp.wpbrigade.com'))).toBe('https://bootcamp.wpbrigade.com')
   })
 
-  it('still allows the labspk.com pair the site moved off', () => {
-    // Kept until those names stop resolving: while they do, a browser can
-    // still arrive on one, and this is what makes a rollback a DNS change
-    // rather than another backend deploy.
+  it('no longer trusts the labspk.com pair the site moved off', () => {
+    // Trusted through the cutover, removed once it was settled. Asserted
+    // rather than simply deleted, so re-adding a retired domain to the
+    // whitelist has to be a deliberate edit to this file too.
     const origin = buildOriginFn()
-    expect(origin(ctxWithOrigin('https://bootcamp.labspk.com'))).toBe('https://bootcamp.labspk.com')
+    expect(origin(ctxWithOrigin('https://bootcamp.labspk.com'))).toBe('')
+    expect(origin(ctxWithOrigin('https://bootcamp-api.labspk.com'))).toBe('')
   })
 
   it('does not throw and returns a string for a non-whitelisted origin (regression for #75)', () => {

@@ -12,17 +12,12 @@
 // with a wildcard for that project's Netlify deploy previews - anyone opening
 // a pull request there would have received an origin this API trusted.
 const DEFAULT_ALLOWED_ORIGINS = [
-  // Production.
+  // Production. The labspk.com pair the site was served from until 2026-09-15
+  // was kept here through the cutover and is now gone: everything issued under
+  // those names was test data, so nothing in anyone's hands points at them and
+  // there is no rollback left to keep cheap.
   'https://bootcamp.wpbrigade.com',
   'https://bootcamp-api.wpbrigade.com',
-
-  // The labspk.com hosts the site was served from until 2026-09-15. Kept
-  // rather than deleted: they cost nothing to trust, they are still our own
-  // names, and while DNS and any bookmarked link still point here they are
-  // what makes a rollback a DNS change rather than another backend deploy.
-  // Remove them once the old names no longer resolve.
-  'https://bootcamp.labspk.com',
-  'https://bootcamp-api.labspk.com',
 
   // Local development
   'http://localhost:3000',
