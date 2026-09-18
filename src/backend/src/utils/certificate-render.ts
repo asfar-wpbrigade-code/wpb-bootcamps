@@ -15,8 +15,7 @@
  */
 import { Resvg } from '@resvg/resvg-js'
 import { PDFDocument, PDFFont, PDFName, PDFString, StandardFonts } from 'pdf-lib'
-import { HEADING_TEXT } from './certificate-assets/heading'
-import { CANVAS, HEADING_PLACEMENT, NAME_METRICS, SEAL_METRICS } from './certificate-template'
+import { CANVAS, HEADING_PLACEMENT, NAME_METRICS, SEAL_METRICS, resolveHeading } from './certificate-template'
 
 /**
  * Read from the template rather than restated here.
@@ -246,17 +245,25 @@ function toWinAnsi(text: string): string {
  * face is licensed and cannot be embedded, and the recipient's name, whose
  * script face cannot be assumed installed anywhere. They are the two a reader
  * is most likely to search for, so they are placed from their known metrics -
- * `HEADING_PLACEMENT`/`HEADING_TEXT` and `NAME_METRICS` - with the name passed
- * in by the caller.
+ * `HEADING_PLACEMENT` and `NAME_METRICS` - with the name and the heading's
+ * wording passed in by the caller, since neither is in the SVG to be read.
  *
  * @param {string} svg - A complete certificate SVG document
- * @param {object} [meta] - Document properties, the outlined name, and the
- *   address the seal links to
+ * @param {object} [meta] - Document properties, the outlined name and heading,
+ *   and the address the seal links to
  */
 export async function renderCertificatePdf(
   svg: string,
-  meta: { title?: string, author?: string, recipientName?: string, verifyUrl?: string } = {},
+  meta: {
+    title?: string,
+    author?: string,
+    recipientName?: string,
+    verifyUrl?: string,
+    /** The achievement's qualifier, so the layer says what the outlines do. */
+    headingQualifier?: string,
+  } = {},
 ): Promise<Buffer> {
+  const heading = resolveHeading(meta.headingQualifier)
   const png = renderCertificatePng(svg, PDF_SCALE)
 
   const pdf = await PDFDocument.create()
@@ -289,7 +296,7 @@ export async function renderCertificatePdf(
 
   const items: TextItem[] = [
     {
-      text: HEADING_TEXT,
+      text: heading.text,
       // The template translates the outlines to centre them on the page, so
       // this reads where they end up rather than where they were drawn.
       x: HEADING_PLACEMENT.centreX,
@@ -299,7 +306,7 @@ export async function renderCertificatePdf(
       serif: true,
       bold: false,
       italic: false,
-      maxWidth: HEADING_PLACEMENT.width,
+      maxWidth: heading.width,
     },
     ...extractSvgTextItems(svg),
   ]

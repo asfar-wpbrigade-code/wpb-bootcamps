@@ -172,6 +172,9 @@ export default ({ strapi }) => ({
       // searchable text layer. Same precedence as the title and the artwork -
       // the name as awarded, falling back to the profile's current one.
       recipientName: credential.recipientName || credential.recipient?.name,
+      // Likewise outlines, and likewise unreadable from the SVG: the heading
+      // now varies with the role the achievement certifies.
+      headingQualifier: credential.achievement?.certificateHeading,
       // The address the seal links to when the PDF is opened on a screen.
       //
       // The canonical page URL, not the short uppercase form the QR carries.
@@ -252,6 +255,7 @@ export default ({ strapi }) => ({
         badgeImageUrl,
         verifyUrl,
         credentialUrl,
+        headingQualifier: credential.achievement?.certificateHeading,
         description: credential.achievement?.description || credential.description,
         signatureImageDataUri,
         signatoryName: credential.achievement?.signatoryName,

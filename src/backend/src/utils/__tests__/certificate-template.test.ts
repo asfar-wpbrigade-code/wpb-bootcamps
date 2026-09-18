@@ -1,4 +1,5 @@
-import { generateCertificateSvg } from '../certificate-template'
+import { HEADING_PLACEMENT, generateCertificateSvg } from '../certificate-template'
+import { HEADINGS } from '../certificate-assets/headings'
 
 /**
  * The design comes from the printed reference, Certificate1.pdf. These
@@ -40,6 +41,14 @@ import { generateCertificateSvg } from '../certificate-template'
  *   6. **The programme and its date sit 14pt higher**, on 400 and 420.4. That
  *      is what keeps a long programme name clear of the seal, which the seal's
  *      position no longer leaves room for at the reference's 414.
+ *   7. **The heading's wording varies.** The reference sets one heading and it
+ *      was traced as artwork, so it could only ever say "Certificate of
+ *      Completion". The same programme is now certified for the students who
+ *      completed it, the trainers who taught it and the moderators who ran it,
+ *      and "Completion" is true of the first only. The heading is generated
+ *      per wording instead (scripts/generate-heading-outlines.js), in Old
+ *      English Text MT at the cap height the traced original was drawn at. Its
+ *      position, size and colour are unchanged.
  *
  * The canvas, the heading, the introduction, the name's baseline and the
  * citation keep their reference positions.
@@ -82,6 +91,40 @@ describe('certificate template, against the printed reference', () => {
   it('sets the introduction at 10pt above the name', () => {
     expect(svg).toMatch(/y="201.28"[^>]*font-size="10"[^>]*font-style="italic"/)
     expect(svg).toContain('This Certificate is Proudly Presented to')
+  })
+
+  it('sets the heading on the reference baseline, centred', () => {
+    // 183.618 less the 16.72 A4 is short of Letter, plus the 13pt drop.
+    expect(HEADING_PLACEMENT.baselineY).toBeCloseTo(179.898, 3)
+    expect(HEADING_PLACEMENT.centreX).toBeCloseTo(420.945, 3)
+    expect(svg).toContain('transform="translate(420.945, 179.898)"')
+  })
+
+  it('draws the heading the achievement asks for', () => {
+    // Outlines, so there is no text to assert on - the check is that the
+    // drawn path is the one generated for that wording and not another.
+    expect(svg).toContain(HEADINGS.Completion.paths)
+    expect(svg).not.toContain(HEADINGS.Appreciation.paths)
+  })
+
+  it('certifies a role that completed nothing', async () => {
+    // The reason the heading had to stop being one fixed piece of artwork: a
+    // trainer taught the programme and a moderator ran it, and "Completion" is
+    // true of neither.
+    const trainer = await generateCertificateSvg({ ...SAMPLE, headingQualifier: 'Appreciation' })
+
+    expect(trainer).toContain(HEADINGS.Appreciation.paths)
+    expect(trainer).not.toContain(HEADINGS.Completion.paths)
+  })
+
+  it('falls back to Completion rather than printing no heading at all', async () => {
+    // An achievement predating the field, and one naming a wording nothing was
+    // generated for. Both print what every certificate printed before.
+    const missing = await generateCertificateSvg({ ...SAMPLE, headingQualifier: undefined })
+    const unknown = await generateCertificateSvg({ ...SAMPLE, headingQualifier: 'Sportsmanship' })
+
+    expect(missing).toContain(HEADINGS.Completion.paths)
+    expect(unknown).toContain(HEADINGS.Completion.paths)
   })
 
   it('sets the citation at 10pt on 18pt leading', () => {

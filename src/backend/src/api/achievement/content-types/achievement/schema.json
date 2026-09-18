@@ -24,6 +24,16 @@
       "type": "string",
       "default": "Achievement"
     },
+    "certificateHeading": {
+      "type": "enumeration",
+      "enum": [
+        "Completion",
+        "Appreciation",
+        "Recognition",
+        "Participation"
+      ],
+      "default": "Completion"
+    },
     "image": {
       "type": "media",
       "multiple": false,
