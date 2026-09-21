@@ -26,6 +26,11 @@ export interface AdminApiToken extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         minLength: 1;
       }>;
+    adminPermissions: Schema.Attribute.Relation<
+      'oneToMany',
+      'admin::permission'
+    >;
+    adminUserOwner: Schema.Attribute.Relation<'manyToOne', 'admin::user'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -39,6 +44,9 @@ export interface AdminApiToken extends Struct.CollectionTypeSchema {
         minLength: 1;
       }>;
     expiresAt: Schema.Attribute.DateTime;
+    kind: Schema.Attribute.Enumeration<['content-api', 'admin']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'content-api'>;
     lastUsedAt: Schema.Attribute.DateTime;
     lifespan: Schema.Attribute.BigInteger;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -56,7 +64,6 @@ export interface AdminApiToken extends Struct.CollectionTypeSchema {
     >;
     publishedAt: Schema.Attribute.DateTime;
     type: Schema.Attribute.Enumeration<['read-only', 'full-access', 'custom']> &
-      Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'read-only'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -134,6 +141,7 @@ export interface AdminPermission extends Struct.CollectionTypeSchema {
         minLength: 1;
       }>;
     actionParameters: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+    apiToken: Schema.Attribute.Relation<'manyToOne', 'admin::api-token'>;
     conditions: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -200,6 +208,64 @@ export interface AdminRole extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     users: Schema.Attribute.Relation<'manyToMany', 'admin::user'>;
+  };
+}
+
+export interface AdminSession extends Struct.CollectionTypeSchema {
+  collectionName: 'strapi_sessions';
+  info: {
+    description: 'Session Manager storage';
+    displayName: 'Session';
+    name: 'Session';
+    pluralName: 'sessions';
+    singularName: 'session';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: false;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
+    i18n: {
+      localized: false;
+    };
+  };
+  attributes: {
+    absoluteExpiresAt: Schema.Attribute.DateTime & Schema.Attribute.Private;
+    childId: Schema.Attribute.String & Schema.Attribute.Private;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    deviceId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    expiresAt: Schema.Attribute.DateTime &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'admin::session'> &
+      Schema.Attribute.Private;
+    metadata: Schema.Attribute.JSON & Schema.Attribute.Private;
+    origin: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    sessionId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique;
+    status: Schema.Attribute.String & Schema.Attribute.Private;
+    type: Schema.Attribute.String & Schema.Attribute.Private;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    userId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
   };
 }
 
@@ -328,6 +394,8 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
+    apiTokens: Schema.Attribute.Relation<'oneToMany', 'admin::api-token'> &
+      Schema.Attribute.Private;
     blocked: Schema.Attribute.Boolean &
       Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<false>;
@@ -364,6 +432,8 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     registrationToken: Schema.Attribute.String & Schema.Attribute.Private;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
+    resetPasswordTokenExpiresAt: Schema.Attribute.DateTime &
+      Schema.Attribute.Private;
     roles: Schema.Attribute.Relation<'manyToMany', 'admin::role'> &
       Schema.Attribute.Private;
     updatedAt: Schema.Attribute.DateTime;
@@ -389,6 +459,10 @@ export interface ApiAchievementAchievement extends Struct.CollectionTypeSchema {
     achievementType: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'Achievement'>;
     alignment: Schema.Attribute.Component<'badge.alignment', true>;
+    certificateHeading: Schema.Attribute.Enumeration<
+      ['Completion', 'Appreciation', 'Recognition', 'Participation']
+    > &
+      Schema.Attribute.DefaultTo<'Completion'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -407,7 +481,12 @@ export interface ApiAchievementAchievement extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     name: Schema.Attribute.String & Schema.Attribute.Required;
+    programmeEndDate: Schema.Attribute.Date;
+    programmeStartDate: Schema.Attribute.Date;
     publishedAt: Schema.Attribute.DateTime;
+    signatoryName: Schema.Attribute.String;
+    signatoryTitle: Schema.Attribute.String;
+    signatureImage: Schema.Attribute.Media<'images'>;
     skills: Schema.Attribute.Component<'badge.skill', true>;
     tags: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     updatedAt: Schema.Attribute.DateTime;
@@ -468,6 +547,7 @@ export interface ApiCredentialCredential extends Struct.CollectionTypeSchema {
       'manyToOne',
       'api::achievement.achievement'
     >;
+    achievementDocumentId: Schema.Attribute.String & Schema.Attribute.Private;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -484,6 +564,7 @@ export interface ApiCredentialCredential extends Struct.CollectionTypeSchema {
     image: Schema.Attribute.Media<'images'>;
     issuanceDate: Schema.Attribute.DateTime & Schema.Attribute.Required;
     issuer: Schema.Attribute.Relation<'manyToOne', 'api::profile.profile'>;
+    issuerDocumentId: Schema.Attribute.String & Schema.Attribute.Private;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -495,6 +576,7 @@ export interface ApiCredentialCredential extends Struct.CollectionTypeSchema {
     proof: Schema.Attribute.Component<'badge.proof', true>;
     publishedAt: Schema.Attribute.DateTime;
     recipient: Schema.Attribute.Relation<'manyToOne', 'api::profile.profile'>;
+    recipientName: Schema.Attribute.String;
     revocationReason: Schema.Attribute.Text;
     revoked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     statusList: Schema.Attribute.Relation<
@@ -658,6 +740,11 @@ export interface ApiProfileProfile extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     name: Schema.Attribute.String & Schema.Attribute.Required;
+    organization: Schema.Attribute.String;
+    owner: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     profileType: Schema.Attribute.Enumeration<['Issuer', 'Recipient', 'Both']> &
       Schema.Attribute.DefaultTo<'Both'>;
     publicKey: Schema.Attribute.Component<'badge.public-key', true>;
@@ -716,11 +803,56 @@ export interface ApiRevocationListRevocationList
   };
 }
 
+export interface ApiScheduledIssuanceScheduledIssuance
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'scheduled_issuances';
+  info: {
+    description: 'Credentials queued for automatic issuance at a future date.';
+    displayName: 'Scheduled Issuance';
+    pluralName: 'scheduled-issuances';
+    singularName: 'scheduled-issuance';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    achievementId: Schema.Attribute.Integer & Schema.Attribute.Required;
+    cancelReason: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    expirationDate: Schema.Attribute.DateTime;
+    failureReason: Schema.Attribute.Text;
+    issuedCredentialId: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::scheduled-issuance.scheduled-issuance'
+    > &
+      Schema.Attribute.Private;
+    note: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    recipientEmail: Schema.Attribute.Email & Schema.Attribute.Required;
+    recipientName: Schema.Attribute.String;
+    scheduledByEmail: Schema.Attribute.Email;
+    scheduledById: Schema.Attribute.Integer;
+    scheduledDate: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    status: Schema.Attribute.Enumeration<
+      ['pending', 'issued', 'cancelled', 'failed']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'pending'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiWebhookSubscriptionWebhookSubscription
   extends Struct.CollectionTypeSchema {
   collectionName: 'webhook_subscriptions';
   info: {
-    description: 'Outbound webhook endpoints notified on credential lifecycle events. Managed via the admin panel content manager - no public/authenticated REST routes are defined for this content type.';
+    description: 'Outbound webhook endpoints notified on credential lifecycle events. Managed through authenticated API routes or the admin panel.';
     displayName: 'Webhook Subscription';
     pluralName: 'webhook-subscriptions';
     singularName: 'webhook-subscription';
@@ -1006,12 +1138,13 @@ export interface PluginUploadFile extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
-    alternativeText: Schema.Attribute.String;
-    caption: Schema.Attribute.String;
+    alternativeText: Schema.Attribute.Text;
+    caption: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     ext: Schema.Attribute.String;
+    focalPoint: Schema.Attribute.JSON;
     folder: Schema.Attribute.Relation<'manyToOne', 'plugin::upload.folder'> &
       Schema.Attribute.Private;
     folderPath: Schema.Attribute.String &
@@ -1031,7 +1164,7 @@ export interface PluginUploadFile extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     mime: Schema.Attribute.String & Schema.Attribute.Required;
     name: Schema.Attribute.String & Schema.Attribute.Required;
-    previewUrl: Schema.Attribute.String;
+    previewUrl: Schema.Attribute.Text;
     provider: Schema.Attribute.String & Schema.Attribute.Required;
     provider_metadata: Schema.Attribute.JSON;
     publishedAt: Schema.Attribute.DateTime;
@@ -1040,7 +1173,7 @@ export interface PluginUploadFile extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    url: Schema.Attribute.String & Schema.Attribute.Required;
+    url: Schema.Attribute.Text & Schema.Attribute.Required;
     width: Schema.Attribute.Integer;
   };
 }
@@ -1248,12 +1381,13 @@ export interface PluginUsersPermissionsUser
 }
 
 declare module '@strapi/strapi' {
-  export module Public {
+  export namespace Public {
     export interface ContentTypeSchemas {
       'admin::api-token': AdminApiToken;
       'admin::api-token-permission': AdminApiTokenPermission;
       'admin::permission': AdminPermission;
       'admin::role': AdminRole;
+      'admin::session': AdminSession;
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
@@ -1265,6 +1399,7 @@ declare module '@strapi/strapi' {
       'api::issuer-key.issuer-key': ApiIssuerKeyIssuerKey;
       'api::profile.profile': ApiProfileProfile;
       'api::revocation-list.revocation-list': ApiRevocationListRevocationList;
+      'api::scheduled-issuance.scheduled-issuance': ApiScheduledIssuanceScheduledIssuance;
       'api::webhook-subscription.webhook-subscription': ApiWebhookSubscriptionWebhookSubscription;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
