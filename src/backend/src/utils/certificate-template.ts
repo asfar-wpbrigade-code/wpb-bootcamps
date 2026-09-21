@@ -190,6 +190,17 @@ const SIGNATURE_NAME_DROP = 16
 const SIGNATURE_TITLE_DROP = 11.2
 
 /**
+ * How far the signature image sits above its rule.
+ *
+ * Measured to the top of a 46pt box whose artwork is bottom-aligned inside
+ * it (xMidYMax), so the ink lands at the foot of the box rather than
+ * filling it. At 61.5 the signature rode high off the line; 5pt lower
+ * closes that gap on its own - the rule, the name and the title keep the
+ * positions a review on paper asked to leave alone.
+ */
+const SIGNATURE_IMAGE_LIFT = 56.5
+
+/**
  * The masthead: the logo lockup, then a single rule beneath it.
  *
  * The rule used to be two segments flanking the lockup's own tagline, level
@@ -546,7 +557,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   <!-- Signature block, on the centre axis at the foot of the panel -->
   <g transform="translate(${n(CENTRE)}, 0)">
     ${signatureImageDataUri
-      ? `<image href="${signatureImageDataUri}" x="-85" y="${n(signatureRuleY - 61.5)}" width="170" height="46" preserveAspectRatio="xMidYMax meet" />`
+      ? `<image href="${signatureImageDataUri}" x="-85" y="${n(signatureRuleY - SIGNATURE_IMAGE_LIFT)}" width="170" height="46" preserveAspectRatio="xMidYMax meet" />`
       : ''}
     <line x1="-95" y1="${n(signatureRuleY)}" x2="95" y2="${n(signatureRuleY)}" stroke="${INK}" stroke-width="0.8" />
     <text x="0" y="${n(signatureNameY)}" font-family="${SERIF}" font-size="10" font-weight="bold" letter-spacing="0.6" text-anchor="middle" fill="${INK}">${escapeXml((signatoryName || issuerName || '').toUpperCase())}</text>
