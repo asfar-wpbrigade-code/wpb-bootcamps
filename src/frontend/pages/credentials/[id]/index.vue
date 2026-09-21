@@ -1035,6 +1035,42 @@ async function submitRenewal() {
             <p>{{ credential.credentialSubject.achievement.criteria.narrative }}</p>
           </div>
 
+          <!-- Skills -->
+          <div
+            v-if="credential.credentialSubject.achievement.skills?.length"
+            class="mt-6"
+          >
+            <h4 class="font-medium mb-2">
+              Skills
+            </h4>
+            <div class="flex flex-wrap gap-2">
+              <div
+                v-for="skill in credential.credentialSubject.achievement.skills"
+                :key="skill.skillName"
+                class="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200"
+              >
+                <div class="flex items-baseline gap-2">
+                  <component
+                    :is="skill.skillUrl ? 'a' : 'span'"
+                    :href="skill.skillUrl || undefined"
+                    :target="skill.skillUrl ? '_blank' : undefined"
+                    :rel="skill.skillUrl ? 'noopener noreferrer' : undefined"
+                    class="text-sm font-medium"
+                    :class="skill.skillUrl ? 'text-primary-500 hover:text-primary-600' : 'text-gray-900'"
+                  >
+                    {{ skill.skillName }}
+                  </component>
+                  <span v-if="skill.level" class="text-xs text-gray-500">
+                    {{ skill.level }}
+                  </span>
+                </div>
+                <p v-if="skill.skillDescription" class="mt-1 text-xs text-gray-600 max-w-xs">
+                  {{ skill.skillDescription }}
+                </p>
+              </div>
+            </div>
+          </div>
+
           <!-- Alignments -->
           <div
             v-if="credential.credentialSubject.achievement.alignments?.length"

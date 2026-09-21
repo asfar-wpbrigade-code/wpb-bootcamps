@@ -485,6 +485,22 @@ export default ({ strapi }) => ({
                   targetFramework: align.targetFramework,
                   targetCode: align.targetCode
                 })) }
+              : {}),
+            // Skills were populated here and on every other read path, but
+            // never made it into the serialized achievement - so anything
+            // entered against the badge in the admin panel was visible while
+            // issuing and nowhere afterwards. Safe to add for the same reason
+            // credentialStatus below is: the JWS is made over the payload in
+            // credential.ts at issuance, not over this object, so credentials
+            // already in the wild pick the skills up and keep their signatures.
+            ...(credential.achievement.skills && credential.achievement.skills.length > 0
+              ? { skills: credential.achievement.skills.map(skill => ({
+                  skillName: skill.skillName,
+                  skillDescription: skill.skillDescription,
+                  skillUrl: skill.skillUrl,
+                  skillType: skill.skillType,
+                  level: skill.level
+                })) }
               : {})
           }
         }

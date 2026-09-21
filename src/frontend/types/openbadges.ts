@@ -80,7 +80,17 @@ export interface Achievement {
   image?: Image
   criteria?: Criteria
   alignments?: Alignment[]
+  skills?: Skill[]
   tags?: string[]
+  [key: string]: any
+}
+
+export interface Skill {
+  skillName: string
+  skillDescription?: string
+  skillUrl?: string
+  skillType?: string
+  level?: string
   [key: string]: any
 }
 
