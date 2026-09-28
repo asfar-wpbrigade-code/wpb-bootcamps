@@ -68,6 +68,12 @@ interface CertificateData {
   /** Programme run dates, printed as "From: ... - ..." when both are set. */
   programmeStartDate?: string
   programmeEndDate?: string
+  /**
+   * Stamps the certificate REVOKED. The artwork is rendered on every request
+   * rather than stored, so revoking a credential marks every copy served from
+   * then on - web view, PNG and PDF alike - without touching the record.
+   */
+  revoked?: boolean
 }
 
 /**
@@ -430,6 +436,29 @@ function formatProgrammePeriod(start?: string, end?: string): string {
   return from || ''
 }
 
+const REVOKED_RED = '#c62828'
+
+/**
+ * A rubber-stamp overlay across the middle of the panel.
+ *
+ * Translucent, so the certificate underneath stays legible - it still shows
+ * who it was issued to - while no one could mistake it for a valid one. Set
+ * in the body serif (Gelasio is loaded for the PNG and PDF renders), and
+ * positioned by a translate on its group so the PDF's text layer places
+ * "REVOKED" over the stamp and a search for it finds the page.
+ */
+function revokedStamp(): string {
+  const width = 480
+  const height = 124
+
+  return `<g transform="translate(${n(CENTRE)}, ${n(HEIGHT / 2)}) rotate(-14)" opacity="0.72">
+    <rect x="${-width / 2}" y="${-height / 2}" width="${width}" height="${height}" rx="14" fill="#ffffff" fill-opacity="0.55" stroke="${REVOKED_RED}" stroke-width="6" />
+    <rect x="${-width / 2 + 11}" y="${-height / 2 + 11}" width="${width - 22}" height="${height - 22}" rx="8" fill="none" stroke="${REVOKED_RED}" stroke-width="1.6" />
+    <text x="0" y="16" font-family="${SERIF}" font-size="76" font-weight="bold" letter-spacing="8" text-anchor="middle" fill="${REVOKED_RED}">REVOKED</text>
+    <text x="0" y="42" font-family="${SERIF}" font-size="11.5" font-weight="bold" letter-spacing="2" text-anchor="middle" fill="${REVOKED_RED}">THIS CERTIFICATE IS NO LONGER VALID</text>
+  </g>`
+}
+
 export const generateCertificateSvg = async (data: CertificateData): Promise<string> => {
   const {
     recipientName,
@@ -446,6 +475,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
     signatoryTitle,
     programmeStartDate,
     programmeEndDate,
+    revoked,
   } = data
 
   const period = formatProgrammePeriod(programmeStartDate, programmeEndDate)
@@ -496,7 +526,7 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
   return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="${n(WIDTH)}" height="${n(HEIGHT)}" viewBox="0 0 ${n(WIDTH)} ${n(HEIGHT)}" role="img"
-     aria-label="Certificate of completion awarded to ${escapeXml(recipientName)} for ${escapeXml(achievementName)}">
+     aria-label="${revoked ? 'Revoked certificate' : 'Certificate'} awarded to ${escapeXml(recipientName)} for ${escapeXml(achievementName)}">
   <defs>
     <!-- The emblem, tiled faintly across the panel -->
     <pattern id="watermark" x="0" y="0" width="${watermarkTile}" height="${watermarkTile}" patternUnits="userSpaceOnUse">
@@ -568,5 +598,8 @@ export const generateCertificateSvg = async (data: CertificateData): Promise<str
 
   <!-- Credential id, small, for anyone checking by hand -->
   <text x="${n(WIDTH - 52)}" y="${n(HEIGHT - 46)}" font-family="${SERIF}" font-size="6" text-anchor="end" fill="#a8aeb9">${escapeXml(credentialId)}</text>
+${revoked ? `
+  <!-- Revoked: drawn last, over everything -->
+  ${revokedStamp()}` : ''}
 </svg>`
 }

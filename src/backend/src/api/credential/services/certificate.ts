@@ -262,6 +262,7 @@ export default ({ strapi }) => ({
         signatoryTitle: credential.achievement?.signatoryTitle,
         programmeStartDate: credential.achievement?.programmeStartDate,
         programmeEndDate: credential.achievement?.programmeEndDate,
+        revoked: Boolean(credential.revoked),
       })
     } catch (error) {
       console.error('Error generating certificate:', error)

@@ -37,6 +37,25 @@ function checkLabel(check: string): string {
 function checkDetail(check: string): string {
   return translated(`credential.checks.${check}Detail`, t('credential.checks.passed'))
 }
+
+// A failed check is named for what went wrong ("Revoked"), not for the
+// property it tests - "Not revoked" under a FAILED badge read as a contradiction.
+function failedCheckLabel(check: string): string {
+  return translated(`credential.checks.${check}Failed`, checkLabel(check))
+}
+
+// For a revocation recorded on the credential, the API passes the issuer's
+// free-text reason through as the message ("Just testing"), which means
+// nothing on its own. Label it. Other failure messages are full sentences.
+function failedCheckDetail(check: { check: string, message?: string }, reason?: string): string {
+  if (!check.message) {
+    return t('credential.checks.failed')
+  }
+  if (check.check === 'not_revoked' && reason && check.message === reason) {
+    return t('credential.checks.revocationReason', { reason })
+  }
+  return check.message
+}
 const route = useRoute()
 const config = useRuntimeConfig()
 
@@ -149,6 +168,26 @@ const credential = computed<AchievementCredential | null>(() => {
 })
 
 const verificationResult = computed(() => verificationData.value)
+
+// The line under the verdict. It used to fall back to "All verification
+// checks passed." whenever the API sent no `error`, which a revoked
+// certificate never does - so a failed verification claimed every check passed.
+const verificationSummary = computed(() => {
+  const result = verificationResult.value
+  if (!result) {
+    return ''
+  }
+  if (result.verified) {
+    return t('credential.verificationSuccessDetail')
+  }
+  if (result.error) {
+    return result.error
+  }
+  const failed = result.checks?.find(c => c.result === 'error')
+  return failed
+    ? translated(`credential.checks.${failed.check}Summary`, t('credential.verificationFailedDetail'))
+    : t('credential.verificationFailedDetail')
+})
 const loading = computed(() => status.value === 'pending')
 const error = computed(() => {
   if (fetchError.value) {
@@ -637,8 +676,9 @@ async function submitRenewal() {
 
     <!-- Credential Details -->
     <div v-else-if="credential" class="max-w-4xl mx-auto">
-      <!-- LinkedIn Add to Profile Button at the Top -->
-      <div class="flex flex-wrap gap-4 mb-6">
+      <!-- LinkedIn Add to Profile Button at the Top. Only for a certificate
+           that verifies - offering to showcase a revoked one is wrong. -->
+      <div v-if="verificationResult?.verified" class="flex flex-wrap gap-4 mb-6">
         <a
           :href="getLinkedInAddToProfileUrl()"
           target="_blank"
@@ -752,7 +792,7 @@ async function submitRenewal() {
                 {{ verificationResult?.verified ? t('credential.verificationSuccess') : t('credential.verificationFailed') }}
               </h3>
               <p class="text-gray-600">
-                {{ verificationResult?.error || t('credential.verificationSuccessDetail') }}
+                {{ verificationSummary }}
               </p>
             </div>
           </div>
@@ -835,7 +875,7 @@ async function submitRenewal() {
                        was also the only one that rendered while the other two
                        showed their raw keys. -->
                   <div class="font-semibold text-gray-800">
-                    {{ checkLabel(check.check) }}
+                    {{ check.result === 'error' ? failedCheckLabel(check.check) : checkLabel(check.check) }}
                   </div>
 
                   <!-- Description based on check type and result. A failed
@@ -844,7 +884,7 @@ async function submitRenewal() {
                   <p class="mt-1 text-xs text-gray-500">
                     {{
                       check.result === 'error' || check.result === 'warning'
-                        ? (check.message || t('credential.checks.failed'))
+                        ? failedCheckDetail(check, verificationResult?.rawCredential?.revocationReason)
                         : checkDetail(check.check)
                     }}
                   </p>
