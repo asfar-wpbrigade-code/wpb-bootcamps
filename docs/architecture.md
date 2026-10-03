@@ -82,19 +82,24 @@ it's PaaS-hosted, not the Docker Compose stack:
 - **OG image generation**: a standalone Netlify Function (`netlify/functions/og-credential/`) using `satori`, called for social-share previews (e.g. LinkedIn), fetching credential data from `CERTO_API_URL`.
 
 A Helm chart now exists ([`helm/certo/`](../helm/certo/), see
-[kubernetes.md](./kubernetes.md)) with images published to GHCR via
-`.github/workflows/docker-publish.yml` — this is a self-hosting option, not
+[kubernetes.md](./kubernetes.md)), using images built and pushed by hand
+from `src/backend/Dockerfile`/`src/frontend/Dockerfile` — this is a self-hosting option, not
 a change to the actual current production deployment above (still
 Netlify/Strapi Cloud). Terraform modules remain future work.
 
 ## CI/CD
 
-Two GitHub Actions workflows: `.github/workflows/frontend/autofix.yml` (runs
-`eslint --fix` on the frontend and auto-commits the result), and
-`.github/workflows/ci.yml` (two jobs on push/PR to `main` — `backend`:
-type-check, `npm test`, `npm run build`; `frontend`: `npm run test:unit`,
-`npm run build`). Playwright E2E isn't run in CI (needs a browser install,
-heavier — not yet added). No workflow produces a Docker image.
+None. There are no GitHub Actions workflows; checks are run by hand before
+pushing:
+
+- `src/backend`: `npx tsc --noEmit`, `npm test`, `npm run build`
+- `src/frontend`: `npm run lint`, `npm run test:unit`, `npm run build`,
+  `npm run test:e2e -- --project=chromium`
+- End to end: `docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build postgres mailhog backend`,
+  then `node src/backend/scripts/smoke-flow.js`
+
+Dependabot (`.github/dependabot.yml`) still opens weekly upgrade PRs, which
+nothing tests automatically.
 
 ## Testing
 

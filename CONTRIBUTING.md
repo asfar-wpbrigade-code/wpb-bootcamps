@@ -252,7 +252,8 @@ async issueCredential(ctx) {
 
 - Backend: Jest, run via `npm run test`
 - Frontend: Vitest, run via `npm run test:unit`
-- CI runs on every PR push (GitHub Actions)
+- There is no CI: run the checks listed under CI/CD in
+  [docs/architecture.md](./docs/architecture.md) before pushing
 - Add or update tests where applicable before submitting a PR
 - Aim for >80% coverage on critical paths (credential issuance, verification)
 

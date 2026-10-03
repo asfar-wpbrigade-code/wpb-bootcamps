@@ -1,4 +1,7 @@
-# Stands the stack up for the smoke job in .github/workflows/ci.yml.
+# Stands the stack up for scripts/smoke-flow.js:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build postgres mailhog backend
+#   node src/backend/scripts/smoke-flow.js
 #
 # It adds the two things a real deployment supplies and this repository
 # deliberately does not: somewhere for mail to go, and a sender address.

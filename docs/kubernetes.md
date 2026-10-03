@@ -8,14 +8,11 @@ configuration shape for this deployment path.
 ## Prerequisites
 
 - A Kubernetes cluster and `helm` (v3).
-- Backend/frontend images published to
-  `ghcr.io/schroedinger-hat/certo-backend`/`certo-frontend` — built and
-  pushed automatically by `.github/workflows/docker-publish.yml` on every
-  push to `main` (tags: `latest`, the git short sha, and version tags on
-  release). If you've forked this repo, that workflow publishes to your
-  fork's own GHCR namespace instead — update `values.yaml`'s
-  `image.repository` fields to match, or build/push your own images
-  manually from `src/backend/Dockerfile`/`src/frontend/Dockerfile`.
+- Backend/frontend images in a registry the cluster can pull from. Nothing
+  in this repo publishes them: build and push your own from
+  `src/backend/Dockerfile`/`src/frontend/Dockerfile`, then point
+  `values.yaml`'s `image.repository` fields at them (they default to
+  upstream's `ghcr.io/schroedinger-hat/certo-backend`/`certo-frontend`).
 
 ## Install
 
